@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: sga-stayly-uq
+
+# Ficha del Alojamiento (Anexo A) · Stayly-UQ, Armenia.
+# Son configuración, no constantes del código: el dominio los pide al puerto ConfiguracionAlojamiento.
+sga:
+  alojamiento:
+    umbral-edad-facturable: 12        # años cumplidos a la fecha de entrada (L-09)
+    hora-entrada: "15:00"             # L-12
+    hora-salida: "12:00"              # L-12
+    tiempo-preparacion-horas: 3       # L-13: cabe exacto entre 12:00 y 15:00
+    plazo-confirmacion-horas: 24      # L-14
+    hora-limite-no-show: "23:00"      # L-15: hasta esa hora hay recepción
+    anticipo:                         # L-11
+      exigido: true
+      porcentaje: 30
+    mascotas:                         # RP-02 (solo SUQ-102, SUQ-202 y SUQ-301 las admiten)
+      cupo-maximo: 2
+      cargo-por-noche: 25000
+    recargo-llegada-nocturna:         # RP-03
+      hora-inicio: "21:00"
+      valor: 30000
