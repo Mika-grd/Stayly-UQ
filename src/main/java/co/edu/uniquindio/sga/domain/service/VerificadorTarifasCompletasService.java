@@ -18,12 +18,16 @@ public class VerificadorTarifasCompletasService {
     }
 
     public void verificarTarifasCompletas(IdentificacionApartamento apartamento) {
-        Tarifario tarifario = tarifarios.buscarPorApartamento(apartamento).orElse(null);
-        boolean completas = tarifario != null && temporadas.listarTodas().stream()
-                .allMatch(temporada -> tarifario.tieneTarifaPara(temporada.id()));
-        if (!completas) {
+        if (!tieneTarifasCompletas(apartamento)) {
             throw new ReglaDominioException("TARIFAS_INCOMPLETAS",
                     "El apartamento " + apartamento + " no tiene tarifa en todas las temporadas.");
         }
+    }
+
+    /** Si tiene tarifa vigente en cada una de las temporadas definidas, base incluida. */
+    public boolean tieneTarifasCompletas(IdentificacionApartamento apartamento) {
+        Tarifario tarifario = tarifarios.buscarPorApartamento(apartamento).orElse(null);
+        return tarifario != null && temporadas.listarTodas().stream()
+                .allMatch(temporada -> tarifario.tieneTarifaPara(temporada.id()));
     }
 }

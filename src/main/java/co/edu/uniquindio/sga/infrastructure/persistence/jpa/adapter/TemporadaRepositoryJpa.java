@@ -1,6 +1,7 @@
 package co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter;
 
 import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
+import co.edu.uniquindio.sga.domain.model.temporada.IdTemporada;
 import co.edu.uniquindio.sga.domain.model.temporada.Temporada;
 import co.edu.uniquindio.sga.domain.repository.TemporadaRepository;
 import co.edu.uniquindio.sga.infrastructure.persistence.jpa.mapper.TemporadaMapper;
@@ -8,6 +9,7 @@ import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.Temporada
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /** Adaptador JPA del puerto TemporadaRepository. */
 public class TemporadaRepositoryJpa implements TemporadaRepository {
@@ -26,6 +28,11 @@ public class TemporadaRepositoryJpa implements TemporadaRepository {
     @Override
     public List<Temporada> listarTodas() {
         return jpa.findAll().stream().map(TemporadaMapper::aDominio).toList();
+    }
+
+    @Override
+    public Optional<Temporada> buscarPorId(IdTemporada id) {
+        return jpa.findById(id.valor()).map(TemporadaMapper::aDominio);
     }
 
     /** CalendarioTemporadasService garantiza que las temporadas no se solapan: a lo sumo una contiene la noche. */

@@ -70,6 +70,14 @@ public class ReservaRepositoryEnMemoria implements ReservaRepository {
     }
 
     @Override
+    public List<Reserva> buscarActivasOFuturas(IdentificacionApartamento apartamento, LocalDate hoy) {
+        return reservas.values().stream()
+                .filter(reserva -> reserva.apartamento().equals(apartamento))
+                .filter(reserva -> reserva.estaActiva() && reserva.estancia().salida().isAfter(hoy))
+                .toList();
+    }
+
+    @Override
     public CodigoReserva siguienteCodigo() {
         return new CodigoReserva("RES-%d-%05d".formatted(Year.now(reloj).getValue(), consecutivo.incrementAndGet()));
     }

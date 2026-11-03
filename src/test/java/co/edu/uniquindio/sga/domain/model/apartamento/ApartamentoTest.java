@@ -70,4 +70,43 @@ class ApartamentoTest {
                 .isInstanceOf(ReglaDominioException.class)
                 .extracting("codigo").isEqualTo("IMAGENES_INVALIDAS");
     }
+
+    // Actualización de los datos descriptivos (7.3)
+
+    @Test
+    @DisplayName("7.3 · Actualizar los datos conserva la identificación, el estado operativo y el indicador de activo")
+    void actualizarDatosConservaIdentidadYEstado() {
+        // Arrange
+        Apartamento suq201 = FichaStaylyUq.suq201();
+
+        // Act
+        suq201.actualizarDatos("Apartamento 201 renovado", "Con escritorio nuevo", 2, new Capacidad(3), true,
+                "Escaleras angostas", Set.of(new Caracteristica("Escritorio")), FichaStaylyUq.imagenes(3));
+
+        // Assert
+        assertThat(suq201.identificacion()).isEqualTo(new IdentificacionApartamento("SUQ-201"));
+        assertThat(suq201.nombre()).isEqualTo("Apartamento 201 renovado");
+        assertThat(suq201.capacidad()).isEqualTo(new Capacidad(3));
+        assertThat(suq201.admiteMascotas()).isTrue();
+        assertThat(suq201.advertenciaAcceso()).contains("Escaleras angostas");
+        assertThat(suq201.imagenes()).hasSize(3);
+        assertThat(suq201.estadoOperativo()).isEqualTo(EstadoOperativo.PREPARADO);
+        assertThat(suq201.estaActivo()).isTrue();
+    }
+
+    @Test
+    @DisplayName("7.3 · Actualizar con dos imágenes principales se rechaza y no cambia nada (A-4)")
+    void noActualizarConDosImagenesPrincipales() {
+        // Arrange
+        Apartamento suq201 = FichaStaylyUq.suq201();
+        List<ImagenApartamento> dosPrincipales = List.of(new ImagenApartamento("https://stayly-uq.co/a.jpg", true),
+                new ImagenApartamento("https://stayly-uq.co/b.jpg", true));
+
+        // Act + Assert
+        assertThatThrownBy(() -> suq201.actualizarDatos("Otro nombre", "x", 2, new Capacidad(4), false, null,
+                Set.of(), dosPrincipales))
+                .isInstanceOf(ReglaDominioException.class)
+                .extracting("codigo").isEqualTo("IMAGENES_INVALIDAS");
+        assertThat(suq201.nombre()).isEqualTo("Apartamento 201");
+    }
 }

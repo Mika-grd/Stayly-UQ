@@ -30,4 +30,8 @@ public interface ReservaJpaRepository extends JpaRepository<ReservaEntity, Strin
 
     boolean existsByApartamentoAndEstadoInAndEstanciaSalidaAfter(String apartamento,
                                                                  Collection<EstadoReserva> estados, LocalDate hoy);
+
+    List<ReservaEntity> findByApartamentoAndEstadoInAndEstanciaSalidaAfter(String apartamento,
+                                                                          Collection<EstadoReserva> estados,
+                                                                          LocalDate hoy);
 }

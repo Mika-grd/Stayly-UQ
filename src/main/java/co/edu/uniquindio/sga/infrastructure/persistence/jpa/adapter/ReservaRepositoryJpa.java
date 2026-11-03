@@ -76,6 +76,13 @@ public class ReservaRepositoryJpa implements ReservaRepository {
         return jpa.existsByApartamentoAndEstadoInAndEstanciaSalidaAfter(apartamento.valor(), ACTIVAS, hoy);
     }
 
+    @Override
+    public List<Reserva> buscarActivasOFuturas(IdentificacionApartamento apartamento, LocalDate hoy) {
+        return jpa.findByApartamentoAndEstadoInAndEstanciaSalidaAfter(apartamento.valor(), ACTIVAS, hoy).stream()
+                .map(ReservaMapper::aDominio)
+                .toList();
+    }
+
     /** RES-AAAA-NNNNN: el número se reinicia cada año y se toma con la fila del año bloqueada. */
     @Override
     @Transactional

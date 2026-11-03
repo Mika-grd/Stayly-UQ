@@ -27,5 +27,8 @@ public interface ReservaRepository {
     /** Reservas activas o con salida posterior a {@code hoy} (7.3). */
     boolean tieneActivasOFuturas(IdentificacionApartamento apartamento, LocalDate hoy);
 
+    /** Las reservas activas del apartamento con salida posterior a {@code hoy}, para advertir cambios de capacidad (7.3). */
+    List<Reserva> buscarActivasOFuturas(IdentificacionApartamento apartamento, LocalDate hoy);
+
     CodigoReserva siguienteCodigo();
 }

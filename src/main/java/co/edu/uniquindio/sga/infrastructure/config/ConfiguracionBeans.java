@@ -1,9 +1,5 @@
 package co.edu.uniquindio.sga.infrastructure.config;
 
-import co.edu.uniquindio.sga.application.usecase.CancelarReservaUseCase;
-import co.edu.uniquindio.sga.application.usecase.ConfirmarReservaUseCase;
-import co.edu.uniquindio.sga.application.usecase.CrearReservaUseCase;
-import co.edu.uniquindio.sga.application.usecase.RegistrarLlegadaUseCase;
 import co.edu.uniquindio.sga.domain.repository.ApartamentoRepository;
 import co.edu.uniquindio.sga.domain.repository.BloqueoRepository;
 import co.edu.uniquindio.sga.domain.repository.CanalRepository;
@@ -16,11 +12,15 @@ import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.repository.TarifarioRepository;
 import co.edu.uniquindio.sga.domain.repository.TemporadaRepository;
 import co.edu.uniquindio.sga.domain.service.AdmisionMascotasService;
+import co.edu.uniquindio.sga.domain.service.AltaApartamentoService;
 import co.edu.uniquindio.sga.domain.service.CalculadorRetencionService;
+import co.edu.uniquindio.sga.domain.service.CalendarioTemporadasService;
 import co.edu.uniquindio.sga.domain.service.ConfirmacionReservaService;
 import co.edu.uniquindio.sga.domain.service.CotizadorEstanciaService;
 import co.edu.uniquindio.sga.domain.service.DisponibilidadApartamentoService;
 import co.edu.uniquindio.sga.domain.service.EntregaApartamentoService;
+import co.edu.uniquindio.sga.domain.service.RegistroBloqueoService;
+import co.edu.uniquindio.sga.domain.service.RetiroApartamentoService;
 import co.edu.uniquindio.sga.domain.service.VerificadorEstanciaMinimaService;
 import co.edu.uniquindio.sga.domain.service.VerificadorTarifasCompletasService;
 import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.ApartamentoRepositoryJpa;
@@ -48,18 +48,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import java.time.ZoneId;
 
 /**
- * Ensambla el hexágono: el dominio y la capa de aplicación no conocen Spring, así que sus
- * objetos se crean aquí. Los repositorios son los adaptadores JPA sobre H2; las
- * implementaciones en memoria quedan solo para las pruebas unitarias.
+ * Ensambla el hexágono: el dominio no conoce Spring, así que sus servicios y los adaptadores de
+ * sus puertos se registran aquí como {@code @Bean}. Los casos de uso son {@code @Service} de la
+ * capa de aplicación. Los repositorios son los adaptadores JPA sobre H2; las implementaciones en
+ * memoria quedan solo para las pruebas unitarias.
  */
 @Configuration
 public class ConfiguracionBeans {
 
+    /** 3.1: todas las fechas en la zona horaria de Colombia, sin importar la del servidor. */
     @Bean
     Clock reloj() {
-        return Clock.systemDefaultZone();
+        return Clock.system(ZoneId.of("America/Bogota"));
     }
 
     @Bean
@@ -166,36 +169,23 @@ public class ConfiguracionBeans {
         return new AdmisionMascotasService(configuracion);
     }
 
-    // Casos de uso
-
     @Bean
-    CrearReservaUseCase crearReservaUseCase(ApartamentoRepository apartamentos, ReservaRepository reservas,
-                                            FolioRepository folios, PoliticaCancelacionRepository politicas,
-                                            VerificadorTarifasCompletasService verificadorTarifas,
-                                            VerificadorEstanciaMinimaService verificadorEstanciaMinima,
-                                            AdmisionMascotasService admisionMascotas,
-                                            DisponibilidadApartamentoService disponibilidad,
-                                            CotizadorEstanciaService cotizador, ConfiguracionAlojamiento configuracion,
-                                            Clock reloj) {
-        return new CrearReservaUseCase(apartamentos, reservas, folios, politicas, verificadorTarifas,
-                verificadorEstanciaMinima, admisionMascotas, disponibilidad, cotizador, configuracion, reloj);
+    CalendarioTemporadasService calendarioTemporadasService(TemporadaRepository temporadas) {
+        return new CalendarioTemporadasService(temporadas);
     }
 
     @Bean
-    ConfirmarReservaUseCase confirmarReservaUseCase(ReservaRepository reservas, FolioRepository folios,
-                                                    ConfirmacionReservaService confirmacion, Clock reloj) {
-        return new ConfirmarReservaUseCase(reservas, folios, confirmacion, reloj);
+    RegistroBloqueoService registroBloqueoService(ReservaRepository reservas) {
+        return new RegistroBloqueoService(reservas);
     }
 
     @Bean
-    CancelarReservaUseCase cancelarReservaUseCase(ReservaRepository reservas, FolioRepository folios,
-                                                  CalculadorRetencionService calculadorRetencion, Clock reloj) {
-        return new CancelarReservaUseCase(reservas, folios, calculadorRetencion, reloj);
+    RetiroApartamentoService retiroApartamentoService(ReservaRepository reservas) {
+        return new RetiroApartamentoService(reservas);
     }
 
     @Bean
-    RegistrarLlegadaUseCase registrarLlegadaUseCase(ReservaRepository reservas, ApartamentoRepository apartamentos,
-                                                    EntregaApartamentoService entrega, Clock reloj) {
-        return new RegistrarLlegadaUseCase(reservas, apartamentos, entrega, reloj);
+    AltaApartamentoService altaApartamentoService(ApartamentoRepository apartamentos) {
+        return new AltaApartamentoService(apartamentos);
     }
 }
