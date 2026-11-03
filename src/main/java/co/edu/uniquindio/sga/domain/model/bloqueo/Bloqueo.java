@@ -45,6 +45,14 @@ public class Bloqueo {
         return new Bloqueo(id, apartamento, rango, motivo.trim(), autor.trim(), ahora);
     }
 
+    /** Rearma un bloqueo ya existente, levantado o vigente. Repite las validaciones de B-1. */
+    public static Bloqueo reconstituir(IdBloqueo id, IdentificacionApartamento apartamento, RangoFechas rango,
+                                       String motivo, String autor, LocalDateTime fechaRegistro, boolean levantado) {
+        Bloqueo bloqueo = registrar(id, apartamento, rango, motivo, autor, fechaRegistro);
+        bloqueo.levantado = levantado;
+        return bloqueo;
+    }
+
     public boolean afecta(Estancia estancia) {
         return !levantado && rango.seSolapaCon(estancia);
     }
@@ -59,6 +67,7 @@ public class Bloqueo {
     public String motivo() { return motivo; }
     public String autor() { return autor; }
     public LocalDateTime fechaRegistro() { return fechaRegistro; }
+    public boolean estaLevantado() { return levantado; }
 
     @Override
     public boolean equals(Object o) {

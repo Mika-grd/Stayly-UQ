@@ -18,9 +18,9 @@ class ConfiguracionAlojamientoEnMemoriaTest {
     private ConfiguracionAlojamiento configuracion;
 
     @Test
-    @DisplayName("Sección 6 · Los valores de la Ficha se leen de application.yml, no del código")
+    @DisplayName("Sección 6 · Los valores de la Ficha se leen de application.properties, no del código")
     void leerValoresDeLaFichaDesdeApplicationYml() {
-        // Arrange: el contexto de Spring carga application.yml
+        // Arrange: el contexto de Spring carga application.properties
 
         // Act
         var horario = configuracion.horario();

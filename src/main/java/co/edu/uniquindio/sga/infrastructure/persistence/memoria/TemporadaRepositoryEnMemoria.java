@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class TemporadaRepositoryEnMemoria implements TemporadaRepository {
 
@@ -22,6 +23,11 @@ public class TemporadaRepositoryEnMemoria implements TemporadaRepository {
     @Override
     public List<Temporada> listarTodas() {
         return List.copyOf(temporadas.values());
+    }
+
+    @Override
+    public Optional<Temporada> buscarPorId(IdTemporada id) {
+        return Optional.ofNullable(temporadas.get(id));
     }
 
     @Override

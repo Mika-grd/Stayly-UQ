@@ -1,6 +1,5 @@
 package co.edu.uniquindio.sga.application.usecase;
 
-import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
 import co.edu.uniquindio.sga.domain.model.apartamento.Apartamento;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.ComposicionGrupo;
@@ -29,6 +28,8 @@ import co.edu.uniquindio.sga.domain.service.CotizadorEstanciaService;
 import co.edu.uniquindio.sga.domain.service.DisponibilidadApartamentoService;
 import co.edu.uniquindio.sga.domain.service.VerificadorEstanciaMinimaService;
 import co.edu.uniquindio.sga.domain.service.VerificadorTarifasCompletasService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -42,6 +43,8 @@ import java.util.UUID;
  * CU-02. Orquesta la creación en el orden de 7.5 y las reglas propias RP-01, RP-02 y RP-03.
  * No contiene reglas: carga agregados, llama al dominio y a los servicios, y guarda.
  */
+@Service
+@Transactional
 public class CrearReservaUseCase {
 
     private final ApartamentoRepository apartamentos;
@@ -78,9 +81,7 @@ public class CrearReservaUseCase {
     public ReservaCreada ejecutar(Comando comando) {
         LocalDateTime ahora = LocalDateTime.now(reloj);
         Estancia estancia = new Estancia(comando.entrada(), comando.salida());
-        Apartamento apartamento = apartamentos.buscarPorIdentificacion(comando.apartamento())
-                .orElseThrow(() -> new ReglaDominioException("APARTAMENTO_NO_ENCONTRADO",
-                        "No existe el apartamento " + comando.apartamento() + "."));
+        Apartamento apartamento = Consultas.apartamento(apartamentos, comando.apartamento());
         List<Ocupante> ocupantes = comando.ocupantes().stream().map(DatosOcupante::aOcupante).toList();
         MascotasAutorizadas mascotas = new MascotasAutorizadas(comando.mascotas());
         HoraEstimadaLlegada hora = comando.horaEstimadaLlegada() == null

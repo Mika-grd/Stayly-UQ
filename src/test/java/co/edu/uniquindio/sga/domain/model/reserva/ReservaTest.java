@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -203,5 +204,48 @@ class ReservaTest {
         assertThat(tarifario.historico()).hasSize(4);
         assertThat(cotizador.cotizar(suq201.identificacion(), estancia, reserva.composicion()).total())
                 .isEqualTo(Dinero.pesos(390_000));
+    }
+
+    // Reconstitución desde la persistencia
+
+    @Test
+    @DisplayName("Persistencia · Reconstituye una reserva FINALIZADA del pasado con su estado y su historia")
+    void reconstituirReservaFinalizadaDelPasado() {
+        // Arrange: estancia de septiembre, anterior a HOY (01/10/2026)
+        Estancia septiembre = new Estancia(LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 12));
+        List<EventoReserva> historia = List.of(
+                new EventoReserva("Reserva creada en estado PENDIENTE", "huesped@correo.co",
+                        LocalDateTime.of(2026, 9, 1, 9, 0)),
+                new EventoReserva("Estado EN_CURSO → FINALIZADA", "recepcion", LocalDateTime.of(2026, 9, 12, 11, 0)));
+
+        // Act
+        Reserva reserva = Reserva.reconstituir(new CodigoReserva("RES-2026-00007"), suq201.identificacion(),
+                septiembre, List.of(titularAdulto(), adulto()), EstadoReserva.FINALIZADA, CanalOrigen.DIRECTO, null,
+                new HoraEstimadaLlegada(LocalTime.of(16, 0)), MascotasAutorizadas.ninguna(),
+                FichaStaylyUq.valorFijo(septiembre, 75_000, 2), new VersionPolitica(1),
+                LocalDateTime.of(2026, 9, 1, 9, 0), historia);
+
+        // Assert: no revalida RN-04 y conserva el estado terminal (RN-08 sigue protegiéndolo)
+        assertThat(reserva.estado()).isEqualTo(EstadoReserva.FINALIZADA);
+        assertThat(reserva.eventos()).containsExactlyElementsOf(historia);
+        assertThat(reserva.estaActiva()).isFalse();
+        assertThatThrownBy(() -> reserva.cancelar("recepcion", HOY))
+                .isInstanceOf(ReglaDominioException.class)
+                .extracting("codigo").isEqualTo("TRANSICION_INVALIDA");
+    }
+
+    @Test
+    @DisplayName("Persistencia · No reconstituye una reserva CONFIRMADA sin hora estimada de llegada (RN-09)")
+    void noReconstituirConfirmadaSinHoraEstimada() {
+        // Arrange
+        Estancia estancia = FichaStaylyUq.diciembre(13, 15);
+
+        // Act + Assert
+        assertThatThrownBy(() -> Reserva.reconstituir(new CodigoReserva("RES-2026-00008"), suq201.identificacion(),
+                estancia, List.of(titularAdulto(), adulto()), EstadoReserva.CONFIRMADA, CanalOrigen.PORTAL, null,
+                null, MascotasAutorizadas.ninguna(), FichaStaylyUq.valorFijo(estancia, 75_000, 2),
+                new VersionPolitica(1), HOY, List.of()))
+                .isInstanceOf(ReglaDominioException.class)
+                .extracting("codigo").isEqualTo("HORA_LLEGADA_REQUERIDA");
     }
 }

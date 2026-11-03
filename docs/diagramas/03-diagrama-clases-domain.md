@@ -1,6 +1,6 @@
 # Diagrama de clases — paquete `domain`
 
-Corresponde 1 a 1 con el código del paquete `domain`. No hay clases de Spring ni de infraestructura: los repositorios y `ConfiguracionAlojamiento` son **interfaces del dominio**; sus implementaciones en memoria viven en `infrastructure`.
+Corresponde 1 a 1 con el código del paquete `domain`. No hay clases de Spring ni de infraestructura: los repositorios y `ConfiguracionAlojamiento` son **interfaces del dominio**; sus implementaciones viven en `infrastructure`: los adaptadores JPA que usa la aplicación y los de memoria que usan las pruebas unitarias.
 
 ## Cómo leerlo
 
@@ -41,6 +41,7 @@ classDiagram
     -List~EventoReserva~ eventos
     -Reserva(...)
     +crear(codigo, apartamento, estancia, ocupantes, ...)$ Reserva
+    +reconstituir(codigo, apartamento, estancia, ocupantes, estado, ...)$ Reserva
     +indicarHoraEstimadaLlegada(hora, autor, ahora) void
     +confirmar(String autor, LocalDateTime ahora) void
     +puedeRegistrarLlegada(LocalDate hoy) boolean
@@ -209,6 +210,7 @@ classDiagram
     -boolean activo
     -Apartamento(...)
     +crear(identificacion, nombre, descripcion, ...)$ Apartamento
+    +reconstituir(identificacion, ..., estadoOperativo, activo)$ Apartamento
     +admite(int totalOcupantes) boolean
     +admiteMascotas() boolean
     +puedeRecibirGrupo() boolean
@@ -280,6 +282,7 @@ classDiagram
     -AutorizacionCierre autorizacion
     -Folio(...)
     +abrir(id, reserva, valorAlojamiento, ahora)$ Folio
+    +reconstituir(id, reserva, cargos, pagos, estado, autorizacion)$ Folio
     +registrarCargo(Cargo cargo) void
     +registrarPago(Pago pago) void
     +registrarAjuste(Dinero diferencia, LocalDateTime ahora) void
@@ -391,8 +394,10 @@ classDiagram
     -boolean levantado
     -Bloqueo(...)
     +registrar(id, apartamento, rango, motivo, ...)$ Bloqueo
+    +reconstituir(id, apartamento, rango, ..., levantado)$ Bloqueo
     +afecta(Estancia estancia) boolean
     +levantar() void
+    +estaLevantado() boolean
     +equals(Object o) boolean
     +hashCode() int
   }
@@ -419,6 +424,7 @@ classDiagram
     +crear(id, nombre, periodos, estanciaMinima)$ Temporada
     +agregarPeriodo(RangoFechas periodo) void
     +crearBase(id, nombre)$ Temporada
+    +reconstituir(id, nombre, periodos, esBase, estanciaMinima)$ Temporada
     +contiene(LocalDate noche) boolean
     +seSolapaCon(Temporada otra) boolean
     +cambiarEstanciaMinima(EstanciaMinima nueva) void
@@ -533,6 +539,7 @@ classDiagram
     -LocalDateTime fechaRegistro
     -ConflictoCanal(...)
     +registrar(id, identificadorExterno, ...)$ ConflictoCanal
+    +reconstituir(id, identificadorExterno, ..., estado, ...)$ ConflictoCanal
     +resolver(autor, resolucion, ahora) void
     +equals(Object o) boolean
     +hashCode() int
@@ -1027,6 +1034,7 @@ classDiagram
     -List~EventoReserva~ eventos
     -Reserva(...)
     +crear(codigo, apartamento, estancia, ocupantes, ...)$ Reserva
+    +reconstituir(codigo, apartamento, estancia, ocupantes, estado, ...)$ Reserva
     +indicarHoraEstimadaLlegada(hora, autor, ahora) void
     +confirmar(String autor, LocalDateTime ahora) void
     +puedeRegistrarLlegada(LocalDate hoy) boolean
@@ -1168,6 +1176,7 @@ classDiagram
     -boolean activo
     -Apartamento(...)
     +crear(identificacion, nombre, descripcion, ...)$ Apartamento
+    +reconstituir(identificacion, ..., estadoOperativo, activo)$ Apartamento
     +admite(int totalOcupantes) boolean
     +admiteMascotas() boolean
     +puedeRecibirGrupo() boolean
@@ -1226,6 +1235,7 @@ classDiagram
     -AutorizacionCierre autorizacion
     -Folio(...)
     +abrir(id, reserva, valorAlojamiento, ahora)$ Folio
+    +reconstituir(id, reserva, cargos, pagos, estado, autorizacion)$ Folio
     +registrarCargo(Cargo cargo) void
     +registrarPago(Pago pago) void
     +registrarAjuste(Dinero diferencia, LocalDateTime ahora) void
@@ -1318,8 +1328,10 @@ classDiagram
     -boolean levantado
     -Bloqueo(...)
     +registrar(id, apartamento, rango, motivo, ...)$ Bloqueo
+    +reconstituir(id, apartamento, rango, ..., levantado)$ Bloqueo
     +afecta(Estancia estancia) boolean
     +levantar() void
+    +estaLevantado() boolean
     +equals(Object o) boolean
     +hashCode() int
   }
@@ -1346,6 +1358,7 @@ classDiagram
     +crear(id, nombre, periodos, estanciaMinima)$ Temporada
     +agregarPeriodo(RangoFechas periodo) void
     +crearBase(id, nombre)$ Temporada
+    +reconstituir(id, nombre, periodos, esBase, estanciaMinima)$ Temporada
     +contiene(LocalDate noche) boolean
     +seSolapaCon(Temporada otra) boolean
     +cambiarEstanciaMinima(EstanciaMinima nueva) void
@@ -1460,6 +1473,7 @@ classDiagram
     -LocalDateTime fechaRegistro
     -ConflictoCanal(...)
     +registrar(id, identificadorExterno, ...)$ ConflictoCanal
+    +reconstituir(id, identificadorExterno, ..., estado, ...)$ ConflictoCanal
     +resolver(autor, resolucion, ahora) void
     +equals(Object o) boolean
     +hashCode() int
@@ -1863,3 +1877,4 @@ classDiagram
 - `RegistroBloqueoService.registrar` recibe `LocalDateTime ahora` para la `fechaRegistro` del bloqueo, porque el dominio nunca consulta el reloj.
 - `ConflictoCanal` guarda `autorResolucion` y `fechaResolucion` para cumplir CC-1 ("con autor y descripción de la resolución").
 - `Alojamiento.crear(...)` es la fábrica estática exigida a toda entidad (constructor privado).
+- **Entrega 2 · `reconstituir(...)`**: `Reserva`, `Folio`, `Apartamento`, `Temporada`, `Bloqueo` y `ConflictoCanal` tienen una segunda fábrica estática para que la persistencia rearme un agregado ya existente con su estado (una reserva FINALIZADA, un folio CERRADO, un apartamento OCUPADO) sin setters, sin constructor vacío y sin anotaciones JPA en el dominio. No repite las reglas de creación que dependen del momento (RN-04, titular facturable), porque ya se cumplieron al crearlo; sí protege las invariantes que valen en cualquier estado (RN-09, RN-17, A-4, T-1, B-1, CC-1). `Tarifario`, `PoliticaCancelacion`, `Novedad` y `Canal` se rearman con su API pública y no la necesitan. `Bloqueo` agrega `estaLevantado()` para poder guardar ese dato.

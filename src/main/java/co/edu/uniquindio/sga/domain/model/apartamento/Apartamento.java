@@ -18,14 +18,14 @@ public class Apartamento {
     private static final int MAXIMO_IMAGENES = 10;
 
     private final IdentificacionApartamento identificacion;
-    private final String nombre;
-    private final String descripcion;
-    private final int dormitorios;
+    private String nombre;
+    private String descripcion;
+    private int dormitorios;
     private Capacidad capacidad;
-    private final boolean admiteMascotas;
-    private final String advertenciaAcceso;
-    private final Set<Caracteristica> caracteristicas;
-    private final List<ImagenApartamento> imagenes;
+    private boolean admiteMascotas;
+    private String advertenciaAcceso;
+    private Set<Caracteristica> caracteristicas;
+    private List<ImagenApartamento> imagenes;
     private EstadoOperativo estadoOperativo;
     private boolean activo;
 
@@ -50,8 +50,37 @@ public class Apartamento {
                                     int dormitorios, Capacidad capacidad, boolean admiteMascotas,
                                     String advertenciaAcceso, Set<Caracteristica> caracteristicas,
                                     List<ImagenApartamento> imagenes) {
-        if (identificacion == null || nombre == null || nombre.isBlank() || capacidad == null
-                || caracteristicas == null) {
+        if (identificacion == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO",
+                    "El apartamento requiere identificación, nombre y capacidad.");
+        }
+        validarDatos(nombre, dormitorios, capacidad, caracteristicas, imagenes);
+        return new Apartamento(identificacion, nombre.trim(), descripcion, dormitorios, capacidad, admiteMascotas,
+                normalizarAdvertencia(advertenciaAcceso), caracteristicas, imagenes);
+    }
+
+    /**
+     * 7.3: reemplaza los datos descriptivos con las mismas validaciones de {@link #crear} (A-4). La
+     * identificación nunca cambia (L-04). Bajar la capacidad no afecta las reservas ya creadas: el
+     * caso de uso advierte cuáles quedan por encima con {@link #admite}.
+     */
+    public void actualizarDatos(String nombre, String descripcion, int dormitorios, Capacidad capacidad,
+                                boolean admiteMascotas, String advertenciaAcceso, Set<Caracteristica> caracteristicas,
+                                List<ImagenApartamento> imagenes) {
+        validarDatos(nombre, dormitorios, capacidad, caracteristicas, imagenes);
+        this.nombre = nombre.trim();
+        this.descripcion = descripcion;
+        this.dormitorios = dormitorios;
+        this.capacidad = capacidad;
+        this.admiteMascotas = admiteMascotas;
+        this.advertenciaAcceso = normalizarAdvertencia(advertenciaAcceso);
+        this.caracteristicas = Set.copyOf(caracteristicas);
+        this.imagenes = new ArrayList<>(imagenes);
+    }
+
+    private static void validarDatos(String nombre, int dormitorios, Capacidad capacidad,
+                                     Set<Caracteristica> caracteristicas, List<ImagenApartamento> imagenes) {
+        if (nombre == null || nombre.isBlank() || capacidad == null || caracteristicas == null) {
             throw new ReglaDominioException("PARAMETRO_INVALIDO",
                     "El apartamento requiere identificación, nombre y capacidad.");
         }
@@ -64,9 +93,29 @@ public class Apartamento {
             throw new ReglaDominioException("IMAGENES_INVALIDAS",
                     "El apartamento debe tener entre 1 y 10 imágenes y una principal.");
         }
-        String advertencia = advertenciaAcceso == null || advertenciaAcceso.isBlank() ? null : advertenciaAcceso.trim();
-        return new Apartamento(identificacion, nombre.trim(), descripcion, dormitorios, capacidad, admiteMascotas,
-                advertencia, caracteristicas, imagenes);
+    }
+
+    private static String normalizarAdvertencia(String advertenciaAcceso) {
+        return advertenciaAcceso == null || advertenciaAcceso.isBlank() ? null : advertenciaAcceso.trim();
+    }
+
+    /**
+     * Rearma un apartamento ya existente con su estado operativo y su indicador de activo. Repite
+     * las validaciones de forma de {@link #crear} (A-4: imágenes, dormitorios, capacidad).
+     */
+    public static Apartamento reconstituir(IdentificacionApartamento identificacion, String nombre,
+                                           String descripcion, int dormitorios, Capacidad capacidad,
+                                           boolean admiteMascotas, String advertenciaAcceso,
+                                           Set<Caracteristica> caracteristicas, List<ImagenApartamento> imagenes,
+                                           EstadoOperativo estadoOperativo, boolean activo) {
+        if (estadoOperativo == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El apartamento guardado requiere su estado operativo.");
+        }
+        Apartamento apartamento = crear(identificacion, nombre, descripcion, dormitorios, capacidad, admiteMascotas,
+                advertenciaAcceso, caracteristicas, imagenes);
+        apartamento.estadoOperativo = estadoOperativo;
+        apartamento.activo = activo;
+        return apartamento;
     }
 
     /** RN-02: la capacidad es un tope rígido. */

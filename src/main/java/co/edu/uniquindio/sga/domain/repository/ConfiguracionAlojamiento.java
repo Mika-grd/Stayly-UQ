@@ -1,5 +1,6 @@
 package co.edu.uniquindio.sga.domain.repository;
 
+import co.edu.uniquindio.sga.domain.model.alojamiento.Alojamiento;
 import co.edu.uniquindio.sga.domain.model.alojamiento.Anticipo;
 import co.edu.uniquindio.sga.domain.model.alojamiento.CargoPorMascota;
 import co.edu.uniquindio.sga.domain.model.alojamiento.CupoMascotas;
@@ -34,4 +35,7 @@ public interface ConfiguracionAlojamiento {
     CargoPorMascota cargoPorMascota();
 
     RecargoLlegadaNocturna recargoLlegadaNocturna();
+
+    /** El alojamiento completo (F-13): identidad, ubicación, normas, servicios, medios de pago y parámetros. */
+    Alojamiento alojamiento();
 }

@@ -8,7 +8,6 @@ import co.edu.uniquindio.sga.domain.model.temporada.IdTemporada;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,11 +36,15 @@ public class Tarifario {
         tarifas.add(new Tarifa(temporada, valor, desde));
     }
 
-    /** La última definida para esa temporada; las anteriores quedan en el histórico. */
+    /**
+     * La de vigencia más reciente para esa temporada; con la misma vigencia gana la última definida.
+     * Las anteriores quedan en el histórico.
+     */
     public Optional<Tarifa> tarifaVigente(IdTemporada temporada) {
         return tarifas.stream()
                 .filter(tarifa -> tarifa.temporada().equals(temporada))
-                .max(Comparator.comparing(Tarifa::vigenteDesde));
+                .reduce((anterior, siguiente) ->
+                        siguiente.vigenteDesde().isBefore(anterior.vigenteDesde()) ? anterior : siguiente);
     }
 
     public boolean tieneTarifaPara(IdTemporada temporada) {

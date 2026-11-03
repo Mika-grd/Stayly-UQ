@@ -24,7 +24,7 @@ src/main/java/co/edu/uniquindio/sga/
   application/usecase/  CU-02 Crear, CU-03 Confirmar, CU-04 Cancelar, CU-05 Registrar llegada
   infrastructure/
     persistence/memoria/  repositorios con HashMap
-    config/               valores de la Ficha leídos de application.yml + ensamblaje de beans
+    config/               valores de la Ficha leídos de application.properties + ensamblaje de beans
     web/                  (Corte 2)
 docs/
   modelo/     libro del modelo (Excel): identificación, invariantes, servicios, casos de uso, matriz, plan de pruebas
@@ -34,7 +34,7 @@ docs/
 ```
 
 Los valores de la Ficha del Alojamiento (umbral de edad, horarios, anticipo, mascotas, recargo nocturno…) están en
-`src/main/resources/application.yml`; el dominio los pide al puerto `ConfiguracionAlojamiento`.
+`src/main/resources/application.properties`; el dominio los pide al puerto `ConfiguracionAlojamiento`.
 
 ## Validar la API
 

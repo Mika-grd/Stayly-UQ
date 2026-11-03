@@ -7,6 +7,8 @@ import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.service.CalculadorRetencionService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -15,6 +17,8 @@ import java.time.LocalDateTime;
  * CU-04: cancela una reserva PENDIENTE o CONFIRMADA (RN-08, RN-12, RN-13). La retención sale de
  * la política congelada y el folio anula el alojamiento y registra la penalidad.
  */
+@Service
+@Transactional
 public class CancelarReservaUseCase {
 
     private final ReservaRepository reservas;

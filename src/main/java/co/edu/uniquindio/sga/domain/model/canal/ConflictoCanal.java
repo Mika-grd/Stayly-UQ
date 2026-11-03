@@ -49,6 +49,26 @@ public class ConflictoCanal {
         return new ConflictoCanal(id, identificadorExterno, apartamento, estancia, reservaVigente, ahora);
     }
 
+    /**
+     * Rearma un conflicto ya existente. Protege CC-1: un conflicto RESUELTO siempre tiene autor,
+     * resolución y fecha de resolución.
+     */
+    public static ConflictoCanal reconstituir(IdConflictoCanal id, IdentificadorExterno identificadorExterno,
+                                              IdentificacionApartamento apartamento, Estancia estancia,
+                                              CodigoReserva reservaVigente, LocalDateTime fechaRegistro,
+                                              EstadoConflicto estado, String autorResolucion, String resolucion,
+                                              LocalDateTime fechaResolucion) {
+        if (estado == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El conflicto guardado requiere su estado.");
+        }
+        ConflictoCanal conflicto = registrar(id, identificadorExterno, apartamento, estancia, reservaVigente,
+                fechaRegistro);
+        if (estado == EstadoConflicto.RESUELTO) {
+            conflicto.resolver(autorResolucion, resolucion, fechaResolucion);
+        }
+        return conflicto;
+    }
+
     public void resolver(String autor, String resolucion, LocalDateTime ahora) {
         if (estado == EstadoConflicto.RESUELTO) {
             throw new ReglaDominioException("CONFLICTO_YA_RESUELTO", "El conflicto ya fue resuelto.");

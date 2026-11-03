@@ -6,11 +6,15 @@ import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.service.ConfirmacionReservaService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 
 /** CU-03: deja la reserva en firme (RN-08, RN-09, L-11). */
+@Service
+@Transactional
 public class ConfirmarReservaUseCase {
 
     private final ReservaRepository reservas;
