@@ -2,7 +2,10 @@ package co.edu.uniquindio.sga.domain.repository;
 
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.Estancia;
+import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
+import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
+import co.edu.uniquindio.sga.domain.model.reserva.FiltroReservas;
 import co.edu.uniquindio.sga.domain.model.reserva.IdentificadorExterno;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 
@@ -31,4 +34,7 @@ public interface ReservaRepository {
     List<Reserva> buscarActivasOFuturas(IdentificacionApartamento apartamento, LocalDate hoy);
 
     CodigoReserva siguienteCodigo();
+
+    /** Listado filtrado (7.5), de la más reciente a la más antigua por fecha de creación, de a 10. */
+    Pagina<Reserva> buscar(FiltroReservas filtro, PeticionPagina pagina);
 }

@@ -2,8 +2,11 @@ package co.edu.uniquindio.sga.infrastructure.persistence.memoria;
 
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.Estancia;
+import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
+import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.EstadoReserva;
+import co.edu.uniquindio.sga.domain.model.reserva.FiltroReservas;
 import co.edu.uniquindio.sga.domain.model.reserva.IdentificadorExterno;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
@@ -12,6 +15,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +79,17 @@ public class ReservaRepositoryEnMemoria implements ReservaRepository {
                 .filter(reserva -> reserva.apartamento().equals(apartamento))
                 .filter(reserva -> reserva.estaActiva() && reserva.estancia().salida().isAfter(hoy))
                 .toList();
+    }
+
+    @Override
+    public Pagina<Reserva> buscar(FiltroReservas filtro, PeticionPagina pagina) {
+        List<Reserva> filtradas = reservas.values().stream()
+                .filter(filtro::admite)
+                .sorted(Comparator.comparing(Reserva::fechaCreacion)
+                        .thenComparing(reserva -> reserva.codigo().valor())
+                        .reversed())
+                .toList();
+        return Pagina.de(filtradas, pagina);
     }
 
     @Override

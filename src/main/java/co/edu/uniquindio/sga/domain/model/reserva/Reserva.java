@@ -248,10 +248,7 @@ public class Reserva {
     }
 
     private static void verificarEntradaNoPasada(Estancia estancia, LocalDate hoy) {
-        if (estancia.entrada().isBefore(hoy)) {
-            throw new ReglaDominioException("FECHA_ENTRADA_PASADA",
-                    "La fecha de entrada no puede ser anterior a la fecha actual.");
-        }
+        estancia.verificarEntradaNoPasada(hoy);
     }
 
     private static void verificarTitular(List<Ocupante> ocupantes, Estancia estancia, UmbralEdadFacturable umbral) {

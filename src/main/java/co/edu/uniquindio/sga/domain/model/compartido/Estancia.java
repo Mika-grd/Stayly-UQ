@@ -22,6 +22,14 @@ public record Estancia(LocalDate entrada, LocalDate salida) {
         }
     }
 
+    /** RN-04: no se reserva ni se busca disponibilidad con entrada anterior a hoy. */
+    public void verificarEntradaNoPasada(LocalDate hoy) {
+        if (entrada.isBefore(hoy)) {
+            throw new ReglaDominioException("FECHA_ENTRADA_PASADA",
+                    "La fecha de entrada no puede ser anterior a la fecha actual.");
+        }
+    }
+
     public int noches() {
         return (int) ChronoUnit.DAYS.between(entrada, salida);
     }

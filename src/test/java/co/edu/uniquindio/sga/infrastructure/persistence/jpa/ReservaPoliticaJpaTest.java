@@ -4,11 +4,15 @@ import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
 import co.edu.uniquindio.sga.domain.model.apartamento.Apartamento;
 import co.edu.uniquindio.sga.domain.model.canal.IdCanal;
 import co.edu.uniquindio.sga.domain.model.compartido.Estancia;
+import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
 import co.edu.uniquindio.sga.domain.model.politica.PoliticaCancelacion;
 import co.edu.uniquindio.sga.domain.model.politica.TramoPolitica;
 import co.edu.uniquindio.sga.domain.model.politica.VersionPolitica;
+import co.edu.uniquindio.sga.domain.model.reserva.CanalOrigen;
 import co.edu.uniquindio.sga.domain.model.reserva.EstadoReserva;
+import co.edu.uniquindio.sga.domain.model.reserva.FiltroReservas;
 import co.edu.uniquindio.sga.domain.model.reserva.IdentificadorExterno;
+import co.edu.uniquindio.sga.domain.model.reserva.MascotasAutorizadas;
 import co.edu.uniquindio.sga.domain.model.reserva.Ocupante;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.soporte.FichaStaylyUq;
@@ -174,6 +178,33 @@ class ReservaPoliticaJpaTest {
     }
 
     @Test
+    @DisplayName("Reserva · El listado filtra en H2 por estado, titular y fechas, de la más reciente a la más antigua")
+    void buscarConFiltrosEnH2() {
+        // Arrange: tres reservas creadas en momentos distintos
+        Reserva antigua = FichaStaylyUq.reservaPendiente(suq201, diciembre(1, 3));
+        Reserva media = reservaCreadaEn(diciembre(5, 7), HOY.plusHours(1));
+        Reserva reciente = reservaCreadaEn(diciembre(10, 12), HOY.plusHours(2));
+        reciente.cancelar("recepcion", HOY.plusHours(3));
+        reservas.guardar(antigua);
+        reservas.guardar(media);
+        reservas.guardar(reciente);
+        vaciarCache();
+
+        // Act + Assert
+        assertThat(reservas.buscar(FiltroReservas.ninguno(), PeticionPagina.primera()).contenido())
+                .containsExactly(reciente, media, antigua);
+        assertThat(reservas.buscar(new FiltroReservas(EstadoReserva.CANCELADA, null, null, null, null, null),
+                PeticionPagina.primera()).contenido()).containsExactly(reciente);
+        assertThat(reservas.buscar(new FiltroReservas(null, null, suq201.identificacion(), "LAURA", null, null),
+                PeticionPagina.primera()).totalElementos()).as("titular sin distinguir mayúsculas").isEqualTo(3);
+        assertThat(reservas.buscar(new FiltroReservas(null, null, null, "nadie", null, null),
+                PeticionPagina.primera()).contenido()).isEmpty();
+        assertThat(reservas.buscar(new FiltroReservas(null, CanalOrigen.PORTAL, null, null,
+                LocalDate.of(2026, 12, 4), LocalDate.of(2026, 12, 8)), PeticionPagina.primera()).contenido())
+                .as("solo la que comparte noches con [4-dic, 8-dic)").containsExactly(media);
+    }
+
+    @Test
     @DisplayName("Política · La vigente es la de mayor versión y las anteriores se conservan (F-07, RN-13)")
     void versionesDePolitica() {
         // Arrange
@@ -195,6 +226,14 @@ class ReservaPoliticaJpaTest {
         assertThatThrownBy(() -> politicas.buscarPorVersion(new VersionPolitica(9)))
                 .isInstanceOf(ReglaDominioException.class)
                 .extracting("codigo").isEqualTo("POLITICA_NO_ENCONTRADA");
+    }
+
+    /** Reserva PENDIENTE del portal creada en {@code momento}, con un titular y un adulto. */
+    private Reserva reservaCreadaEn(Estancia estancia, LocalDateTime momento) {
+        return Reserva.crear(FichaStaylyUq.siguienteCodigo(), suq201.identificacion(), estancia,
+                List.of(FichaStaylyUq.titularAdulto(), FichaStaylyUq.adulto()), CanalOrigen.PORTAL, null, null,
+                MascotasAutorizadas.ninguna(), FichaStaylyUq.valorFijo(estancia, 75_000, 2), new VersionPolitica(1),
+                FichaStaylyUq.UMBRAL, "huesped@correo.co", momento);
     }
 
     /** Obliga a leer de H2 y no de la caché de primer nivel de JPA. */
