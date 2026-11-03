@@ -3,7 +3,7 @@ package co.edu.uniquindio.sga.infrastructure.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Valores de la Ficha del Alojamiento (Anexo A) leídos de {@code application.yml}, prefijo
+ * Valores de la Ficha del Alojamiento (Anexo A) leídos de {@code application.properties}, prefijo
  * {@code sga.alojamiento}. Las horas se escriben "HH:mm" y el dinero en pesos COP sin decimales.
  */
 @ConfigurationProperties(prefix = "sga.alojamiento")

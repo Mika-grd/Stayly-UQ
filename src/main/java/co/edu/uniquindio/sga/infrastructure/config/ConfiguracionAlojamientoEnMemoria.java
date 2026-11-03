@@ -16,7 +16,7 @@ import java.time.LocalTime;
 
 /**
  * Implementa el puerto ConfiguracionAlojamiento con los valores de la Ficha cargados al iniciar.
- * Construye los objetos de valor una sola vez, así un valor fuera de rango en application.yml
+ * Construye los objetos de valor una sola vez, así un valor fuera de rango en application.properties
  * hace fallar el arranque con su ReglaDominioException.
  */
 public class ConfiguracionAlojamientoEnMemoria implements ConfiguracionAlojamiento {
