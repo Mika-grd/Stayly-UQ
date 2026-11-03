@@ -1,14 +1,17 @@
 package co.edu.uniquindio.sga.application.usecase;
 
+import co.edu.uniquindio.sga.application.exception.RecursoNoEncontradoException;
 import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
 import co.edu.uniquindio.sga.domain.model.apartamento.Apartamento;
 import co.edu.uniquindio.sga.domain.model.apartamento.EstadoOperativo;
+import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.Dinero;
 import co.edu.uniquindio.sga.domain.model.folio.Cargo;
 import co.edu.uniquindio.sga.domain.model.folio.Folio;
 import co.edu.uniquindio.sga.domain.model.folio.MedioPago;
 import co.edu.uniquindio.sga.domain.model.folio.Pago;
 import co.edu.uniquindio.sga.domain.model.reserva.CanalOrigen;
+import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.EstadoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.service.AdmisionMascotasService;
@@ -129,6 +132,35 @@ class ReservaUseCasesTest {
                 new CalculadorRetencionService(politicas), reloj).ejecutar(reserva.codigo(), "huesped"))
                 .isInstanceOf(ReglaDominioException.class)
                 .extracting("codigo").isEqualTo("TRANSICION_INVALIDA");
+    }
+
+    @Test
+    @DisplayName("CU-03 · Confirmar una reserva inexistente es un recurso no encontrado, no una regla violada")
+    void confirmarReservaInexistente() {
+        // Arrange
+        ConfirmarReservaUseCase confirmar =
+                new ConfirmarReservaUseCase(reservas, folios, new ConfirmacionReservaService(configuracion), reloj);
+
+        // Act y Assert
+        assertThatThrownBy(() -> confirmar.ejecutar(new CodigoReserva("RES-2026-09999"), "recepcion"))
+                .isInstanceOf(RecursoNoEncontradoException.class)
+                .extracting("codigo").isEqualTo("RESERVA_NO_ENCONTRADA");
+    }
+
+    @Test
+    @DisplayName("CU-02 · Reservar un apartamento inexistente es un recurso no encontrado")
+    void crearReservaEnApartamentoInexistente() {
+        // Arrange
+        CrearReservaUseCase.Comando base = comandoSuq301(LocalTime.of(16, 0), 0);
+        CrearReservaUseCase.Comando comando = new CrearReservaUseCase.Comando(
+                new IdentificacionApartamento("SUQ-999"), base.entrada(), base.salida(), base.ocupantes(),
+                base.canal(), base.identificadorExterno(), base.horaEstimadaLlegada(), base.mascotas(),
+                base.autor());
+
+        // Act y Assert
+        assertThatThrownBy(() -> crearReserva().ejecutar(comando))
+                .isInstanceOf(RecursoNoEncontradoException.class)
+                .extracting("codigo").isEqualTo("APARTAMENTO_NO_ENCONTRADO");
     }
 
     private CrearReservaUseCase crearReserva() {

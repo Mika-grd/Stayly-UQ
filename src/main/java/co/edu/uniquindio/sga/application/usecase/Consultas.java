@@ -1,6 +1,6 @@
 package co.edu.uniquindio.sga.application.usecase;
 
-import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
+import co.edu.uniquindio.sga.application.exception.RecursoNoEncontradoException;
 import co.edu.uniquindio.sga.domain.model.folio.Folio;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
@@ -15,12 +15,13 @@ final class Consultas {
 
     static Reserva reserva(ReservaRepository reservas, CodigoReserva codigo) {
         return reservas.buscarPorCodigo(codigo)
-                .orElseThrow(() -> new ReglaDominioException("RESERVA_NO_ENCONTRADA", "No existe la reserva " + codigo + "."));
+                .orElseThrow(() -> new RecursoNoEncontradoException("RESERVA_NO_ENCONTRADA",
+                        "No existe la reserva " + codigo + "."));
     }
 
     static Folio folio(FolioRepository folios, CodigoReserva codigo) {
         return folios.buscarPorCodigoReserva(codigo)
-                .orElseThrow(() -> new ReglaDominioException("FOLIO_NO_ENCONTRADO",
+                .orElseThrow(() -> new RecursoNoEncontradoException("FOLIO_NO_ENCONTRADO",
                         "No existe el folio de la reserva " + codigo + "."));
     }
 }

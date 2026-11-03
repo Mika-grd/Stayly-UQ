@@ -1,6 +1,6 @@
 package co.edu.uniquindio.sga.application.usecase;
 
-import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
+import co.edu.uniquindio.sga.application.exception.RecursoNoEncontradoException;
 import co.edu.uniquindio.sga.domain.model.apartamento.Apartamento;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
@@ -30,7 +30,7 @@ public class RegistrarLlegadaUseCase {
     public Reserva ejecutar(CodigoReserva codigo, String autor) {
         Reserva reserva = Consultas.reserva(reservas, codigo);
         Apartamento apartamento = apartamentos.buscarPorIdentificacion(reserva.apartamento())
-                .orElseThrow(() -> new ReglaDominioException("APARTAMENTO_NO_ENCONTRADO",
+                .orElseThrow(() -> new RecursoNoEncontradoException("APARTAMENTO_NO_ENCONTRADO",
                         "No existe el apartamento " + reserva.apartamento() + "."));
         entrega.registrarLlegada(reserva, apartamento, autor, LocalDateTime.now(reloj));
         reservas.guardar(reserva);

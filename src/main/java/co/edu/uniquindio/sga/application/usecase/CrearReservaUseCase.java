@@ -1,6 +1,6 @@
 package co.edu.uniquindio.sga.application.usecase;
 
-import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
+import co.edu.uniquindio.sga.application.exception.RecursoNoEncontradoException;
 import co.edu.uniquindio.sga.domain.model.apartamento.Apartamento;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.ComposicionGrupo;
@@ -79,7 +79,7 @@ public class CrearReservaUseCase {
         LocalDateTime ahora = LocalDateTime.now(reloj);
         Estancia estancia = new Estancia(comando.entrada(), comando.salida());
         Apartamento apartamento = apartamentos.buscarPorIdentificacion(comando.apartamento())
-                .orElseThrow(() -> new ReglaDominioException("APARTAMENTO_NO_ENCONTRADO",
+                .orElseThrow(() -> new RecursoNoEncontradoException("APARTAMENTO_NO_ENCONTRADO",
                         "No existe el apartamento " + comando.apartamento() + "."));
         List<Ocupante> ocupantes = comando.ocupantes().stream().map(DatosOcupante::aOcupante).toList();
         MascotasAutorizadas mascotas = new MascotasAutorizadas(comando.mascotas());
