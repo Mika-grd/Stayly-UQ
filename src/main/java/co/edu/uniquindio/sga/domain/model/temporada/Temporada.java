@@ -51,6 +51,25 @@ public class Temporada {
         return new Temporada(id, nombre, List.of(), true, new EstanciaMinima(1));
     }
 
+    /**
+     * Rearma una temporada ya existente, incluida la base con una estancia mínima distinta de 1.
+     * Protege T-1: la que no es base tiene periodos y no se solapan entre sí.
+     */
+    public static Temporada reconstituir(IdTemporada id, String nombre, List<RangoFechas> periodos, boolean esBase,
+                                         EstanciaMinima estanciaMinima) {
+        if (periodos == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "La temporada guardada requiere sus periodos.");
+        }
+        if (esBase) {
+            if (!periodos.isEmpty()) {
+                throw new ReglaDominioException("PARAMETRO_INVALIDO",
+                        "La temporada base no tiene periodos: cubre las fechas sin otra temporada.");
+            }
+            return new Temporada(id, nombre, List.of(), true, estanciaMinima);
+        }
+        return crear(id, nombre, periodos, estanciaMinima);
+    }
+
     public void agregarPeriodo(RangoFechas periodo) {
         if (esBase) {
             throw new ReglaDominioException("PARAMETRO_INVALIDO",

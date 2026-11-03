@@ -43,6 +43,30 @@ public class Folio {
         return folio;
     }
 
+    /**
+     * Rearma un folio ya existente con sus movimientos y su estado. Protege F-3 / RN-17: un folio
+     * CERRADO con saldo distinto de cero solo existe si su cierre quedó autorizado.
+     */
+    public static Folio reconstituir(IdFolio id, CodigoReserva reserva, List<Cargo> cargos, List<Pago> pagos,
+                                     EstadoFolio estado, AutorizacionCierre autorizacion) {
+        if (id == null || reserva == null || estado == null || cargos == null || pagos == null
+                || cargos.stream().anyMatch(Objects::isNull) || pagos.stream().anyMatch(Objects::isNull)) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "Faltan datos obligatorios del folio guardado.");
+        }
+        Folio folio = new Folio(id, reserva);
+        folio.cargos.addAll(cargos);
+        folio.pagos.addAll(pagos);
+        if (estado == EstadoFolio.CERRADO) {
+            if (!folio.saldo().esCero() && autorizacion == null) {
+                throw new ReglaDominioException("FOLIO_CON_SALDO_SIN_AUTORIZACION",
+                        "El folio tiene saldo pendiente; se requiere autorización del administrador.");
+            }
+            folio.autorizacion = autorizacion;
+            folio.estado = EstadoFolio.CERRADO;
+        }
+        return folio;
+    }
+
     public void registrarCargo(Cargo cargo) {
         verificarAbierto();
         if (cargo == null) {

@@ -69,6 +69,25 @@ public class Apartamento {
                 advertencia, caracteristicas, imagenes);
     }
 
+    /**
+     * Rearma un apartamento ya existente con su estado operativo y su indicador de activo. Repite
+     * las validaciones de forma de {@link #crear} (A-4: imágenes, dormitorios, capacidad).
+     */
+    public static Apartamento reconstituir(IdentificacionApartamento identificacion, String nombre,
+                                           String descripcion, int dormitorios, Capacidad capacidad,
+                                           boolean admiteMascotas, String advertenciaAcceso,
+                                           Set<Caracteristica> caracteristicas, List<ImagenApartamento> imagenes,
+                                           EstadoOperativo estadoOperativo, boolean activo) {
+        if (estadoOperativo == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El apartamento guardado requiere su estado operativo.");
+        }
+        Apartamento apartamento = crear(identificacion, nombre, descripcion, dormitorios, capacidad, admiteMascotas,
+                advertenciaAcceso, caracteristicas, imagenes);
+        apartamento.estadoOperativo = estadoOperativo;
+        apartamento.activo = activo;
+        return apartamento;
+    }
+
     /** RN-02: la capacidad es un tope rígido. */
     public boolean admite(int totalOcupantes) {
         return capacidad.admite(totalOcupantes);

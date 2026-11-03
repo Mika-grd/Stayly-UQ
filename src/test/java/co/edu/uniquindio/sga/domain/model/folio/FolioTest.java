@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -127,5 +128,40 @@ class FolioTest {
         assertThat(folio.cargos()).extracting(Cargo::tipo)
                 .containsExactly(TipoCargo.ALOJAMIENTO, TipoCargo.ALOJAMIENTO, TipoCargo.PENALIDAD);
         assertThat(folio.saldo().esCero()).isTrue();
+    }
+
+    // Reconstitución desde la persistencia
+
+    @Test
+    @DisplayName("Persistencia · Reconstituye un folio CERRADO en cero que sigue sin admitir movimientos (F-5)")
+    void reconstituirFolioCerrado() {
+        // Arrange
+        List<Cargo> cargos = List.of(new Cargo(TipoCargo.ALOJAMIENTO, "Alojamiento", Dinero.pesos(488_000), AHORA));
+        List<Pago> pagos = List.of(new Pago(Dinero.pesos(488_000), MedioPago.TRANSFERENCIA, AHORA, "TRF-001"));
+
+        // Act
+        Folio folio = Folio.reconstituir(new IdFolio(UUID.randomUUID()), new CodigoReserva("RES-2026-00042"),
+                cargos, pagos, EstadoFolio.CERRADO, null);
+
+        // Assert
+        assertThat(folio.estaCerrado()).isTrue();
+        assertThat(folio.saldo().esCero()).isTrue();
+        assertThatThrownBy(() -> folio.registrarPago(
+                new Pago(Dinero.pesos(1_000), MedioPago.EFECTIVO, AHORA, "EF-001")))
+                .isInstanceOf(ReglaDominioException.class)
+                .extracting("codigo").isEqualTo("FOLIO_CERRADO");
+    }
+
+    @Test
+    @DisplayName("Persistencia · No reconstituye un folio CERRADO con saldo sin autorización (RN-17)")
+    void noReconstituirFolioCerradoConSaldoSinAutorizacion() {
+        // Arrange
+        List<Cargo> cargos = List.of(new Cargo(TipoCargo.ALOJAMIENTO, "Alojamiento", Dinero.pesos(488_000), AHORA));
+
+        // Act + Assert
+        assertThatThrownBy(() -> Folio.reconstituir(new IdFolio(UUID.randomUUID()),
+                new CodigoReserva("RES-2026-00042"), cargos, List.of(), EstadoFolio.CERRADO, null))
+                .isInstanceOf(ReglaDominioException.class)
+                .extracting("codigo").isEqualTo("FOLIO_CON_SALDO_SIN_AUTORIZACION");
     }
 }

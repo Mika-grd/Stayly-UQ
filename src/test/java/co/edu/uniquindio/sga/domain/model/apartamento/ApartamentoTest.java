@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ApartamentoTest {
@@ -34,6 +35,38 @@ class ApartamentoTest {
         // Act + Assert
         assertThatThrownBy(() -> Apartamento.crear(new IdentificacionApartamento("SUQ-101"), "Apartamento 101",
                 "Un dormitorio con balcón", 1, new Capacidad(2), false, null, Set.of(), onceImagenes))
+                .isInstanceOf(ReglaDominioException.class)
+                .extracting("codigo").isEqualTo("IMAGENES_INVALIDAS");
+    }
+
+    // Reconstitución desde la persistencia
+
+    @Test
+    @DisplayName("Persistencia · Reconstituye un apartamento activo y OCUPADO que no puede salir de servicio (A-3)")
+    void reconstituirApartamentoOcupado() {
+        // Arrange
+        Apartamento original = FichaStaylyUq.suq201();
+
+        // Act
+        Apartamento apartamento = Apartamento.reconstituir(original.identificacion(), original.nombre(),
+                original.descripcion(), original.dormitorios(), original.capacidad(), original.admiteMascotas(),
+                original.advertenciaAcceso().orElse(null), original.caracteristicas(), original.imagenes(),
+                EstadoOperativo.OCUPADO, true);
+
+        // Assert
+        assertThat(apartamento.estaActivo()).isTrue();
+        assertThat(apartamento.estadoOperativo()).isEqualTo(EstadoOperativo.OCUPADO);
+        assertThatThrownBy(apartamento::declararFueraDeServicio)
+                .isInstanceOf(ReglaDominioException.class)
+                .extracting("codigo").isEqualTo("APARTAMENTO_OCUPADO");
+    }
+
+    @Test
+    @DisplayName("Persistencia · No reconstituye un apartamento sin imágenes (A-4)")
+    void noReconstituirApartamentoSinImagenes() {
+        assertThatThrownBy(() -> Apartamento.reconstituir(new IdentificacionApartamento("SUQ-101"),
+                "Apartamento 101", "Un dormitorio con balcón", 1, new Capacidad(2), false, null, Set.of(), List.of(),
+                EstadoOperativo.PREPARADO, true))
                 .isInstanceOf(ReglaDominioException.class)
                 .extracting("codigo").isEqualTo("IMAGENES_INVALIDAS");
     }

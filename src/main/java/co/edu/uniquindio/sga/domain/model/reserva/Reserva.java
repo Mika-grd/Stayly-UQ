@@ -82,6 +82,46 @@ public class Reserva {
         return reserva;
     }
 
+    /**
+     * Rearma una reserva ya existente, con su estado y su historia, a partir de lo guardado. No
+     * repite las reglas de creación (RN-04, titular facturable): se cumplieron al crearla y el
+     * valor quedó congelado (RN-22). Sí protege lo que vale en cualquier estado: datos
+     * obligatorios, exactamente un titular, identificador externo en el canal externo y hora
+     * estimada de llegada en toda reserva que pasó por CONFIRMADA (RN-09).
+     */
+    public static Reserva reconstituir(CodigoReserva codigo, IdentificacionApartamento apartamento, Estancia estancia,
+                                       List<Ocupante> ocupantes, EstadoReserva estado, CanalOrigen canal,
+                                       IdentificadorExterno identificadorExterno,
+                                       HoraEstimadaLlegada horaEstimadaLlegada, MascotasAutorizadas mascotas,
+                                       ValorCongelado valor, VersionPolitica versionPolitica,
+                                       LocalDateTime fechaCreacion, List<EventoReserva> eventos) {
+        if (codigo == null || apartamento == null || estancia == null || estado == null || canal == null
+                || mascotas == null || valor == null || versionPolitica == null || fechaCreacion == null
+                || eventos == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "Faltan datos obligatorios de la reserva guardada.");
+        }
+        if (ocupantes == null || ocupantes.isEmpty() || ocupantes.stream().anyMatch(Objects::isNull)
+                || ocupantes.stream().filter(Ocupante::esTitular).count() != 1) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO",
+                    "La reserva guardada debe tener ocupantes y exactamente un titular.");
+        }
+        if (canal == CanalOrigen.EXTERNO && identificadorExterno == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO",
+                    "Una reserva del canal externo requiere su identificador externo.");
+        }
+        boolean pasoPorConfirmada = estado == EstadoReserva.CONFIRMADA || estado == EstadoReserva.EN_CURSO
+                || estado == EstadoReserva.FINALIZADA || estado == EstadoReserva.NO_SHOW;
+        if (pasoPorConfirmada && horaEstimadaLlegada == null) {
+            throw new ReglaDominioException("HORA_LLEGADA_REQUERIDA",
+                    "Una reserva en estado " + estado + " debe tener hora estimada de llegada.");
+        }
+        Reserva reserva = new Reserva(codigo, apartamento, estancia, ocupantes, canal, identificadorExterno,
+                horaEstimadaLlegada, mascotas, valor, versionPolitica, fechaCreacion);
+        reserva.estado = estado;
+        reserva.eventos.addAll(eventos);
+        return reserva;
+    }
+
     /** Registra o cambia la hora estimada de llegada; solo antes del registro (CU-14). */
     public void indicarHoraEstimadaLlegada(HoraEstimadaLlegada hora, String autor, LocalDateTime ahora) {
         if (hora == null) {
