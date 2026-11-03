@@ -1,6 +1,8 @@
 package co.edu.uniquindio.sga.infrastructure.config;
 
 import co.edu.uniquindio.sga.domain.model.apartamento.Apartamento;
+import co.edu.uniquindio.sga.domain.model.apartamento.Capacidad;
+import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.repository.ApartamentoRepository;
 import co.edu.uniquindio.sga.domain.repository.BloqueoRepository;
 import co.edu.uniquindio.sga.domain.repository.CanalRepository;
@@ -21,6 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,16 +58,17 @@ class ArranqueConAdaptadoresJpaTest {
     @Test
     @DisplayName("12.2 · Lo que se guarda por el puerto queda en H2 y el consecutivo funciona fuera de una prueba")
     void guardarPorElPuertoLlegaAH2() {
-        // Arrange
-        Apartamento suq201 = FichaStaylyUq.suq201();
+        // Arrange: un apartamento que no está en los datos de prueba
+        Apartamento suq901 = Apartamento.crear(new IdentificacionApartamento("SUQ-901"), "Apartamento 901",
+                "Solo para esta prueba", 1, new Capacidad(2), false, null, Set.of(), FichaStaylyUq.imagenes(1));
 
         // Act
-        apartamentos.guardar(suq201);
+        apartamentos.guardar(suq901);
         String primero = reservas.siguienteCodigo().valor();
         String segundo = reservas.siguienteCodigo().valor();
 
         // Assert
-        assertThat(apartamentoJpa.existsById("SUQ-201")).isTrue();
+        assertThat(apartamentoJpa.existsById("SUQ-901")).isTrue();
         assertThat(primero).matches("RES-\\d{4}-\\d{5}");
         assertThat(segundo).isNotEqualTo(primero);
     }
