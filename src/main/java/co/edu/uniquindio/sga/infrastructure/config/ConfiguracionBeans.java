@@ -6,8 +6,11 @@ import co.edu.uniquindio.sga.application.usecase.CrearReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.RegistrarLlegadaUseCase;
 import co.edu.uniquindio.sga.domain.repository.ApartamentoRepository;
 import co.edu.uniquindio.sga.domain.repository.BloqueoRepository;
+import co.edu.uniquindio.sga.domain.repository.CanalRepository;
 import co.edu.uniquindio.sga.domain.repository.ConfiguracionAlojamiento;
+import co.edu.uniquindio.sga.domain.repository.ConflictoCanalRepository;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
+import co.edu.uniquindio.sga.domain.repository.NovedadRepository;
 import co.edu.uniquindio.sga.domain.repository.PoliticaCancelacionRepository;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.repository.TarifarioRepository;
@@ -20,13 +23,27 @@ import co.edu.uniquindio.sga.domain.service.DisponibilidadApartamentoService;
 import co.edu.uniquindio.sga.domain.service.EntregaApartamentoService;
 import co.edu.uniquindio.sga.domain.service.VerificadorEstanciaMinimaService;
 import co.edu.uniquindio.sga.domain.service.VerificadorTarifasCompletasService;
-import co.edu.uniquindio.sga.infrastructure.persistence.memoria.ApartamentoRepositoryEnMemoria;
-import co.edu.uniquindio.sga.infrastructure.persistence.memoria.BloqueoRepositoryEnMemoria;
-import co.edu.uniquindio.sga.infrastructure.persistence.memoria.FolioRepositoryEnMemoria;
-import co.edu.uniquindio.sga.infrastructure.persistence.memoria.PoliticaCancelacionRepositoryEnMemoria;
-import co.edu.uniquindio.sga.infrastructure.persistence.memoria.ReservaRepositoryEnMemoria;
-import co.edu.uniquindio.sga.infrastructure.persistence.memoria.TarifarioRepositoryEnMemoria;
-import co.edu.uniquindio.sga.infrastructure.persistence.memoria.TemporadaRepositoryEnMemoria;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.ApartamentoRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.BloqueoRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.CanalRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.ConflictoCanalRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.FolioRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.NovedadRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.PoliticaCancelacionRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.ReservaRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.TarifarioRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter.TemporadaRepositoryJpa;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.ApartamentoJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.BloqueoJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.CanalJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.ConflictoCanalJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.ConsecutivoReservaJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.FolioJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.NovedadJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.PoliticaCancelacionJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.ReservaJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.TarifarioJpaRepository;
+import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.TemporadaJpaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,7 +51,8 @@ import java.time.Clock;
 
 /**
  * Ensambla el hexágono: el dominio y la capa de aplicación no conocen Spring, así que sus
- * objetos se crean aquí. Los repositorios son, por ahora, las implementaciones en memoria.
+ * objetos se crean aquí. Los repositorios son los adaptadores JPA sobre H2; las
+ * implementaciones en memoria quedan solo para las pruebas unitarias.
  */
 @Configuration
 public class ConfiguracionBeans {
@@ -49,41 +67,57 @@ public class ConfiguracionBeans {
         return new ConfiguracionAlojamientoEnMemoria(propiedades);
     }
 
-    // Repositorios
+    // Repositorios: adaptadores JPA sobre H2
 
     @Bean
-    ReservaRepository reservaRepository(Clock reloj) {
-        return new ReservaRepositoryEnMemoria(reloj);
+    ReservaRepository reservaRepository(ReservaJpaRepository jpa, ConsecutivoReservaJpaRepository consecutivos,
+                                        Clock reloj) {
+        return new ReservaRepositoryJpa(jpa, consecutivos, reloj);
     }
 
     @Bean
-    ApartamentoRepository apartamentoRepository() {
-        return new ApartamentoRepositoryEnMemoria();
+    ApartamentoRepository apartamentoRepository(ApartamentoJpaRepository jpa) {
+        return new ApartamentoRepositoryJpa(jpa);
     }
 
     @Bean
-    FolioRepository folioRepository() {
-        return new FolioRepositoryEnMemoria();
+    FolioRepository folioRepository(FolioJpaRepository jpa) {
+        return new FolioRepositoryJpa(jpa);
     }
 
     @Bean
-    BloqueoRepository bloqueoRepository() {
-        return new BloqueoRepositoryEnMemoria();
+    BloqueoRepository bloqueoRepository(BloqueoJpaRepository jpa) {
+        return new BloqueoRepositoryJpa(jpa);
     }
 
     @Bean
-    TemporadaRepository temporadaRepository() {
-        return new TemporadaRepositoryEnMemoria();
+    TemporadaRepository temporadaRepository(TemporadaJpaRepository jpa) {
+        return new TemporadaRepositoryJpa(jpa);
     }
 
     @Bean
-    TarifarioRepository tarifarioRepository() {
-        return new TarifarioRepositoryEnMemoria();
+    TarifarioRepository tarifarioRepository(TarifarioJpaRepository jpa) {
+        return new TarifarioRepositoryJpa(jpa);
     }
 
     @Bean
-    PoliticaCancelacionRepository politicaCancelacionRepository() {
-        return new PoliticaCancelacionRepositoryEnMemoria();
+    PoliticaCancelacionRepository politicaCancelacionRepository(PoliticaCancelacionJpaRepository jpa) {
+        return new PoliticaCancelacionRepositoryJpa(jpa);
+    }
+
+    @Bean
+    NovedadRepository novedadRepository(NovedadJpaRepository jpa) {
+        return new NovedadRepositoryJpa(jpa);
+    }
+
+    @Bean
+    CanalRepository canalRepository(CanalJpaRepository jpa) {
+        return new CanalRepositoryJpa(jpa);
+    }
+
+    @Bean
+    ConflictoCanalRepository conflictoCanalRepository(ConflictoCanalJpaRepository jpa) {
+        return new ConflictoCanalRepositoryJpa(jpa);
     }
 
     // Servicios de dominio
