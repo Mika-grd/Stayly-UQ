@@ -1,10 +1,13 @@
 package co.edu.uniquindio.sga.application.dto.response;
 
+import co.edu.uniquindio.sga.domain.model.reserva.CanalOrigen;
+import co.edu.uniquindio.sga.domain.model.reserva.EstadoReserva;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** Fila del listado de reservas (schema ReservaResumenResponse). */
-public record ReservaResumenResponse(String codigo, String estado, String canal, String identificacionApartamento,
-                                     LocalDate fechaEntrada, LocalDate fechaSalida, String nombreTitular, long total,
-                                     LocalDateTime fechaCreacion) {
+/** Resumen de una reserva para listados (schema ReservaResumenResponse). */
+public record ReservaResumenResponse(String codigo, EstadoReserva estado, CanalOrigen canal,
+                                     String identificacionApartamento, LocalDate fechaEntrada, LocalDate fechaSalida,
+                                     String nombreTitular, long total, LocalDateTime fechaCreacion) {
 }

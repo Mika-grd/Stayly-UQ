@@ -3,6 +3,7 @@ package co.edu.uniquindio.sga.infrastructure.security;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,6 +34,13 @@ public class SecurityConfig {
             "/swagger-ui.html"
     };
 
+    /** Solo GET: buscar apartamentos disponibles, ver el detalle de uno y la política vigente. */
+    private static final String[] LECTURAS_PUBLICAS = {
+            "/api/apartamentos/disponibles",
+            "/api/apartamentos/*",
+            "/api/politica-cancelacion/vigente"
+    };
+
     private final JwtDecoder jwtDecoder;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
     private final RespuestasErrorSeguridad respuestasError;
@@ -54,6 +62,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         .requestMatchers(RUTAS_PUBLICAS).permitAll()
+                        // Lecturas públicas del contrato (security: []): catálogo y política vigente
+                        .requestMatchers(HttpMethod.GET, LECTURAS_PUBLICAS).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2

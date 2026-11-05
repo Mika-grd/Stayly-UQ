@@ -6,7 +6,7 @@ import co.edu.uniquindio.sga.domain.repository.FolioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 7.7: el folio de una reserva, para mostrar su saldo junto al detalle de la reserva. */
+/** El folio de una reserva, con su saldo (F-8). Lo usa ReservaResponse para mostrar saldoFolio. */
 @Service
 @Transactional(readOnly = true)
 public class ConsultarFolioUseCase {

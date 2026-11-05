@@ -10,21 +10,11 @@ import java.time.LocalTime;
 import java.util.List;
 
 /**
- * Cuerpo de POST /api/reservas (schema CrearReservaRequest). El canal no viaja en el cuerpo: PORTAL
- * si la crea un huésped, DIRECTO si la crea recepción (lo decide el controller con el rol del token).
+ * Datos para crear una reserva (schema CrearReservaRequest, CU-02). El canal no viaja en el
+ * cuerpo: lo decide el controller según el actor que invoca.
  */
-public record CrearReservaRequest(
-        @NotBlank(message = "es obligatorio") String identificacionApartamento,
-        @NotNull(message = "es obligatoria") LocalDate fechaEntrada,
-        @NotNull(message = "es obligatoria") LocalDate fechaSalida,
-        LocalTime horaEstimadaLlegada,
-        @NotNull(message = "es obligatorio") @Valid TitularRequest titular,
-        List<@Valid OcupanteRequest> acompanantes,
-        @Min(value = 0, message = "no puede ser negativo") Integer mascotasAutorizadas
-) {
-
-    public CrearReservaRequest {
-        acompanantes = acompanantes == null ? List.of() : List.copyOf(acompanantes);
-        mascotasAutorizadas = mascotasAutorizadas == null ? 0 : mascotasAutorizadas;
-    }
+public record CrearReservaRequest(@NotBlank String identificacionApartamento, @NotNull LocalDate fechaEntrada,
+                                  @NotNull LocalDate fechaSalida, LocalTime horaEstimadaLlegada,
+                                  @NotNull @Valid TitularRequest titular, @Valid List<OcupanteRequest> acompanantes,
+                                  @Min(0) Integer mascotasAutorizadas) {
 }
