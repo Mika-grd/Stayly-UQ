@@ -1,0 +1,102 @@
+### Guía 12 - Casos 3 a 14 de la sección 9 (IntelliJ HTTP Client / VS Code REST Client)
+### Arranque la aplicación (./gradlew bootRun) y ejecute las peticiones en orden.
+### Antes de los casos 9 y 10, ejecute el caso 8 y copie en @reserva el código de la reserva de Laura Gomez.
+
+@base = http://localhost:8080
+@reserva = RES-2026-00001
+
+### 3. Login correcto (recepción) -> 200 con token, tipo Bearer y rol RECEPCIONISTA
+# @name loginRecepcion
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"correo":"recepcion@stayly.local","contrasena":"Recepcion2026"}
+
+> {% client.global.set("tokenRecepcion", response.body.token); %}
+
+### 4. Login con contraseña errada -> 401 CREDENCIALES_INVALIDAS
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"correo":"recepcion@stayly.local","contrasena":"Incorrecta1"}
+
+### 5. Login con correo sin formato -> 400 FORMATO_INVALIDO
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"correo":"no-es-correo","contrasena":"Recepcion2026"}
+
+### Login de los demás usuarios (guardan su token)
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"correo":"huesped1@stayly.local","contrasena":"Huesped2026"}
+
+> {% client.global.set("tokenHuesped1", response.body.token); %}
+
+###
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"correo":"huesped2@stayly.local","contrasena":"Huesped2026"}
+
+> {% client.global.set("tokenHuesped2", response.body.token); %}
+
+###
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"correo":"servicio@stayly.local","contrasena":"Servicio2026"}
+
+> {% client.global.set("tokenServicio", response.body.token); %}
+
+### 6. Listado sin token -> 401
+GET {{base}}/api/reservas?estado=PENDIENTE
+
+### 7. Listado como huésped -> 403 ACCESO_DENEGADO
+GET {{base}}/api/reservas?estado=PENDIENTE
+Authorization: Bearer {{tokenHuesped1}}
+
+### 8. Listado como recepción -> 200 (la reserva PENDIENTE es la de Laura Gomez)
+GET {{base}}/api/reservas?estado=PENDIENTE
+Authorization: Bearer {{tokenRecepcion}}
+
+### 9. Reserva del huésped 1, consultada por el huésped 1 -> 200
+GET {{base}}/api/reservas/{{reserva}}
+Authorization: Bearer {{tokenHuesped1}}
+
+### 10. Reserva del huésped 1, consultada por el huésped 2 -> 403
+GET {{base}}/api/reservas/{{reserva}}
+Authorization: Bearer {{tokenHuesped2}}
+
+### 11. Reserva inexistente consultada por recepción -> 404
+GET {{base}}/api/reservas/RES-NO-EXISTE
+Authorization: Bearer {{tokenRecepcion}}
+
+### 12. Personal de servicio intenta confirmar -> 403
+PUT {{base}}/api/reservas/{{reserva}}/confirmar
+Authorization: Bearer {{tokenServicio}}
+
+### 13. Token modificado a mano (firma alterada) -> 401
+GET {{base}}/api/reservas?estado=PENDIENTE
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyZWNlcGNpb25Ac3RheWx5LmxvY2FsIiwicm9sZXMiOlsiQURNSU5JU1RSQURPUiJdfQ.firma-falsa
+
+### 14. Token vencido: espere 30 minutos con un token emitido y repita el caso 8 -> 401
+GET {{base}}/api/reservas?estado=PENDIENTE
+Authorization: Bearer {{tokenRecepcion}}
+
+### 7.5.2 Registro público -> 201 con rol HUESPED (repetirlo -> 409 CORREO_YA_REGISTRADO)
+POST {{base}}/api/auth/registro
+Content-Type: application/json
+
+{"nombre":"Ana Torres","correo":"ana.torres@correo.co","contrasena":"Segura2026","telefono":"3005556677",
+ "documentoIdentidad":"1094777888","fechaNacimiento":"1996-08-20"}
+
+### 7.5.3 Huésped crea una reserva a nombre de otra persona -> 403
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{"identificacionApartamento":"SUQ-201","fechaEntrada":"2027-01-10","fechaSalida":"2027-01-13",
+ "titular":{"nombre":"Otra Persona","documentoIdentidad":"999999999","fechaNacimiento":"1990-01-01",
+            "correo":"otra@correo.co","telefono":"3000000000"}}
