@@ -2,6 +2,7 @@ package co.edu.uniquindio.sga.infrastructure.web.error;
 
 import co.edu.uniquindio.sga.application.dto.response.ErrorNegocioResponse;
 import co.edu.uniquindio.sga.application.exception.RecursoNoEncontradoException;
+import co.edu.uniquindio.sga.application.exception.ReglaAccesoException;
 import co.edu.uniquindio.sga.domain.exception.ReglaDominioException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -10,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -28,6 +31,7 @@ import java.time.ZoneId;
  * Traduce toda excepción a un {@link ErrorNegocioResponse} con su HTTP. Las reglas del dominio toman
  * su HTTP del {@link CatalogoErroresNegocio}; los recursos inexistentes son 404 y la forma del mensaje
  * (Bean Validation, JSON, parámetros) es 400. Nunca devuelve una traza técnica al cliente.
+ * Seguridad (Guía 12): 401 no sé quién eres · 403 sé quién eres, pero no tienes permiso.
  */
 @RestControllerAdvice
 public class ManejadorErroresGlobal {
@@ -52,6 +56,30 @@ public class ManejadorErroresGlobal {
     ResponseEntity<ErrorNegocioResponse> recursoNoEncontrado(RecursoNoEncontradoException e,
                                                              HttpServletRequest peticion) {
         return responder(HttpStatus.NOT_FOUND, e.getCodigo(), e.getMessage(), null, peticion);
+    }
+
+    /** Seguridad (Guía 12): una regla de acceso, p. ej. CORREO_YA_REGISTRADO (409). */
+    @ExceptionHandler(ReglaAccesoException.class)
+    ResponseEntity<ErrorNegocioResponse> reglaAcceso(ReglaAccesoException e, HttpServletRequest peticion) {
+        CatalogoErroresNegocio.Clasificacion clasificacion = CatalogoErroresNegocio.clasificar(e.getCodigo());
+        return responder(clasificacion.estado(), e.getCodigo(), e.getMessage(), clasificacion.regla(), peticion);
+    }
+
+    /**
+     * Seguridad (Guía 12): credenciales inválidas o usuario inactivo en el login. El mensaje es
+     * genérico: no revela si el correo existe o si la contraseña era la errada.
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<ErrorNegocioResponse> autenticacion(AuthenticationException e, HttpServletRequest peticion) {
+        return responder(HttpStatus.UNAUTHORIZED, "CREDENCIALES_INVALIDAS", "Credenciales inválidas.", "7.2",
+                peticion);
+    }
+
+    /** Seguridad (Guía 12): autenticado, pero sin permiso por rol o por propietario del recurso. */
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ErrorNegocioResponse> accesoDenegado(AccessDeniedException e, HttpServletRequest peticion) {
+        return responder(HttpStatus.FORBIDDEN, "ACCESO_DENEGADO", "No tiene permiso para realizar esta operación.",
+                "7.2", peticion);
     }
 
     /** Un DTO anotado con @Valid no cumple sus restricciones. */
