@@ -7,3 +7,6 @@ bin/
 .vscode/
 .DS_Store
 ~$*.xlsx
+
+# Guía 12 (12.4): la clave del JWT nunca se versiona. Solo se versiona la plantilla .example
+src/main/resources/application-secrets.properties
