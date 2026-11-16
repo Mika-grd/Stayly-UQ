@@ -3045,3 +3045,64 @@ Authorization: Bearer {{tokenAdmin}}
         client.assert(response.body.totalElementos === 5, "Se esperaba totalElementos 5 y llegó " + response.body.totalElementos);
     });
 %}
+
+# ============================================================================================================
+# 13. Reportes del administrador: ocupación, ingresos y reservas por canal
+# ============================================================================================================
+
+### 13.1 Ocupación de la última semana y las dos próximas -> 200
+# espera: 200
+GET {{base}}/api/reportes/ocupacion?desde={{ayer}}&hasta={{hoyMas15}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("13.1 Ocupación de la última semana y las dos próximas -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 13.2 Ingresos del día por medio de pago -> 200
+# espera: 200
+GET {{base}}/api/reportes/ingresos?desde={{hoy}}&hasta={{hoyMas1}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("13.2 Ingresos del día por medio de pago -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 13.3 Reservas, cancelaciones y no-show por canal -> 200
+# espera: 200
+GET {{base}}/api/reportes/reservas-por-canal?desde={{ayer}}&hasta={{hoyMas1}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("13.3 Reservas, cancelaciones y no-show por canal -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 13.4 Rango con la fecha final igual a la inicial -> 400 RANGO_FECHAS_INVALIDO (3.1)
+# espera: 400 RANGO_FECHAS_INVALIDO
+GET {{base}}/api/reportes/ingresos?desde={{hoy}}&hasta={{hoy}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("13.4 Rango con la fecha final igual a la inicial -> 400 RANGO_FECHAS_INVALIDO (3.1)", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "RANGO_FECHAS_INVALIDO", "Se esperaba RANGO_FECHAS_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 13.5 Recepción no ve los reportes -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/reportes/ocupacion?desde={{hoy}}&hasta={{hoyMas15}}
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("13.5 Recepción no ve los reportes -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
