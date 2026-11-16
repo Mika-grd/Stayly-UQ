@@ -42,3 +42,12 @@ botón que baja a su capa) y ninguna decoración que no diga algo.
 
 Verbos claros en los botones (Reservar, Registrar pago, Cerrar folio), el mismo nombre para la acción y su
 confirmación, y errores que dicen qué pasó y qué hacer: el mensaje viene del dominio.
+
+## Versión HARSH
+
+Un interruptor en la cabecera cambia a la versión HARSH: la misma interfaz en clave gótica. Solo redefine tokens y decoración en `src/styles/harsh.css` (activado con `data-tema="harsh"` en `<html>` y guardado en el navegador); textos, estructura y comportamiento no cambian.
+
+- Fondo negro, texto y bordes color hueso; los seis colores de fachada pasan a sangre, acero, musgo, oro viejo, veneno y cripta.
+- Metal Mania para titulares, Pirata One para cifras y Barlow Semi Condensed para leer.
+- Esquinas rectas, placas con filete interior y cortes en diente de sierra bajo la cabecera y sobre el pie.
+- En la portada, luna de sangre, cordilleras en silueta y murciélagos que cruzan el cielo.

@@ -99,11 +99,37 @@ function Willys() {
   );
 }
 
+const VUELOS = [
+  { top: 70, vuelo: '16s', retraso: '0s', escala: 1 },
+  { top: 130, vuelo: '22s', retraso: '-7s', escala: 0.7 },
+  { top: 40, vuelo: '19s', retraso: '-13s', escala: 0.55 },
+];
+
+/** Solo se ven en la versión HARSH. */
+function Murcielagos() {
+  return (
+    <div className="murcielagos" aria-hidden="true">
+      {VUELOS.map((v, i) => (
+        <div
+          key={i}
+          className="murcielago"
+          style={{ top: v.top, '--vuelo': v.vuelo, '--retraso': v.retraso, width: 46 * v.escala } as React.CSSProperties}
+        >
+          <svg viewBox="0 0 48 20">
+            <path d="M24 6 C 22 2, 20 2, 19 5 C 14 0, 6 0, 0 4 C 5 5, 7 9, 6 13 C 9 10, 13 11, 15 14 C 17 11, 20 11, 22 13 L24 16 L26 13 C 28 11, 31 11, 33 14 C 35 11, 39 10, 42 13 C 41 9, 43 5, 48 4 C 42 0, 34 0, 29 5 C 28 2, 26 2, 24 6 Z" />
+          </svg>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function Portada({ children }: { children?: React.ReactNode }) {
   const [quieto, setQuieto] = useState(false);
   return (
     <section className={`portada${quieto ? ' portada--quieta' : ''}`}>
       <div className="portada__sol" aria-hidden="true" />
+      <Murcielagos />
       <div className="contenedor portada__titulo">
         <h1>
           Armenia, a todo <em>color</em>.

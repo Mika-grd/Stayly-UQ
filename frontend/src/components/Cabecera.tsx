@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useSesion } from '../auth/Sesion';
 import { nombreRol } from '../lib/formato';
+import { useTema } from '../lib/tema';
 
 function Marca() {
   return (
@@ -18,6 +19,7 @@ function Marca() {
 export function Cabecera() {
   const { rol, usuario, cerrar, es } = useSesion();
   const navegar = useNavigate();
+  const { tema, alternar } = useTema();
 
   return (
     <header className="cabecera">
@@ -31,6 +33,9 @@ export function Cabecera() {
           {es('RECEPCIONISTA', 'ADMINISTRADOR') && <NavLink to="/recepcion">Recepción</NavLink>}
           {es('RECEPCIONISTA', 'ADMINISTRADOR', 'PERSONAL_SERVICIO') && <NavLink to="/operacion">Operación</NavLink>}
         </nav>
+        <button type="button" className="tema" aria-pressed={tema === 'harsh'} onClick={alternar}>
+          {tema === 'harsh' ? 'Normal' : 'Harsh'}
+        </button>
         <div className="usuario">
           {rol ? (
             <>

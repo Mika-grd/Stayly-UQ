@@ -1,0 +1,261 @@
+/*
+ * Versión HARSH: la misma interfaz en clave gótica. Solo redefine tokens y decoración; la
+ * estructura, los textos y el comportamiento son los de siempre. Se activa con
+ * <html data-tema="harsh">.
+ */
+:root[data-tema='harsh'] {
+  color-scheme: dark;
+
+  --tinta: #ece4d4; /* hueso: texto y bordes */
+  --tinta-suave: #a39a8c;
+  --cal: #141114; /* placas */
+  --muro: #080608; /* fondo */
+  --muro-hondo: #2b2429;
+
+  --balcon: #b0001a; /* sangre */
+  --cobalto: #2b3f8c; /* acero */
+  --cafetal: #3e5a1f; /* musgo */
+  --maiz: #c9a43a; /* oro viejo */
+  --lila: #6c1f8a; /* veneno */
+  --aguamarina: #1d5a5a; /* cripta */
+
+  --sobre-balcon: #ece4d4;
+  --sobre-cobalto: #ece4d4;
+  --sobre-cafetal: #ece4d4;
+  --sobre-maiz: #080608;
+  --sobre-lila: #ece4d4;
+  --sobre-aguamarina: #ece4d4;
+
+  --letra-titular: 'Metal Mania', 'Pirata One', serif;
+  --letra-cifra: 'Pirata One', 'Metal Mania', serif;
+  --letra-texto: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif;
+
+  --radio: 0;
+
+  /* Dientes de sierra para los cortes entre bloques */
+  --sierra: linear-gradient(135deg, var(--tinta) 25%, transparent 25%) -7px 0 / 14px 14px repeat-x,
+    linear-gradient(225deg, var(--tinta) 25%, transparent 25%) -7px 0 / 14px 14px repeat-x;
+}
+
+/* ---------- Tipografía ---------- */
+
+[data-tema='harsh'] body {
+  font-size: 1.06rem;
+  letter-spacing: 0.01em;
+}
+
+[data-tema='harsh'] :is(h1, h2, h3, h4, .marca) {
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: 0.02em;
+}
+
+[data-tema='harsh'] h1 {
+  text-shadow: 3px 3px 0 var(--balcon);
+}
+
+[data-tema='harsh'] .cifra {
+  font-family: var(--letra-cifra);
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: 0.02em;
+}
+
+[data-tema='harsh'] .boton,
+[data-tema='harsh'] .pestanas button {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+[data-tema='harsh'] ::selection {
+  background: var(--balcon);
+  color: var(--tinta);
+}
+
+/* ---------- Placas: marco interior de filete, como una placa forjada ---------- */
+
+[data-tema='harsh'] .placa:not(.placa--plana) {
+  outline: 1px solid var(--tinta-suave);
+  outline-offset: -7px;
+}
+
+[data-tema='harsh'] .cabecera {
+  background: var(--muro);
+}
+
+[data-tema='harsh'] .cabecera::after,
+[data-tema='harsh'] .pie::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background: var(--sierra);
+}
+
+[data-tema='harsh'] .cabecera::after {
+  top: 100%;
+}
+
+[data-tema='harsh'] .pie {
+  position: relative;
+  background: #000;
+  color: var(--tinta);
+}
+
+[data-tema='harsh'] .pie::before {
+  bottom: 100%;
+  transform: scaleY(-1);
+}
+
+[data-tema='harsh'] .pie p {
+  color: var(--tinta-suave);
+  font-family: var(--letra-titular);
+  font-size: var(--t1);
+}
+
+/* ---------- Portada: noche, luna de sangre, siluetas y murciélagos ---------- */
+
+[data-tema='harsh'] .portada {
+  background: #000;
+  color: var(--tinta);
+}
+
+[data-tema='harsh'] .portada__titulo h1 em {
+  color: var(--balcon);
+  text-shadow: 3px 3px 0 var(--tinta);
+}
+
+[data-tema='harsh'] .portada__titulo p {
+  color: var(--tinta-suave);
+}
+
+[data-tema='harsh'] .portada__sol {
+  background: var(--balcon);
+  box-shadow:
+    0 0 0 8px #000,
+    0 0 0 11px var(--balcon),
+    14px 14px 0 11px #2a0008;
+}
+
+[data-tema='harsh'] .paisaje__capa--lejos {
+  fill: #2a0008;
+}
+
+[data-tema='harsh'] .paisaje__capa--cerca {
+  fill: #171217;
+}
+
+[data-tema='harsh'] .paisaje__capa--cerca .palma :is(rect, ellipse) {
+  fill: #000;
+}
+
+[data-tema='harsh'] .paisaje__via {
+  background:
+    linear-gradient(90deg, var(--balcon) 0 48px, transparent 48px 96px) 0 15px / 96px 5px repeat-x,
+    #000;
+  border-top-color: var(--tinta-suave);
+}
+
+[data-tema='harsh'] .willys__rueda circle:first-of-type {
+  fill: #000;
+  stroke: var(--tinta);
+  stroke-width: 3;
+}
+
+[data-tema='harsh'] .portada__pausa {
+  background: #000;
+  color: var(--tinta);
+  border-color: var(--tinta);
+}
+
+.murcielagos {
+  display: none;
+}
+
+[data-tema='harsh'] .murcielagos {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.murcielago {
+  position: absolute;
+  left: 100%;
+  width: 46px;
+  fill: var(--tinta);
+  animation: volar var(--vuelo, 18s) linear infinite;
+  animation-delay: var(--retraso, 0s);
+}
+
+.murcielago svg {
+  display: block;
+  width: 100%;
+  animation: aletear 0.28s ease-in-out infinite alternate;
+  transform-origin: center 40%;
+}
+
+@keyframes volar {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-30vw, -24px); }
+  50% { transform: translate(-60vw, 12px); }
+  75% { transform: translate(-90vw, -18px); }
+  100% { transform: translate(calc(-100vw - 120px), 0); }
+}
+
+@keyframes aletear {
+  to { transform: scaleY(0.45); }
+}
+
+[data-tema='harsh'] .portada--quieta .murcielago,
+[data-tema='harsh'] .portada--quieta .murcielago svg {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .murcielago,
+  .murcielago svg {
+    animation: none;
+  }
+  .murcielago {
+    left: 70%;
+  }
+}
+
+/* ---------- Interruptor de tema ---------- */
+
+.tema {
+  min-height: 40px;
+  padding: var(--e1) var(--e3);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+  color: var(--tinta);
+  font: 400 var(--t0) / 1 'Metal Mania', serif;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.tema:hover {
+  background: var(--tinta);
+  color: var(--cal);
+}
+
+[data-tema='harsh'] .tema {
+  background: var(--balcon);
+  color: var(--tinta);
+  box-shadow: 3px 3px 0 0 var(--tinta);
+}
+
+/* ---------- Contraste sobre negro ---------- */
+
+[data-tema='harsh'] a,
+[data-tema='harsh'] .boton--texto {
+  color: var(--maiz);
+}
+
+[data-tema='harsh'] .calendario__hoy small {
+  color: inherit;
+}
