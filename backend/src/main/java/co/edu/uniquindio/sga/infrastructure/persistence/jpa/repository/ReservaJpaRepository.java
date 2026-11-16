@@ -35,6 +35,14 @@ public interface ReservaJpaRepository extends JpaRepository<ReservaEntity, Strin
 
     List<ReservaEntity> findByEstanciaSalidaOrderByApartamentoAsc(LocalDate salida);
 
+    @Query(value = """
+            select r from ReservaEntity r
+            where exists (select o from r.ocupantes o where o.titular = true and o.documento = :documento)""",
+            countQuery = """
+            select count(r) from ReservaEntity r
+            where exists (select o from r.ocupantes o where o.titular = true and o.documento = :documento)""")
+    Page<ReservaEntity> buscarPorDocumentoTitular(@Param("documento") String documento, Pageable pagina);
+
     /** Solapamiento con [inicio, fin): entrada < fin y salida > inicio, en cualquier estado (reportes). */
     List<ReservaEntity> findByEstanciaEntradaBeforeAndEstanciaSalidaAfter(LocalDate fin, LocalDate inicio);
 

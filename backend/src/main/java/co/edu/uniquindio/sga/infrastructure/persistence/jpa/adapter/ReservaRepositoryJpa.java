@@ -116,6 +116,14 @@ public class ReservaRepositoryJpa implements ReservaRepository {
     }
 
     @Override
+    public Pagina<Reserva> buscarPorDocumentoTitular(String documento, PeticionPagina pagina) {
+        Page<ReservaEntity> resultado = jpa.buscarPorDocumentoTitular(documento,
+                PageRequest.of(pagina.numero(), pagina.tamano(), MAS_RECIENTE_PRIMERO));
+        return new Pagina<>(resultado.getContent().stream().map(ReservaMapper::aDominio).toList(), pagina.numero(),
+                pagina.tamano(), resultado.getTotalElements());
+    }
+
+    @Override
     public List<Reserva> buscarQueSolapan(RangoFechas rango) {
         return jpa.findByEstanciaEntradaBeforeAndEstanciaSalidaAfter(rango.fin(), rango.inicio()).stream()
                 .map(ReservaMapper::aDominio).toList();
