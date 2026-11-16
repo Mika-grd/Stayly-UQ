@@ -1,18 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apartamentos, operacion } from '../api/servicios';
-import type { ApartamentoDetalle } from '../api/tipos';
+import type { ApartamentoDetalle, GravedadNovedad } from '../api/tipos';
 import { useSesion } from '../auth/Sesion';
-import { AvisoError, AvisoOk, Cargando, EstadoOperativoChip } from '../components/Comunes';
+import { AvisoError, AvisoOk, Cargando, EstadoOperativoChip, Paginacion } from '../components/Comunes';
 import { colorDe, textoSobre, variable } from '../lib/colores';
-import { aFecha, hoy, sumarDias } from '../lib/formato';
+import { aFecha, fechaHora, hoy, sumarDias } from '../lib/formato';
 import { useAccion, useCarga } from '../lib/useCarga';
 
-function PorPreparar() {
+function PorPreparar({ alVerNovedades, alCargar }: { alVerNovedades: (id: string) => void; alCargar: (ids: string[]) => void }) {
   const { es } = useSesion();
   const puedePreparar = es('PERSONAL_SERVICIO', 'ADMINISTRADOR');
   const carga = useCarga(() => apartamentos.porPreparar(), []);
   const accion = useAccion();
+  useEffect(() => {
+    if (carga.datos) alCargar(carga.datos.map((a) => a.identificacion));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carga.datos]);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const cambiar = async (operacionApi: () => Promise<unknown>, texto: string) => {
@@ -52,6 +56,9 @@ function PorPreparar() {
                 Marcar preparado
               </button>
             )}
+            <button className="boton boton--texto" onClick={() => alVerNovedades(a.identificacion)}>
+              Novedades
+            </button>
           </li>
         ))}
       </ul>
@@ -59,7 +66,7 @@ function PorPreparar() {
   );
 }
 
-function FilaApartamento({ id, alCambiar }: { id: string; alCambiar: () => void }) {
+function FilaApartamento({ id, alCambiar, alVerNovedades }: { id: string; alCambiar: () => void; alVerNovedades: (id: string) => void }) {
   const { es } = useSesion();
   const carga = useCarga(() => apartamentos.detalle(id), [id]);
   const accion = useAccion();
@@ -97,6 +104,9 @@ function FilaApartamento({ id, alCambiar }: { id: string; alCambiar: () => void 
           Volver a servicio
         </button>
       )}
+      <button className="boton boton--texto" onClick={() => alVerNovedades(id)}>
+        Novedades
+      </button>
       {pidiendoMotivo && (
         <form
           className="fila fila--accion estado-apto__motivo"
@@ -126,11 +136,15 @@ const DIAS = 14;
 const dia = new Intl.DateTimeFormat('es-CO', { weekday: 'short' });
 const numeroDia = new Intl.DateTimeFormat('es-CO', { day: 'numeric' });
 
-function CalendarioOcupacion() {
+function CalendarioOcupacion({ alVerNovedades, alCargar }: { alVerNovedades: (id: string) => void; alCargar: (ids: string[]) => void }) {
   const [desde, setDesde] = useState(hoy());
   const hasta = sumarDias(desde, DIAS);
   const [version, setVersion] = useState(0);
   const { datos, error, cargando } = useCarga(() => operacion.calendario(desde, hasta), [desde, version]);
+  useEffect(() => {
+    if (datos) alCargar(datos.apartamentos.map((a) => a.identificacion));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [datos]);
 
   return (
     <>
@@ -209,7 +223,7 @@ function CalendarioOcupacion() {
           <h2>Apartamentos</h2>
           <ul className="preparar">
             {datos.apartamentos.map((a) => (
-              <FilaApartamento key={a.identificacion} id={a.identificacion} alCambiar={() => setVersion((v) => v + 1)} />
+              <FilaApartamento key={a.identificacion} id={a.identificacion} alCambiar={() => setVersion((v) => v + 1)} alVerNovedades={alVerNovedades} />
             ))}
           </ul>
         </section>
@@ -218,13 +232,141 @@ function CalendarioOcupacion() {
   );
 }
 
+const GRAVEDADES: { valor: GravedadNovedad; nombre: string }[] = [
+  { valor: 'BAJA', nombre: 'Baja' },
+  { valor: 'MEDIA', nombre: 'Media' },
+  { valor: 'ALTA', nombre: 'Alta' },
+  { valor: 'CRITICA', nombre: 'Crítica' },
+];
+const COLOR_GRAVEDAD: Record<GravedadNovedad, string> = { BAJA: 'muro', MEDIA: 'maiz', ALTA: 'balcon', CRITICA: 'lila' };
+
+/** Novedades de un apartamento (7.6, CU-11 y CU-41): registrar con gravedad y consultar el historial. */
+function Novedades({ apartamento, setApartamento, conocidos }: { apartamento: string; setApartamento: (id: string) => void; conocidos: string[] }) {
+  const [texto, setTexto] = useState(apartamento);
+  const [descripcion, setDescripcion] = useState('');
+  const [gravedad, setGravedad] = useState<GravedadNovedad>('MEDIA');
+  const [pagina, setPagina] = useState(0);
+  const accion = useAccion();
+  const [mensaje, setMensaje] = useState<string | null>(null);
+  const historial = useCarga(
+    () => (apartamento ? apartamentos.novedades(apartamento, pagina) : Promise.resolve(null)),
+    [apartamento, pagina],
+  );
+  useEffect(() => {
+    setTexto(apartamento);
+    setPagina(0);
+    setMensaje(null);
+  }, [apartamento]);
+
+  const registrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMensaje(null);
+    const n = await accion.ejecutar(() => apartamentos.registrarNovedad(apartamento, descripcion, gravedad));
+    if (n) {
+      setDescripcion('');
+      setMensaje('Novedad registrada.');
+      setPagina(0);
+      historial.recargar();
+    }
+  };
+
+  return (
+    <section id="novedades" className="placa" style={{ '--losa': 'var(--balcon)' } as React.CSSProperties}>
+      <h2>Novedades</h2>
+      <form
+        className="barra"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setApartamento(texto.trim().toUpperCase());
+        }}
+      >
+        <label className="campo">
+          <span>Apartamento</span>
+          <input list="aptos-conocidos" required value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="SUQ-101" />
+          <datalist id="aptos-conocidos">
+            {conocidos.map((id) => (
+              <option key={id} value={id} />
+            ))}
+          </datalist>
+        </label>
+        <button className="boton boton--claro">Ver</button>
+      </form>
+
+      {apartamento && (
+        <>
+          <form className="pila novedades__form" onSubmit={registrar}>
+            <label className="campo">
+              <span>Descripción</span>
+              <textarea required value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Qué pasó y dónde" />
+            </label>
+            <fieldset className="filtros__caracteristicas">
+              <legend>Gravedad</legend>
+              {GRAVEDADES.map((g) => (
+                <button key={g.valor} type="button" className="chip chip--filtro" aria-pressed={gravedad === g.valor} onClick={() => setGravedad(g.valor)}>
+                  {g.nombre}
+                </button>
+              ))}
+            </fieldset>
+            <div>
+              <button className="boton boton--principal" disabled={accion.enCurso}>
+                Registrar novedad en {apartamento}
+              </button>
+            </div>
+          </form>
+          {mensaje && <AvisoOk>{mensaje}</AvisoOk>}
+          <AvisoError error={accion.error ?? historial.error} />
+          {historial.cargando && !historial.datos && <Cargando />}
+          {historial.datos && historial.datos.contenido.length === 0 && <p className="nota">Sin novedades.</p>}
+          <ul className="novedades">
+            {historial.datos?.contenido.map((n) => (
+              <li key={n.id}>
+                <span
+                  className="chip"
+                  style={{ '--chip': `var(--${COLOR_GRAVEDAD[n.gravedad]})`, '--chip-texto': n.gravedad === 'BAJA' ? 'var(--tinta)' : `var(--sobre-${COLOR_GRAVEDAD[n.gravedad]})` } as React.CSSProperties}
+                >
+                  {GRAVEDADES.find((g) => g.valor === n.gravedad)?.nombre}
+                </span>
+                <div>
+                  <p>{n.descripcion}</p>
+                  <p className="nota">
+                    {fechaHora(n.fecha)}, {n.autor}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {historial.datos && historial.datos.totalPaginas > 1 && (
+            <Paginacion
+              pagina={historial.datos.pagina}
+              totalPaginas={historial.datos.totalPaginas}
+              totalElementos={historial.datos.totalElementos}
+              alCambiar={setPagina}
+            />
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
 export function Operacion() {
   const { es } = useSesion();
+  const [novedadesDe, setNovedadesDe] = useState('');
+  const [conocidos, setConocidos] = useState<string[]>([]);
+  const ancla = useRef<HTMLDivElement>(null);
+  const agregar = (ids: string[]) => setConocidos((c) => [...new Set([...c, ...ids])].sort());
+  const verNovedades = (id: string) => {
+    setNovedadesDe(id);
+    ancla.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   return (
     <main className="contenedor pagina pila-grande">
       <h1>Operación</h1>
-      <PorPreparar />
-      {es('RECEPCIONISTA', 'ADMINISTRADOR') && <CalendarioOcupacion />}
+      <PorPreparar alVerNovedades={verNovedades} alCargar={agregar} />
+      {es('RECEPCIONISTA', 'ADMINISTRADOR') && <CalendarioOcupacion alVerNovedades={verNovedades} alCargar={agregar} />}
+      <div ref={ancla}>
+        <Novedades apartamento={novedadesDe} setApartamento={setNovedadesDe} conocidos={conocidos} />
+      </div>
     </main>
   );
 }
