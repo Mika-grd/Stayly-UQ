@@ -35,6 +35,12 @@ public interface ReservaJpaRepository extends JpaRepository<ReservaEntity, Strin
 
     List<ReservaEntity> findByEstanciaSalidaOrderByApartamentoAsc(LocalDate salida);
 
+    /** Solapamiento con [inicio, fin): entrada < fin y salida > inicio, en cualquier estado (reportes). */
+    List<ReservaEntity> findByEstanciaEntradaBeforeAndEstanciaSalidaAfter(LocalDate fin, LocalDate inicio);
+
+    List<ReservaEntity> findByFechaCreacionGreaterThanEqualAndFechaCreacionLessThan(LocalDateTime desde,
+                                                                                    LocalDateTime hasta);
+
     boolean existsByApartamentoAndEstadoInAndEstanciaSalidaAfter(String apartamento,
                                                                  Collection<EstadoReserva> estados, LocalDate hoy);
 

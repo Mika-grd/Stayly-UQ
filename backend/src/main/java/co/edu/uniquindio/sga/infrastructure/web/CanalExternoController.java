@@ -15,6 +15,7 @@ import co.edu.uniquindio.sga.domain.model.canal.IdCanal;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.ApartamentoWebMapper;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.CanalWebMapper;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.ReservaWebMapper;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,7 @@ import java.util.List;
  * autenticado es el principal, así cada canal solo ve y cancela las reservas que él envió.
  */
 @RestController
+@SecurityRequirement(name = "apiKey")
 public class CanalExternoController {
 
     private final ConsultarDisponibilidadExternaUseCase disponibilidad;

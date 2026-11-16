@@ -4,6 +4,7 @@ import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.Estancia;
 import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
 import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
+import co.edu.uniquindio.sga.domain.model.compartido.RangoFechas;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.FiltroReservas;
 import co.edu.uniquindio.sga.domain.model.reserva.IdentificadorExterno;
@@ -40,6 +41,12 @@ public interface ReservaRepository {
 
     /** Reservas cuya fecha de salida es {@code fecha}, en cualquier estado (salidas del día, 7.6). */
     List<Reserva> buscarConSalidaEl(LocalDate fecha);
+
+    /** Reservas en cualquier estado cuya estancia comparte al menos una noche con el rango (reportes). */
+    List<Reserva> buscarQueSolapan(RangoFechas rango);
+
+    /** Reservas en cualquier estado creadas en [desde, hasta) (reportes). */
+    List<Reserva> buscarCreadasEntre(LocalDateTime desde, LocalDateTime hasta);
 
     /** Listado filtrado (7.5), de la más reciente a la más antigua por fecha de creación, de a 10. */
     Pagina<Reserva> buscar(FiltroReservas filtro, PeticionPagina pagina);

@@ -6,6 +6,8 @@ import co.edu.uniquindio.sga.domain.repository.FolioRepository;
 import co.edu.uniquindio.sga.infrastructure.persistence.jpa.mapper.FolioMapper;
 import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.FolioJpaRepository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /** Adaptador JPA del puerto FolioRepository. */
@@ -25,5 +27,10 @@ public class FolioRepositoryJpa implements FolioRepository {
     @Override
     public Optional<Folio> buscarPorCodigoReserva(CodigoReserva codigo) {
         return jpa.findByReserva(codigo.valor()).map(FolioMapper::aDominio);
+    }
+
+    @Override
+    public List<Folio> buscarConPagosEntre(LocalDateTime desde, LocalDateTime hasta) {
+        return jpa.buscarConPagosEntre(desde, hasta).stream().map(FolioMapper::aDominio).toList();
     }
 }

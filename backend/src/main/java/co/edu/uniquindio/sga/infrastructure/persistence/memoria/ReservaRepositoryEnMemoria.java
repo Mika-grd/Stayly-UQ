@@ -1,6 +1,7 @@
 package co.edu.uniquindio.sga.infrastructure.persistence.memoria;
 
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
+import co.edu.uniquindio.sga.domain.model.compartido.RangoFechas;
 import co.edu.uniquindio.sga.domain.model.compartido.Estancia;
 import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
 import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
@@ -91,6 +92,18 @@ public class ReservaRepositoryEnMemoria implements ReservaRepository {
     public List<Reserva> buscarConSalidaEl(LocalDate fecha) {
         return reservas.values().stream().filter(r -> r.estancia().salida().equals(fecha))
                 .sorted(Comparator.comparing(r -> r.apartamento().valor())).toList();
+    }
+
+    @Override
+    public List<Reserva> buscarQueSolapan(RangoFechas rango) {
+        return reservas.values().stream().filter(r -> rango.seSolapaCon(r.estancia())).toList();
+    }
+
+    @Override
+    public List<Reserva> buscarCreadasEntre(LocalDateTime desde, LocalDateTime hasta) {
+        return reservas.values().stream()
+                .filter(r -> !r.fechaCreacion().isBefore(desde) && r.fechaCreacion().isBefore(hasta))
+                .toList();
     }
 
     @Override

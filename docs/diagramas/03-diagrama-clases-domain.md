@@ -526,6 +526,14 @@ classDiagram
     +LocalDateTime fecha
     +String resultado
   }
+  class TipoEventoCanal {
+    <<Enum>>
+    DISPONIBILIDAD_CONSULTADA
+    RESERVA_RECIBIDA
+    RESERVA_DUPLICADA
+    CONFLICTO_REGISTRADO
+    CANCELACION_RECIBIDA
+  }
   class ConflictoCanal {
     <<Entidad>>
     -IdConflictoCanal id
@@ -673,6 +681,7 @@ classDiagram
   Novedad --> Apartamento : ref. por id (IdentificacionApartamento)
   Canal "1" *-- "1" IdCanal
   Canal "1" *-- "0..*" EventoCanal : bitácora
+  EventoCanal ..> TipoEventoCanal : tipo (por nombre)
   ConflictoCanal "1" *-- "1" IdConflictoCanal
   ConflictoCanal "1" *-- "1" EstadoConflicto
   ConflictoCanal --> Reserva : ref. por id (CodigoReserva)
@@ -743,6 +752,8 @@ classDiagram
     +siguienteCodigo() CodigoReserva
     +buscarConEntradaEl(LocalDate) List~Reserva~
     +buscarConSalidaEl(LocalDate) List~Reserva~
+    +buscarQueSolapan(RangoFechas rango) List~Reserva~
+    +buscarCreadasEntre(desde, hasta) List~Reserva~
   }
   class BloqueoRepository {
     <<Interface>>
@@ -848,6 +859,8 @@ classDiagram
     +siguienteCodigo() CodigoReserva
     +buscarConEntradaEl(LocalDate) List~Reserva~
     +buscarConSalidaEl(LocalDate) List~Reserva~
+    +buscarQueSolapan(RangoFechas rango) List~Reserva~
+    +buscarCreadasEntre(desde, hasta) List~Reserva~
   }
   class TemporadaRepository {
     <<Interface>>
@@ -940,6 +953,8 @@ classDiagram
     +siguienteCodigo() CodigoReserva
     +buscarConEntradaEl(LocalDate) List~Reserva~
     +buscarConSalidaEl(LocalDate) List~Reserva~
+    +buscarQueSolapan(RangoFechas rango) List~Reserva~
+    +buscarCreadasEntre(desde, hasta) List~Reserva~
   }
   class ApartamentoRepository {
     <<Interface>>
@@ -951,6 +966,7 @@ classDiagram
     <<Interface>>
     +guardar(Folio folio) void
     +buscarPorCodigoReserva(CodigoReserva codigo) Optional~Folio~
+    +buscarConPagosEntre(desde, hasta) List~Folio~
   }
   class BloqueoRepository {
     <<Interface>>
@@ -985,11 +1001,14 @@ classDiagram
     <<Interface>>
     +guardar(Canal canal) void
     +buscarPorId(IdCanal id) Optional~Canal~
+    +listar() List~Canal~
   }
   class ConflictoCanalRepository {
     <<Interface>>
     +guardar(ConflictoCanal conflicto) void
     +listarPendientes() List~ConflictoCanal~
+    +buscarPorId(IdConflictoCanal id) Optional~ConflictoCanal~
+    +buscar(EstadoConflicto, PeticionPagina) Pagina~ConflictoCanal~
   }
   class ConfiguracionAlojamiento {
     <<Interface · Puerto>>
@@ -1476,6 +1495,14 @@ classDiagram
     +LocalDateTime fecha
     +String resultado
   }
+  class TipoEventoCanal {
+    <<Enum>>
+    DISPONIBILIDAD_CONSULTADA
+    RESERVA_RECIBIDA
+    RESERVA_DUPLICADA
+    CONFLICTO_REGISTRADO
+    CANCELACION_RECIBIDA
+  }
   class ConflictoCanal {
     <<Entidad>>
     -IdConflictoCanal id
@@ -1654,6 +1681,8 @@ classDiagram
     +siguienteCodigo() CodigoReserva
     +buscarConEntradaEl(LocalDate) List~Reserva~
     +buscarConSalidaEl(LocalDate) List~Reserva~
+    +buscarQueSolapan(RangoFechas rango) List~Reserva~
+    +buscarCreadasEntre(desde, hasta) List~Reserva~
   }
   class BloqueoRepository {
     <<Interface>>
@@ -1740,6 +1769,7 @@ classDiagram
     <<Interface>>
     +guardar(Folio folio) void
     +buscarPorCodigoReserva(CodigoReserva codigo) Optional~Folio~
+    +buscarConPagosEntre(desde, hasta) List~Folio~
   }
   class NovedadRepository {
     <<Interface>>
@@ -1751,11 +1781,14 @@ classDiagram
     <<Interface>>
     +guardar(Canal canal) void
     +buscarPorId(IdCanal id) Optional~Canal~
+    +listar() List~Canal~
   }
   class ConflictoCanalRepository {
     <<Interface>>
     +guardar(ConflictoCanal conflicto) void
     +listarPendientes() List~ConflictoCanal~
+    +buscarPorId(IdConflictoCanal id) Optional~ConflictoCanal~
+    +buscar(EstadoConflicto, PeticionPagina) Pagina~ConflictoCanal~
   }
   class ReglaDominioException {
     <<Excepción>>
@@ -1819,6 +1852,7 @@ classDiagram
   Novedad --> Apartamento : ref. por id (IdentificacionApartamento)
   Canal "1" *-- "1" IdCanal
   Canal "1" *-- "0..*" EventoCanal : bitácora
+  EventoCanal ..> TipoEventoCanal : tipo (por nombre)
   ConflictoCanal "1" *-- "1" IdConflictoCanal
   ConflictoCanal "1" *-- "1" EstadoConflicto
   ConflictoCanal --> Reserva : ref. por id (CodigoReserva)
