@@ -53,55 +53,209 @@
   margin-top: var(--e3);
 }
 
-/* ---------- Portada: la cuadra de seis fachadas ---------- */
+/* ---------- Portada: cielo, dos cordilleras, la cuadra en movimiento y la vía ---------- */
 
 .portada {
-  background: var(--cal);
+  position: relative;
+  overflow-x: clip;
+  background: var(--tinta);
+  color: var(--cal);
   border-bottom: var(--borde);
-  padding-top: var(--e7);
+  padding-top: var(--e8);
 }
 
-.portada__rejilla {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
-  gap: var(--e6);
-  align-items: end;
-  margin-bottom: var(--e6);
+.portada__sol {
+  position: absolute;
+  top: 48px;
+  right: max(6vw, 40px);
+  width: clamp(110px, 16vw, 210px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--maiz);
+  box-shadow: 14px 14px 0 0 var(--balcon);
 }
 
-.portada__rejilla h1 {
-  font-size: clamp(2.4rem, 5vw, 4.2rem);
+.portada__titulo {
+  position: relative;
+  z-index: 2;
+}
+
+.portada__titulo h1 {
+  font-size: clamp(2.6rem, 7vw, 5.6rem);
   font-stretch: 125%;
   font-weight: 900;
-  margin: 0;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin: 0 0 var(--e3);
+  max-width: 11ch;
 }
 
-.portada__bajada {
-  font-size: var(--t1);
-  max-width: 34ch;
-  margin: 0;
+.portada__titulo h1 em {
+  font-style: normal;
+  color: var(--maiz);
 }
 
-.calle {
+.portada__titulo p {
+  margin: 0;
+  color: #b9c2d6;
+  font-weight: 500;
+}
+
+/* Capas del paisaje: cada una se desliza a su velocidad (paralaje) */
+.paisaje {
+  position: relative;
+  overflow: hidden;
+  height: 300px;
+  margin-top: calc(-1 * var(--e5));
+}
+
+.paisaje__capa {
+  position: absolute;
+  left: 0;
+  bottom: 30px;
+  display: flex;
+  width: max-content;
+  animation: deslizar var(--duracion) linear infinite;
+  will-change: transform;
+}
+
+.paisaje__capa svg {
+  flex: none;
+  display: block;
+}
+
+.paisaje__capa--lejos {
+  --duracion: 150s;
+  bottom: 90px;
+  fill: var(--aguamarina);
+}
+
+.paisaje__capa--cerca {
+  --duracion: 90s;
+  bottom: 40px;
+  fill: var(--cafetal);
+}
+
+.paisaje__capa--cerca .palma rect {
+  fill: var(--tinta);
+}
+
+.paisaje__capa--cerca .palma ellipse {
+  fill: var(--tinta);
+}
+
+.paisaje__capa--calle {
+  --duracion: 60s;
+  align-items: flex-end;
+}
+
+.cuadra {
   display: flex;
   align-items: flex-end;
-  gap: 0;
-  height: 230px;
-  border-bottom: 10px solid var(--tinta);
+  flex: none;
+  padding-inline: 30px;
 }
 
-.calle__casa {
-  flex: 1;
-  min-width: 0;
-  margin-inline: -6px;
+.cuadra__casa {
+  flex: none;
 }
 
-.calle__casa svg {
+.cuadra__casa svg {
   background: transparent !important;
+}
+
+.paisaje__via {
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  background:
+    linear-gradient(90deg, var(--maiz) 0 48px, transparent 48px 96px) 0 15px / 96px 5px repeat-x,
+    var(--tinta);
+  border-top: 4px solid var(--cal);
+  animation: via 1.6s linear infinite;
+}
+
+.willys {
+  position: absolute;
+  z-index: 3;
+  left: 14%;
+  bottom: 14px;
+  width: 150px;
+}
+
+.willys__carroceria {
+  animation: traqueteo 0.36s steps(2) infinite;
+}
+
+.willys__rueda {
+  animation: girar 0.6s linear infinite;
+}
+
+.portada__pausa {
+  position: absolute;
+  z-index: 4;
+  right: var(--e4);
+  top: var(--e4);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--cal);
+  border-radius: var(--radio);
+  background: var(--tinta);
+  color: var(--cal);
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.portada__pausa:hover,
+.portada__pausa:focus-visible {
+  opacity: 1;
+}
+
+.portada__pausa svg {
+  width: 12px;
+  height: 12px;
+}
+
+.portada--quieta .paisaje__capa,
+.portada--quieta .paisaje__via,
+.portada--quieta .willys * {
+  animation-play-state: paused;
+}
+
+@keyframes deslizar {
+  to { transform: translateX(calc(-100% / 3)); }
+}
+
+/* 60 s por tercio de la cuadra: la vía avanza a la misma velocidad que las casas */
+@keyframes via {
+  to { background-position: -96px 15px, 0 0; }
+}
+
+@keyframes traqueteo {
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paisaje__capa,
+  .paisaje__via,
+  .willys * {
+    animation: none;
+  }
+  .portada__pausa {
+    display: none;
+  }
 }
 
 .portada__busqueda {
   position: relative;
+  z-index: 5;
+  color: var(--tinta);
   top: 40px;
   margin-top: calc(-1 * var(--e3));
 }
@@ -118,11 +272,25 @@
 }
 
 @media (max-width: 900px) {
-  .portada__rejilla {
-    grid-template-columns: 1fr;
+  .paisaje {
+    height: 230px;
   }
-  .calle {
-    height: 120px;
+  .paisaje__capa--calle {
+    transform-origin: bottom left;
+    zoom: 0.72;
+  }
+  .willys {
+    width: 96px;
+    left: 6%;
+  }
+  .portada__sol {
+    top: 22px;
+    right: 72px;
+    width: 44px;
+    box-shadow: 7px 7px 0 0 var(--balcon);
+  }
+  .paisaje {
+    margin-top: 0;
   }
   .busqueda {
     grid-template-columns: 1fr 1fr;
