@@ -14,6 +14,12 @@
   gap: var(--e7);
 }
 
+/* Los hijos de una rejilla no deben ensancharla: lo ancho (tablas, calendario) se desplaza por dentro */
+.pila > *,
+.pila-grande > * {
+  min-width: 0;
+}
+
 .volver {
   display: inline-block;
   margin-bottom: var(--e4);
@@ -967,7 +973,9 @@ main.cuenta {
 }
 
 .calendario {
+  position: relative; /* contiene las etiquetas sr-only para que no desborden la página */
   overflow-x: auto;
+  min-width: 0;
   display: grid;
   gap: 4px;
 }
