@@ -101,6 +101,7 @@ export const api = {
   get: <T>(ruta: string) => pedir<T>('GET', ruta),
   post: <T>(ruta: string, cuerpo?: unknown) => pedir<T>('POST', ruta, cuerpo ?? {}),
   put: <T>(ruta: string, cuerpo?: unknown) => pedir<T>('PUT', ruta, cuerpo),
+  delete: <T>(ruta: string) => pedir<T>('DELETE', ruta),
 };
 
 /** Arma una consulta ?a=1&b=2, repitiendo la clave en las listas y omitiendo los vacíos. */

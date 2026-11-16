@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-do
 import { useEffect } from 'react';
 import { PERSONAL, ProveedorSesion, Requiere } from './auth/Sesion';
 import { Cabecera, Pie } from './components/Cabecera';
+import { Administracion } from './pages/admin/Administracion';
 import { Apartamento } from './pages/Apartamento';
 import { Entrar, Recuperar, Registro } from './pages/Cuenta';
 import { Inicio } from './pages/Inicio';
@@ -99,6 +100,14 @@ export function App() {
             element={
               <Requiere roles={[...PERSONAL, 'PERSONAL_SERVICIO']}>
                 <Operacion />
+              </Requiere>
+            }
+          />
+          <Route
+            path="/admin/:seccion?"
+            element={
+              <Requiere roles={['ADMINISTRADOR']}>
+                <Administracion />
               </Requiere>
             }
           />

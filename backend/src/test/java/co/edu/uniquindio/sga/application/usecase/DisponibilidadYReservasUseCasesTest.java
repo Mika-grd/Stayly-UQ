@@ -26,6 +26,7 @@ import co.edu.uniquindio.sga.domain.model.reserva.FiltroReservas;
 import co.edu.uniquindio.sga.domain.model.reserva.HoraEstimadaLlegada;
 import co.edu.uniquindio.sga.domain.model.reserva.MascotasAutorizadas;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
+import co.edu.uniquindio.sga.domain.repository.NotificadorTitular;
 import co.edu.uniquindio.sga.domain.service.AdmisionMascotasService;
 import co.edu.uniquindio.sga.domain.service.CalculadorRetencionService;
 import co.edu.uniquindio.sga.domain.service.ConfirmacionReservaService;
@@ -378,12 +379,31 @@ class DisponibilidadYReservasUseCasesTest {
                 .hasMessageContaining("como máximo");
     }
 
+    @Test
+    @DisplayName("7.5 · Crear y cancelar avisan al titular por el puerto de notificación")
+    void crearYCancelarAvisan() {
+        // Arrange
+        List<NotificadorTitular.Motivo> avisos = new java.util.ArrayList<>();
+        NotificadorTitular capturador = (reserva, motivo) -> avisos.add(motivo);
+        CrearReservaUseCase crear = new CrearReservaUseCase(apartamentos, reservas, folios, politicas,
+                verificadorTarifas, new VerificadorEstanciaMinimaService(temporadas), admisionMascotas, disponibilidad(), cotizador,
+                configuracion, reloj, capturador);
+
+        // Act
+        Reserva reserva = crear.ejecutar(comandoSuq301(LocalTime.of(16, 0), 0)).reserva();
+        new CancelarReservaUseCase(reservas, folios, new CalculadorRetencionService(politicas), reloj, capturador)
+                .ejecutar(reserva.codigo(), "huesped");
+
+        // Assert
+        assertThat(avisos).containsExactly(NotificadorTitular.Motivo.CREADA, NotificadorTitular.Motivo.CANCELADA);
+    }
+
     // Ensamblaje de los casos de uso con el reloj actual
 
     private CrearReservaUseCase crearReserva() {
         return new CrearReservaUseCase(apartamentos, reservas, folios, politicas, verificadorTarifas,
                 new VerificadorEstanciaMinimaService(temporadas), admisionMascotas, disponibilidad(), cotizador,
-                configuracion, reloj);
+                configuracion, reloj, NotificadorTitular.NINGUNO);
     }
 
     private ModificarReservaUseCase modificar() {
@@ -407,7 +427,7 @@ class DisponibilidadYReservasUseCasesTest {
     }
 
     private VencerReservasPendientesUseCase vencer() {
-        return new VencerReservasPendientesUseCase(reservas, folios, configuracion, reloj);
+        return new VencerReservasPendientesUseCase(reservas, folios, configuracion, reloj, NotificadorTitular.NINGUNO);
     }
 
     private ConsultarDisponibilidadApartamentoUseCase consultarDisponibilidad() {
@@ -422,7 +442,8 @@ class DisponibilidadYReservasUseCasesTest {
         Reserva reserva = crearReserva().ejecutar(comandoSuq301(LocalTime.of(16, 0), 0)).reserva();
         folios.buscarPorCodigoReserva(reserva.codigo()).orElseThrow().registrarPago(
                 new Pago(Dinero.pesos(117_000), MedioPago.TRANSFERENCIA, FichaStaylyUq.HOY, "TRF-1"));
-        new ConfirmarReservaUseCase(reservas, folios, new ConfirmacionReservaService(configuracion), reloj)
+        new ConfirmarReservaUseCase(reservas, folios, new ConfirmacionReservaService(configuracion), reloj,
+                NotificadorTitular.NINGUNO)
                 .ejecutar(reserva.codigo(), "recepcion");
         return reserva;
     }

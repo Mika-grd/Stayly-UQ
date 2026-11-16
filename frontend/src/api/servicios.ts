@@ -163,6 +163,10 @@ export const folios = {
 };
 
 export const operacion = {
+  resumenDelDia: (fecha: string) =>
+    api.get<{ fecha: string; disponible: boolean; texto: string | null; proveedor: string }>(
+      `/api/asistente/resumen-del-dia${consulta({ fecha })}`,
+    ),
   calendario: (desde: string, hasta: string) =>
     api.get<Calendario>(`/api/calendario-ocupacion${consulta({ desde, hasta })}`),
 };

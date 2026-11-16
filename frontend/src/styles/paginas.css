@@ -1458,3 +1458,271 @@ button.noche:disabled {
     width: calc(50% - var(--e2));
   }
 }
+
+/* ---------- Administración ---------- */
+
+.pestanas--enlaces a {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--e2) var(--e4);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+  color: var(--tinta);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pestanas--enlaces a[aria-current='page'] {
+  background: var(--tinta);
+  color: var(--cal);
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--maiz);
+}
+
+[data-tema='harsh'] .pestanas--enlaces a[aria-current='page'] {
+  background: var(--lila);
+  color: var(--tinta);
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--balcon);
+}
+
+.pestanas--chicas {
+  margin: 0;
+}
+
+.pestanas--chicas button {
+  min-height: 32px;
+  padding: var(--e1) var(--e3);
+  font-size: var(--t-1);
+}
+
+.acciones-tabla {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.acciones-tabla .boton--texto + .boton--texto {
+  margin-left: var(--e3);
+}
+
+.boton--peligro {
+  color: var(--balcon);
+}
+
+.movimiento__apto--chico {
+  display: inline-grid;
+  place-items: center;
+  margin-right: var(--e2);
+  vertical-align: middle;
+  width: 32px;
+  height: 26px;
+  font-size: var(--t-1);
+}
+
+.campo--casilla {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  font-weight: 700;
+  font-size: var(--t-1);
+  align-self: end;
+  min-height: 44px;
+}
+
+.campo--casilla input {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  accent-color: var(--tinta);
+}
+
+.lista-editable {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.lista-editable li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+}
+
+.lista-editable li > input:not([type='checkbox']):not([type='radio']) {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 40px;
+  padding: var(--e2) var(--e3);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+  color: var(--tinta);
+  font: inherit;
+}
+
+.lista-editable li > input[type='number'] {
+  flex: 0 1 130px;
+}
+
+.temporadas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--e5);
+}
+
+.temporadas li {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--e3);
+}
+
+.temporadas h3,
+.temporadas p {
+  margin: 0;
+}
+
+.canal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+  padding-block: var(--e2);
+}
+
+.canal code {
+  font-size: 0.7rem;
+}
+
+.credencial {
+  display: block;
+  margin-block: var(--e2);
+  padding: var(--e2) var(--e3);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--muro);
+  font-size: var(--t0);
+  word-break: break-all;
+}
+
+.conflictos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+}
+
+.conflictos li {
+  display: grid;
+  gap: var(--e3);
+  padding-block: var(--e3);
+  border-top: 1px solid var(--muro-hondo);
+}
+
+.conflictos p {
+  margin: 0;
+}
+
+.reportes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: var(--e6);
+  align-items: start;
+}
+
+.reporte__cifra {
+  font-size: var(--t4);
+  line-height: 1;
+  margin-bottom: var(--e4);
+}
+
+.barra-progreso,
+.reporte__barra {
+  display: block;
+  height: 14px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--muro);
+  overflow: hidden;
+}
+
+.barra-progreso span,
+.reporte__barra span {
+  display: block;
+  height: 100%;
+  background: var(--maiz);
+}
+
+.reporte__barra span {
+  background: var(--cobalto);
+}
+
+.reporte__lista,
+.reporte__barras {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e3);
+}
+
+.reporte__lista li {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: center;
+  gap: var(--e3);
+}
+
+.reporte__marca {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--tinta);
+  border-radius: 3px;
+}
+
+.reporte__barras li {
+  display: grid;
+  grid-template-columns: 90px 1fr 32px;
+  align-items: center;
+  gap: var(--e1) var(--e3);
+}
+
+.reporte__barras .nota {
+  grid-column: 2 / -1;
+  margin: 0;
+}
+
+/* ---------- Resumen del día (IA) ---------- */
+
+.resumen-ia {
+  margin: 0 0 var(--e5);
+  padding: var(--e3) var(--e4);
+  border: var(--borde);
+  border-left-width: 10px;
+  border-left-color: var(--lila);
+  border-radius: var(--radio);
+  background: var(--cal);
+  max-width: 80ch;
+}
+
+.resumen-ia p {
+  margin: 0;
+}
+
+.resumen-ia .nota {
+  margin-top: var(--e2);
+}
+
+.resumen-ia--apagado,
+.resumen-ia--cargando {
+  border-style: dashed;
+  border-left-style: solid;
+  border-left-color: var(--muro-hondo);
+  margin-top: 0;
+}

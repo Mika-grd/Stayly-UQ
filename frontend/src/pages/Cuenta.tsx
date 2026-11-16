@@ -11,7 +11,7 @@ import { useAccion } from '../lib/useCarga';
 const INICIO_POR_ROL: Record<Rol, string> = {
   HUESPED: '/viajes',
   RECEPCIONISTA: '/recepcion',
-  ADMINISTRADOR: '/recepcion',
+  ADMINISTRADOR: '/admin',
   PERSONAL_SERVICIO: '/operacion',
 };
 

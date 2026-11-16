@@ -24,6 +24,21 @@ function Movimiento({ reserva }: { reserva: ReservaResumen }) {
   );
 }
 
+/** Resumen del asistente de IA (10.2): si no está disponible lo dice y las listas siguen igual. */
+function ResumenIA({ fecha }: { fecha: string }) {
+  const { datos, cargando } = useCarga(() => operacion.resumenDelDia(fecha), [fecha]);
+  if (cargando && !datos) return <p className="resumen-ia resumen-ia--cargando nota">Preparando el resumen del día…</p>;
+  if (!datos?.disponible) {
+    return <p className="resumen-ia resumen-ia--apagado nota">Resumen automático no disponible. Las llegadas y salidas están abajo.</p>;
+  }
+  return (
+    <aside className="resumen-ia" aria-label="Resumen del día">
+      <p>{datos.texto}</p>
+      <p className="nota">Redactado por IA ({datos.proveedor}). Verifique con las listas.</p>
+    </aside>
+  );
+}
+
 function Hoy() {
   const [fecha, setFecha] = useState(hoy());
   const { datos, error, cargando } = useCarga(() => reservas.movimientos(fecha), [fecha]);
@@ -37,6 +52,7 @@ function Hoy() {
         </label>
         <p className="barra__titulo">{fechaLarga(fecha)}</p>
       </div>
+      <ResumenIA fecha={fecha} />
       <AvisoError error={error} />
       {cargando && <Cargando />}
       {datos && (

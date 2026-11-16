@@ -366,7 +366,7 @@
   color: #c98bd8;
 }
 
-[data-tema='harsh'] a:not(.boton):not(.marca):not(.nav a):not(.movimiento):not(.viaje):not(.tarjeta):not(.calendario__noche) {
+[data-tema='harsh'] a:not(.boton):not(.marca):not(.nav a):not(.movimiento):not(.viaje):not(.tarjeta):not(.calendario__noche):not(.pestanas--enlaces a):not(.usuario__nombre) {
   color: #c98bd8;
 }
 
@@ -411,4 +411,9 @@
 
 [data-tema='harsh'] .willys__rueda circle:first-of-type {
   stroke: var(--hierro);
+}
+
+[data-tema='harsh'] .pestanas--enlaces a,
+[data-tema='harsh'] .usuario__nombre {
+  color: var(--tinta);
 }

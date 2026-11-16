@@ -32,4 +32,9 @@ public class ApartamentoRepositoryJpa implements ApartamentoRepository {
     public List<Apartamento> listarActivos() {
         return jpa.findByActivoTrue().stream().map(ApartamentoMapper::aDominio).toList();
     }
+
+    @Override
+    public List<Apartamento> listarTodos() {
+        return jpa.findAll().stream().map(ApartamentoMapper::aDominio).toList();
+    }
 }

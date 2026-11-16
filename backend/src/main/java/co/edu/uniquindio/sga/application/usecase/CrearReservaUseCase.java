@@ -22,6 +22,7 @@ import co.edu.uniquindio.sga.domain.repository.ApartamentoRepository;
 import co.edu.uniquindio.sga.domain.repository.ConfiguracionAlojamiento;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
 import co.edu.uniquindio.sga.domain.repository.PoliticaCancelacionRepository;
+import co.edu.uniquindio.sga.domain.repository.NotificadorTitular;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.service.AdmisionMascotasService;
 import co.edu.uniquindio.sga.domain.service.CotizadorEstanciaService;
@@ -58,13 +59,15 @@ public class CrearReservaUseCase {
     private final CotizadorEstanciaService cotizador;
     private final ConfiguracionAlojamiento configuracion;
     private final Clock reloj;
+    private final NotificadorTitular notificador;
 
     public CrearReservaUseCase(ApartamentoRepository apartamentos, ReservaRepository reservas, FolioRepository folios,
                                PoliticaCancelacionRepository politicas,
                                VerificadorTarifasCompletasService verificadorTarifas,
                                VerificadorEstanciaMinimaService verificadorEstanciaMinima,
                                AdmisionMascotasService admisionMascotas, DisponibilidadApartamentoService disponibilidad,
-                               CotizadorEstanciaService cotizador, ConfiguracionAlojamiento configuracion, Clock reloj) {
+                               CotizadorEstanciaService cotizador, ConfiguracionAlojamiento configuracion,
+                               Clock reloj, NotificadorTitular notificador) {
         this.apartamentos = apartamentos;
         this.reservas = reservas;
         this.folios = folios;
@@ -76,6 +79,7 @@ public class CrearReservaUseCase {
         this.cotizador = cotizador;
         this.configuracion = configuracion;
         this.reloj = reloj;
+        this.notificador = notificador;
     }
 
     public ReservaCreada ejecutar(Comando comando) {
@@ -105,6 +109,7 @@ public class CrearReservaUseCase {
         configuracion.recargoLlegadaNocturna().cargoPorCambioDeHora(null, hora, ahora).ifPresent(folio::registrarCargo);
 
         reservas.guardar(reserva);
+        notificador.notificar(reserva, NotificadorTitular.Motivo.CREADA);
         folios.guardar(folio);
         return new ReservaCreada(reserva, folio, apartamento.advertenciaAcceso());
     }
