@@ -18,7 +18,7 @@ info:
 
     Todo error devuelve `ErrorNegocioResponse` con un `codigo` estable. Los valores monetarios son enteros en pesos colombianos (COP). Las fechas y horas se expresan en la zona America/Bogota. Los listados se paginan de a 10 elementos.
 
-    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5). Las operaciones de la operación diaria, el folio, el canal externo, la gestión de usuarios y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente: corte 3)* y no aparecen en Swagger UI.
+    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5). Las operaciones de la operación diaria, el folio, el canal externo y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
 servers:
 - url: http://localhost:8080
   description: Entorno local de desarrollo.
@@ -151,6 +151,89 @@ paths:
                     mensaje: Credenciales inválidas.
                     regla: '7.2'
                     ruta: /api/auth/login
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security: []
+  /api/auth/recuperacion:
+    post:
+      tags:
+      - Autenticación
+      summary: Solicitar recuperación de contraseña (CU-40)
+      description: |-
+        Envía al correo registrado un código de 6 dígitos, vigente 15 minutos y de un solo uso. Responde 202 aunque el correo no exista, para no revelar quién está registrado.
+
+        Actor(es): Cualquier persona.
+      operationId: solicitarRecuperacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolicitudRecuperacionRequest'
+      responses:
+        '202':
+          description: Solicitud aceptada.
+        '400':
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                FORMATO_INVALIDO:
+                  summary: FORMATO_INVALIDO
+                  value:
+                    codigo: FORMATO_INVALIDO
+                    mensaje: 'El campo nombre es obligatorio.'
+                    ruta: /api/auth/recuperacion
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security: []
+  /api/auth/recuperacion/confirmar:
+    post:
+      tags:
+      - Autenticación
+      summary: Confirmar recuperación de contraseña (CU-40)
+      description: |-
+        Cambia la contraseña con el código recibido por correo. Un código errado, vencido o ya usado responde 409.
+
+        Actor(es): Cualquier persona.
+      operationId: confirmarRecuperacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmarRecuperacionRequest'
+      responses:
+        '204':
+          description: Operación exitosa, sin contenido.
+        '400':
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                FORMATO_INVALIDO:
+                  summary: FORMATO_INVALIDO
+                  value:
+                    codigo: FORMATO_INVALIDO
+                    mensaje: 'El campo nombre es obligatorio.'
+                    ruta: /api/auth/recuperacion/confirmar
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: CODIGO_RECUPERACION_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CODIGO_RECUPERACION_INVALIDO:
+                  summary: CODIGO_RECUPERACION_INVALIDO
+                  value:
+                    codigo: CODIGO_RECUPERACION_INVALIDO
+                    mensaje: 'El código de recuperación no es válido o ya venció.'
+                    regla: '7.2'
+                    ruta: /api/auth/recuperacion/confirmar
                     fecha: '2026-10-01T10:15:30-05:00'
       security: []
   /api/apartamentos/disponibles:
@@ -648,7 +731,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Iniciar preparación (CU-09) (pendiente: corte 3)
+      summary: Iniciar preparación (CU-09) (pendiente del corte 3)
       description: |-
         Transición PENDIENTE_PREPARACION → EN_PREPARACION (7.6, F-09).
 
@@ -729,7 +812,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Marcar apartamento preparado (CU-10) (pendiente: corte 3)
+      summary: Marcar apartamento preparado (CU-10) (pendiente del corte 3)
       description: |-
         Transición EN_PREPARACION → PREPARADO (7.6, RN-11). Desde aquí el apartamento puede recibir un grupo.
 
@@ -810,7 +893,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Declarar fuera de servicio (CU-15) (pendiente: corte 3)
+      summary: Declarar fuera de servicio (CU-15) (pendiente del corte 3)
       description: |-
         Pasa el apartamento a FUERA_DE_SERVICIO desde cualquier estado no ocupado (7.6, 3.3). Solo administrador. No registra un bloqueo por sí solo.
 
@@ -897,7 +980,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Volver a servicio (CU-21) (pendiente: corte 3)
+      summary: Volver a servicio (CU-21) (pendiente del corte 3)
       description: |-
         Transición FUERA_DE_SERVICIO → PENDIENTE_PREPARACION (7.6). Solo administrador.
 
@@ -1088,7 +1171,7 @@ paths:
     post:
       tags:
       - Apartamentos
-      summary: Registrar novedad (CU-11) (pendiente: corte 3)
+      summary: Registrar novedad (CU-11) (pendiente del corte 3)
       description: |-
         Registra un daño, faltante o situación con fecha, autor, descripción y gravedad. No cambia el estado operativo (3.3).
 
@@ -1173,7 +1256,7 @@ paths:
     get:
       tags:
       - Apartamentos
-      summary: Consultar novedades (pendiente: corte 3)
+      summary: Consultar novedades (pendiente del corte 3)
       description: Historial paginado de novedades del apartamento.
       operationId: consultarNovedades
       parameters:
@@ -1237,7 +1320,7 @@ paths:
     get:
       tags:
       - Apartamentos
-      summary: Consultar calendario de ocupación (pendiente: corte 3)
+      summary: Consultar calendario de ocupación (pendiente del corte 3)
       description: Estado de cada noche (LIBRE, RESERVADA, BLOQUEADA) por apartamento en el rango.
       operationId: consultarCalendarioOcupacion
       parameters:
@@ -1708,7 +1791,7 @@ paths:
     get:
       tags:
       - Reservas
-      summary: Consultar llegadas y salidas del día (pendiente: corte 3)
+      summary: Consultar llegadas y salidas del día (pendiente del corte 3)
       description: |-
         Reservas que llegan y salen en la fecha indicada.
 
@@ -2427,7 +2510,7 @@ paths:
     put:
       tags:
       - Reservas
-      summary: Registrar salida (CU-06) (pendiente: corte 3)
+      summary: Registrar salida (CU-06) (pendiente del corte 3)
       description: |-
         Transición EN_CURSO → FINALIZADA; el apartamento pasa a PENDIENTE_PREPARACION. Exige el folio cerrado (7.6, RN-17). La salida anticipada se maneja aquí.
 
@@ -2605,7 +2688,7 @@ paths:
     get:
       tags:
       - Folio
-      summary: Consultar folio (CU-19) (pendiente: corte 3)
+      summary: Consultar folio (CU-19) (pendiente del corte 3)
       description: |-
         Devuelve cargos, pagos y saldo calculado del folio de la reserva (RN-15). El huésped solo consulta los suyos.
 
@@ -2670,7 +2753,7 @@ paths:
     post:
       tags:
       - Folio
-      summary: Registrar pago (CU-07) (pendiente: corte 3)
+      summary: Registrar pago (CU-07) (pendiente del corte 3)
       description: |-
         Registra un abono en el folio con su medio y fecha (RN-15). Admite pagos parciales; nada se edita ni se borra.
 
@@ -2787,7 +2870,7 @@ paths:
     post:
       tags:
       - Folio
-      summary: Registrar cargo (pendiente: corte 3)
+      summary: Registrar cargo (pendiente del corte 3)
       description: |-
         Registra un cargo manual (SERVICIO_ADICIONAL o AJUSTE) en el folio (RN-16).
 
@@ -2896,7 +2979,7 @@ paths:
     put:
       tags:
       - Folio
-      summary: Cerrar folio (CU-18) (pendiente: corte 3)
+      summary: Cerrar folio (CU-18) (pendiente del corte 3)
       description: |-
         Cierra el folio si el saldo es cero; con saldo distinto de cero exige autorización del administrador con motivo (RN-17).
 
@@ -3829,15 +3912,14 @@ paths:
     get:
       tags:
       - Usuarios
-      summary: Listar usuarios (pendiente: corte 3)
+      summary: Listar usuarios (CU-38)
       description: |-
-        Lista paginada de usuarios.
+        Lista paginada de usuarios (10 por página), ordenada por nombre; incluye los inactivos con activo = false.
 
         Actor(es): Administrador.
       operationId: listarUsuarios
       parameters:
       - $ref: '#/components/parameters/Pagina'
-      - $ref: '#/components/parameters/Tamano'
       responses:
         '200':
           description: Operación exitosa.
@@ -3856,7 +3938,7 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
                     ruta: /api/usuarios
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -3871,7 +3953,7 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
                     ruta: /api/usuarios
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -3880,9 +3962,9 @@ paths:
     post:
       tags:
       - Usuarios
-      summary: Crear usuario (pendiente: corte 3)
+      summary: Crear usuario (CU-38)
       description: |-
-        Crea un usuario interno con el rol que asigna el administrador.
+        Crea un usuario interno con el rol que asigna el administrador (nunca HUESPED). La contraseña es obligatoria al crear y se guarda cifrada con BCrypt.
 
         Actor(es): Administrador.
       operationId: crearUsuario
@@ -3900,8 +3982,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioResponse'
         '400':
-          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato
-            incorrecto). Códigos: FORMATO_INVALIDO.'
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -3911,7 +3992,7 @@ paths:
                   summary: FORMATO_INVALIDO
                   value:
                     codigo: FORMATO_INVALIDO
-                    mensaje: El campo fechaEntrada es obligatorio.
+                    mensaje: 'El campo nombre es obligatorio.'
                     ruta: /api/usuarios
                     fecha: '2026-10-01T10:15:30-05:00'
         '401':
@@ -3925,7 +4006,7 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
                     ruta: /api/usuarios
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -3940,13 +4021,12 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
                     ruta: /api/usuarios
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: CORREO_YA_REGISTRADO.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: CORREO_YA_REGISTRADO, DOCUMENTO_YA_REGISTRADO.'
           content:
             application/json:
               schema:
@@ -3956,7 +4036,15 @@ paths:
                   summary: CORREO_YA_REGISTRADO
                   value:
                     codigo: CORREO_YA_REGISTRADO
-                    mensaje: Ya existe un usuario con ese correo.
+                    mensaje: 'Ya existe un usuario con ese correo.'
+                    regla: '7.2'
+                    ruta: /api/usuarios
+                    fecha: '2026-10-01T10:15:30-05:00'
+                DOCUMENTO_YA_REGISTRADO:
+                  summary: DOCUMENTO_YA_REGISTRADO
+                  value:
+                    codigo: DOCUMENTO_YA_REGISTRADO
+                    mensaje: 'Ya existe un usuario con ese documento.'
                     regla: '7.2'
                     ruta: /api/usuarios
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -3966,7 +4054,7 @@ paths:
     get:
       tags:
       - Usuarios
-      summary: Consultar usuario (pendiente: corte 3)
+      summary: Consultar usuario (CU-38)
       description: |-
         Obtiene un usuario.
 
@@ -3992,7 +4080,7 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -4007,7 +4095,7 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -4022,7 +4110,7 @@ paths:
                   summary: USUARIO_NO_ENCONTRADO
                   value:
                     codigo: USUARIO_NO_ENCONTRADO
-                    mensaje: No existe el usuario indicado.
+                    mensaje: 'No existe el usuario indicado.'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
@@ -4030,9 +4118,9 @@ paths:
     put:
       tags:
       - Usuarios
-      summary: Actualizar usuario (pendiente: corte 3)
+      summary: Actualizar usuario (CU-38)
       description: |-
-        Reemplaza los datos del usuario. El correo no es editable después de creado.
+        Reemplaza los datos y el rol del usuario. El correo no es editable después de creado y la contraseña no se cambia por aquí.
 
         Actor(es): Administrador.
       operationId: actualizarUsuario
@@ -4052,8 +4140,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioResponse'
         '400':
-          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato
-            incorrecto). Códigos: FORMATO_INVALIDO.'
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -4063,7 +4150,7 @@ paths:
                   summary: FORMATO_INVALIDO
                   value:
                     codigo: FORMATO_INVALIDO
-                    mensaje: El campo fechaEntrada es obligatorio.
+                    mensaje: 'El campo nombre es obligatorio.'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
         '401':
@@ -4077,7 +4164,7 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -4092,7 +4179,7 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -4107,22 +4194,29 @@ paths:
                   summary: USUARIO_NO_ENCONTRADO
                   value:
                     codigo: USUARIO_NO_ENCONTRADO
-                    mensaje: No existe el usuario indicado.
+                    mensaje: 'No existe el usuario indicado.'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: CORREO_YA_REGISTRADO.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: CORREO_NO_EDITABLE, DOCUMENTO_YA_REGISTRADO.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorNegocioResponse'
               examples:
-                CORREO_YA_REGISTRADO:
-                  summary: CORREO_YA_REGISTRADO
+                CORREO_NO_EDITABLE:
+                  summary: CORREO_NO_EDITABLE
                   value:
-                    codigo: CORREO_YA_REGISTRADO
-                    mensaje: Ya existe un usuario con ese correo.
+                    codigo: CORREO_NO_EDITABLE
+                    mensaje: 'El correo de un usuario no se puede cambiar.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/{id}
+                    fecha: '2026-10-01T10:15:30-05:00'
+                DOCUMENTO_YA_REGISTRADO:
+                  summary: DOCUMENTO_YA_REGISTRADO
+                  value:
+                    codigo: DOCUMENTO_YA_REGISTRADO
+                    mensaje: 'Ya existe un usuario con ese documento.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -4131,9 +4225,9 @@ paths:
     delete:
       tags:
       - Usuarios
-      summary: Eliminar usuario (pendiente: corte 3)
+      summary: Eliminar usuario (CU-38)
       description: |-
-        Eliminación lógica (activo = false). No se permite si es titular de reservas activas (7.2).
+        Eliminación lógica: el usuario queda inactivo y ya no inicia sesión; sus reservas históricas se conservan.
 
         Actor(es): Administrador.
       operationId: eliminarUsuario
@@ -4153,7 +4247,7 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -4168,7 +4262,7 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -4183,12 +4277,11 @@ paths:
                   summary: USUARIO_NO_ENCONTRADO
                   value:
                     codigo: USUARIO_NO_ENCONTRADO
-                    mensaje: No existe el usuario indicado.
+                    mensaje: 'No existe el usuario indicado.'
                     ruta: /api/usuarios/{id}
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: USUARIO_CON_RESERVAS_ACTIVAS.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: USUARIO_CON_RESERVAS_ACTIVAS, AUTOELIMINACION_NO_PERMITIDA.'
           content:
             application/json:
               schema:
@@ -4198,9 +4291,214 @@ paths:
                   summary: USUARIO_CON_RESERVAS_ACTIVAS
                   value:
                     codigo: USUARIO_CON_RESERVAS_ACTIVAS
-                    mensaje: El usuario es titular de reservas activas y no puede eliminarse.
+                    mensaje: 'No se puede eliminar un usuario titular de reservas pendientes, confirmadas o en curso.'
                     regla: '7.2'
                     ruta: /api/usuarios/{id}
+                    fecha: '2026-10-01T10:15:30-05:00'
+                AUTOELIMINACION_NO_PERMITIDA:
+                  summary: AUTOELIMINACION_NO_PERMITIDA
+                  value:
+                    codigo: AUTOELIMINACION_NO_PERMITIDA
+                    mensaje: 'Un administrador no puede eliminar su propio usuario.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/{id}
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security:
+      - bearerAuth: []
+  /api/usuarios/me:
+    get:
+      tags:
+      - Usuarios
+      summary: Consultar mi perfil (CU-39)
+      description: |-
+        Devuelve el usuario autenticado (el correo sale del token).
+
+        Actor(es): Cualquier usuario autenticado.
+      operationId: consultarPerfil
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CREDENCIALES_INVALIDAS:
+                  summary: CREDENCIALES_INVALIDAS
+                  value:
+                    codigo: CREDENCIALES_INVALIDAS
+                    mensaje: 'Credenciales inválidas.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/me
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                ACCESO_DENEGADO:
+                  summary: ACCESO_DENEGADO
+                  value:
+                    codigo: ACCESO_DENEGADO
+                    mensaje: 'No tiene permiso sobre este recurso.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/me
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Usuarios
+      summary: Actualizar mi perfil (CU-39)
+      description: |-
+        Cambia el nombre, el teléfono y la foto de perfil del usuario autenticado. El correo no es editable.
+
+        Actor(es): Cualquier usuario autenticado.
+      operationId: actualizarPerfil
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerfilRequest'
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                FORMATO_INVALIDO:
+                  summary: FORMATO_INVALIDO
+                  value:
+                    codigo: FORMATO_INVALIDO
+                    mensaje: 'El campo nombre es obligatorio.'
+                    ruta: /api/usuarios/me
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CREDENCIALES_INVALIDAS:
+                  summary: CREDENCIALES_INVALIDAS
+                  value:
+                    codigo: CREDENCIALES_INVALIDAS
+                    mensaje: 'Credenciales inválidas.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/me
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                ACCESO_DENEGADO:
+                  summary: ACCESO_DENEGADO
+                  value:
+                    codigo: ACCESO_DENEGADO
+                    mensaje: 'No tiene permiso sobre este recurso.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/me
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security:
+      - bearerAuth: []
+  /api/usuarios/me/contrasena:
+    put:
+      tags:
+      - Usuarios
+      summary: Cambiar mi contraseña (CU-39)
+      description: |-
+        Cambio voluntario con la contraseña actual y la nueva (mínimo 8 caracteres, con mayúsculas y números).
+
+        Actor(es): Cualquier usuario autenticado.
+      operationId: cambiarContrasena
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioContrasenaRequest'
+      responses:
+        '204':
+          description: Operación exitosa, sin contenido.
+        '400':
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                FORMATO_INVALIDO:
+                  summary: FORMATO_INVALIDO
+                  value:
+                    codigo: FORMATO_INVALIDO
+                    mensaje: 'El campo nombre es obligatorio.'
+                    ruta: /api/usuarios/me/contrasena
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CREDENCIALES_INVALIDAS:
+                  summary: CREDENCIALES_INVALIDAS
+                  value:
+                    codigo: CREDENCIALES_INVALIDAS
+                    mensaje: 'Credenciales inválidas.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/me/contrasena
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                ACCESO_DENEGADO:
+                  summary: ACCESO_DENEGADO
+                  value:
+                    codigo: ACCESO_DENEGADO
+                    mensaje: 'No tiene permiso sobre este recurso.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/me/contrasena
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: CONTRASENA_ACTUAL_INCORRECTA.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CONTRASENA_ACTUAL_INCORRECTA:
+                  summary: CONTRASENA_ACTUAL_INCORRECTA
+                  value:
+                    codigo: CONTRASENA_ACTUAL_INCORRECTA
+                    mensaje: 'La contraseña actual no es correcta.'
+                    regla: '7.2'
+                    ruta: /api/usuarios/me/contrasena
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
@@ -4208,7 +4506,7 @@ paths:
     post:
       tags:
       - Canal externo
-      summary: Registrar canal (pendiente: corte 3)
+      summary: Registrar canal (pendiente del corte 3)
       description: |-
         Registra un canal. La credencial generada solo se muestra en esta respuesta.
 
@@ -4277,7 +4575,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Listar canales (pendiente: corte 3)
+      summary: Listar canales (pendiente del corte 3)
       description: |-
         Lista los canales registrados (sin credencial).
 
@@ -4328,7 +4626,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Consultar bitácora de canales (pendiente: corte 3)
+      summary: Consultar bitácora de canales (pendiente del corte 3)
       description: |-
         Eventos de integración con canales externos, paginados.
 
@@ -4400,7 +4698,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Consultar disponibilidad (canal externo) (pendiente: corte 3)
+      summary: Consultar disponibilidad (canal externo) (pendiente del corte 3)
       description: |-
         Contrato del canal externo (10.3.1), autenticado con la credencial del canal (apiKey).
 
@@ -4490,7 +4788,7 @@ paths:
     post:
       tags:
       - Canal externo
-      summary: Recibir reserva externa (CU-08) (pendiente: corte 3)
+      summary: Recibir reserva externa (CU-08) (pendiente del corte 3)
       description: |-
         Recibe una reserva de un canal externo. Idempotente por canal + identificadorExterno (RN-19): un mensaje repetido devuelve 200 con la misma reserva. Si choca con una reserva vigente se rechaza y se registra el conflicto (RN-18). Si es nueva sigue el flujo de CU-02 con canal EXTERNO y respeta la estancia mínima (RP-01).
 
@@ -4647,7 +4945,7 @@ paths:
     put:
       tags:
       - Canal externo
-      summary: Cancelar reserva externa (pendiente: corte 3)
+      summary: Cancelar reserva externa (pendiente del corte 3)
       description: |-
         Cancela una reserva recibida del canal, con la liquidación de la política congelada.
 
@@ -4713,7 +5011,7 @@ paths:
     get:
       tags:
       - Conflictos
-      summary: Consultar conflictos de canal (pendiente: corte 3)
+      summary: Consultar conflictos de canal (pendiente del corte 3)
       description: |-
         Revisión del administrador de los conflictos registrados con canales externos (RN-18).
 
@@ -4771,7 +5069,7 @@ paths:
     put:
       tags:
       - Conflictos
-      summary: Resolver conflicto de canal (pendiente: corte 3)
+      summary: Resolver conflicto de canal (pendiente del corte 3)
       description: |-
         Transición PENDIENTE → RESUELTO del conflicto, registrando qué se hizo con el caso.
 
@@ -4858,7 +5156,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de ocupación (pendiente: corte 3)
+      summary: Reporte de ocupación (pendiente del corte 3)
       description: |-
         Noches vendidas sobre noches disponibles de los apartamentos activos en el rango.
 
@@ -4933,7 +5231,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de ingresos (pendiente: corte 3)
+      summary: Reporte de ingresos (pendiente del corte 3)
       description: |-
         Suma de pagos registrados en el rango, por medio de pago.
 
@@ -5008,7 +5306,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de reservas por canal (pendiente: corte 3)
+      summary: Reporte de reservas por canal (pendiente del corte 3)
       description: |-
         Reservas, cancelaciones y no-show por canal en el rango.
 
@@ -5471,6 +5769,74 @@ components:
         activo:
           type: boolean
           description: false = eliminado lógicamente.
+        fotoUrl:
+          type:
+          - string
+          - 'null'
+          description: URL de la foto de perfil (7.2).
+    PerfilRequest:
+      type: object
+      description: Datos del perfil que el propio usuario puede cambiar (7.2). El correo no es editable.
+      required:
+      - nombre
+      - telefono
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+        telefono:
+          type: string
+          maxLength: 20
+        fotoUrl:
+          type: string
+          format: uri
+          maxLength: 300
+    CambioContrasenaRequest:
+      type: object
+      description: Cambio voluntario de contraseña (7.2).
+      required:
+      - contrasenaActual
+      - contrasenaNueva
+      properties:
+        contrasenaActual:
+          type: string
+          format: password
+        contrasenaNueva:
+          type: string
+          description: Mínimo 8 caracteres, con mayúsculas y números (7.2).
+          format: password
+          minLength: 8
+          pattern: '^(?=.*[A-Z])(?=.*\d).{8,}$'
+    SolicitudRecuperacionRequest:
+      type: object
+      description: Correo al que se envía el código de recuperación (7.2).
+      required:
+      - correo
+      properties:
+        correo:
+          type: string
+          format: email
+    ConfirmarRecuperacionRequest:
+      type: object
+      description: Código recibido por correo y contraseña nueva (7.2).
+      required:
+      - correo
+      - codigo
+      - contrasenaNueva
+      properties:
+        correo:
+          type: string
+          format: email
+        codigo:
+          type: string
+          pattern: '^\d{6}$'
+          description: 6 dígitos, vigente 15 minutos, un solo uso.
+        contrasenaNueva:
+          type: string
+          description: Mínimo 8 caracteres, con mayúsculas y números (7.2).
+          format: password
+          minLength: 8
+          pattern: '^(?=.*[A-Z])(?=.*\d).{8,}$'
     ImagenDTO:
       type: object
       description: Imagen del apartamento.

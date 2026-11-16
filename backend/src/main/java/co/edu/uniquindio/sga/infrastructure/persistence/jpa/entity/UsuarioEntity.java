@@ -52,6 +52,10 @@ public class UsuarioEntity {
     @Column(nullable = false)
     private boolean activo = true;
 
+    /** URL de la foto de perfil (7.2); opcional. */
+    @Column(name = "foto_url", length = 300)
+    private String fotoUrl;
+
     protected UsuarioEntity() {
     }
 
@@ -75,6 +79,29 @@ public class UsuarioEntity {
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public RolUsuario getRol() { return rol; }
     public boolean isActivo() { return activo; }
+    public String getFotoUrl() { return fotoUrl; }
+
+    /** El administrador reemplaza los datos y el rol (7.2). El correo no cambia: identifica al usuario. */
+    public void actualizarDatos(String nombre, String telefono, String documento, LocalDate fechaNacimiento,
+                                RolUsuario rol) {
+        this.nombre = nombre;
+        this.telefono = telefono;
+        this.documento = documento;
+        this.fechaNacimiento = fechaNacimiento;
+        this.rol = rol;
+    }
+
+    /** El propio usuario cambia su nombre, teléfono y foto (7.2). */
+    public void actualizarPerfil(String nombre, String telefono, String fotoUrl) {
+        this.nombre = nombre;
+        this.telefono = telefono;
+        this.fotoUrl = fotoUrl;
+    }
+
+    /** Recibe el hash BCrypt de la contraseña nueva, nunca el texto plano. */
+    public void cambiarContrasena(String contrasenaCifrada) {
+        this.contrasena = contrasenaCifrada;
+    }
 
     public void setActivo(boolean activo) {
         this.activo = activo;

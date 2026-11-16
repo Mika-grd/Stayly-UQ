@@ -2,7 +2,7 @@
 
 - `openapi.yaml`: contrato de la API en OpenAPI 3.1, generado a partir de las hojas APIs, Schemas DTO y
   Errores de Negocio del libro del modelo. Las operaciones que todavía no están implementadas terminan
-  su resumen en *(pendiente: corte 3)*. Con la aplicación arriba, Swagger UI está en
+  su resumen en *(pendiente del corte 3)*. Con la aplicación arriba, Swagger UI está en
   <http://localhost:8080/swagger-ui.html> (botón **Authorize** con el token del login).
 - `coleccion-sga.http`: colección de pruebas para el IntelliJ HTTP Client. Incluye el flujo completo de
   una reserva, un 409 por cada regla que expone la API, los casos 400, 401, 403 y 404, y los casos de

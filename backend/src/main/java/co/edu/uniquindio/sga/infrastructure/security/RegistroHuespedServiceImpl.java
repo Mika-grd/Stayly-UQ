@@ -39,7 +39,6 @@ public class RegistroHuespedServiceImpl implements RegistroHuespedService {
         UsuarioEntity usuario = usuarios.save(new UsuarioEntity(request.nombre().trim(), correo,
                 codificador.encode(request.contrasena()), request.telefono().trim(), documento,
                 request.fechaNacimiento(), RolUsuario.HUESPED));
-        return new UsuarioResponse(usuario.getId(), usuario.getNombre(), usuario.getCorreo(), usuario.getTelefono(),
-                usuario.getRol().name(), usuario.isActivo());
+        return UsuarioRespuestas.de(usuario);
     }
 }

@@ -64,6 +64,11 @@ public final class CatalogoErroresNegocio {
             // Usuarios y seguridad (7.2)
             Map.entry("USUARIO_CON_RESERVAS_ACTIVAS", new Clasificacion(CONFLICTO, "7.2")),
             Map.entry("CORREO_YA_REGISTRADO", new Clasificacion(CONFLICTO, "7.2")),
+            Map.entry("DOCUMENTO_YA_REGISTRADO", new Clasificacion(CONFLICTO, "7.2")),
+            Map.entry("CORREO_NO_EDITABLE", new Clasificacion(CONFLICTO, "7.2")),
+            Map.entry("AUTOELIMINACION_NO_PERMITIDA", new Clasificacion(CONFLICTO, "7.2")),
+            Map.entry("CONTRASENA_ACTUAL_INCORRECTA", new Clasificacion(CONFLICTO, "7.2")),
+            Map.entry("CODIGO_RECUPERACION_INVALIDO", new Clasificacion(CONFLICTO, "7.2")),
             Map.entry("CREDENCIALES_INVALIDAS", new Clasificacion(HttpStatus.UNAUTHORIZED, "7.2")),
             Map.entry("ACCESO_DENEGADO", new Clasificacion(HttpStatus.FORBIDDEN, "7.2")),
             // Configuración y formato

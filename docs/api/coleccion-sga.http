@@ -1977,3 +1977,392 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyZWNlcGNpb25Ac3RheWx5LmxvY
         client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
     });
 %}
+
+# ============================================================================================================
+# 9. Usuarios, perfil y contraseña (7.2)
+# ============================================================================================================
+
+### 9.1 El administrador lista los usuarios, 10 por página (CU-38)
+# espera: 200
+GET {{base}}/api/usuarios?pagina=0
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.1 El administrador lista los usuarios, 10 por página (CU-38)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.2 Recepción no gestiona usuarios -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/usuarios
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("9.2 Recepción no gestiona usuarios -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.3 El administrador crea una recepcionista -> 201 (CU-38)
+# espera: 201
+# guarda: usuarioNuevo = $.id
+POST {{base}}/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "turno.noche@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.3 El administrador crea una recepcionista -> 201 (CU-38)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+    client.global.set("usuarioNuevo", response.body.id);
+%}
+
+### 9.4 El mismo correo otra vez -> 409 CORREO_YA_REGISTRADO
+# espera: 409 CORREO_YA_REGISTRADO
+POST {{base}}/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "turno.noche@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000078",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.4 El mismo correo otra vez -> 409 CORREO_YA_REGISTRADO", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CORREO_YA_REGISTRADO", "Se esperaba CORREO_YA_REGISTRADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.5 El documento de otro usuario -> 409 DOCUMENTO_YA_REGISTRADO
+# espera: 409 DOCUMENTO_YA_REGISTRADO
+POST {{base}}/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "otro.turno@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.5 El documento de otro usuario -> 409 DOCUMENTO_YA_REGISTRADO", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "DOCUMENTO_YA_REGISTRADO", "Se esperaba DOCUMENTO_YA_REGISTRADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.6 Consultar el usuario creado -> 200
+# espera: 200
+GET {{base}}/api/usuarios/{{usuarioNuevo}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.6 Consultar el usuario creado -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.7 Cambiarle el correo -> 409 CORREO_NO_EDITABLE
+# espera: 409 CORREO_NO_EDITABLE
+PUT {{base}}/api/usuarios/{{usuarioNuevo}}
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "cambiado@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA"
+}
+
+> {%
+    client.test("9.7 Cambiarle el correo -> 409 CORREO_NO_EDITABLE", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CORREO_NO_EDITABLE", "Se esperaba CORREO_NO_EDITABLE y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.8 Pasarla a personal de servicio -> 200
+# espera: 200
+PUT {{base}}/api/usuarios/{{usuarioNuevo}}
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "turno.noche@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "PERSONAL_SERVICIO"
+}
+
+> {%
+    client.test("9.8 Pasarla a personal de servicio -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.9 La usuaria nueva inicia sesión con su rol -> 200
+# espera: 200
+# guarda: tokenNuevo = $.token
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.9 La usuaria nueva inicia sesión con su rol -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("tokenNuevo", response.body.token);
+%}
+
+### 9.10 Consulta su propio perfil -> 200 (CU-39)
+# espera: 200
+GET {{base}}/api/usuarios/me
+Authorization: Bearer {{tokenNuevo}}
+
+> {%
+    client.test("9.10 Consulta su propio perfil -> 200 (CU-39)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.11 Cambia su nombre, teléfono y foto -> 200 (el correo no cambia)
+# espera: 200
+PUT {{base}}/api/usuarios/me
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "nombre": "Diana Restrepo",
+  "telefono": "3005550000",
+  "fotoUrl": "https://stayly-uq.co/perfil/diana.jpg"
+}
+
+> {%
+    client.test("9.11 Cambia su nombre, teléfono y foto -> 200 (el correo no cambia)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.12 Cambio de contraseña con la actual errada -> 409 CONTRASENA_ACTUAL_INCORRECTA
+# espera: 409 CONTRASENA_ACTUAL_INCORRECTA
+PUT {{base}}/api/usuarios/me/contrasena
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "contrasenaActual": "Errada2026",
+  "contrasenaNueva": "Nueva2026Turno"
+}
+
+> {%
+    client.test("9.12 Cambio de contraseña con la actual errada -> 409 CONTRASENA_ACTUAL_INCORRECTA", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CONTRASENA_ACTUAL_INCORRECTA", "Se esperaba CONTRASENA_ACTUAL_INCORRECTA y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.13 Cambio de contraseña con la actual correcta -> 204
+# espera: 204
+PUT {{base}}/api/usuarios/me/contrasena
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "contrasenaActual": "TurnoNoche2026",
+  "contrasenaNueva": "Nueva2026Turno"
+}
+
+> {%
+    client.test("9.13 Cambio de contraseña con la actual correcta -> 204", () => {
+        client.assert(response.status === 204, "Se esperaba 204 y llegó " + response.status);
+    });
+%}
+
+### 9.14 Contraseña sin mayúsculas ni números -> 400 FORMATO_INVALIDO
+# espera: 400 FORMATO_INVALIDO
+PUT {{base}}/api/usuarios/me/contrasena
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "contrasenaActual": "Nueva2026Turno",
+  "contrasenaNueva": "debil"
+}
+
+> {%
+    client.test("9.14 Contraseña sin mayúsculas ni números -> 400 FORMATO_INVALIDO", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "FORMATO_INVALIDO", "Se esperaba FORMATO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.15 Pide un código de recuperación -> 202 (llega al correo; en esta versión, al log) (CU-40)
+# espera: 202
+POST {{base}}/api/auth/recuperacion
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local"
+}
+
+> {%
+    client.test("9.15 Pide un código de recuperación -> 202 (llega al correo; en esta versión, al log) (CU-40)", () => {
+        client.assert(response.status === 202, "Se esperaba 202 y llegó " + response.status);
+    });
+%}
+
+### 9.16 Un correo que no existe también responde 202 (no revela quién está registrado)
+# espera: 202
+POST {{base}}/api/auth/recuperacion
+Content-Type: application/json
+
+{
+  "correo": "nadie@stayly.local"
+}
+
+> {%
+    client.test("9.16 Un correo que no existe también responde 202 (no revela quién está registrado)", () => {
+        client.assert(response.status === 202, "Se esperaba 202 y llegó " + response.status);
+    });
+%}
+
+### 9.17 Confirmar con un código errado -> 409 CODIGO_RECUPERACION_INVALIDO
+# espera: 409 CODIGO_RECUPERACION_INVALIDO
+POST {{base}}/api/auth/recuperacion/confirmar
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local",
+  "codigo": "000000",
+  "contrasenaNueva": "Recuperada2026"
+}
+
+> {%
+    client.test("9.17 Confirmar con un código errado -> 409 CODIGO_RECUPERACION_INVALIDO", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CODIGO_RECUPERACION_INVALIDO", "Se esperaba CODIGO_RECUPERACION_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.18 Perfil del huésped 1, para conocer su id
+# espera: 200
+# guarda: idHuesped1 = $.id
+GET {{base}}/api/usuarios/me
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("9.18 Perfil del huésped 1, para conocer su id", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("idHuesped1", response.body.id);
+%}
+
+### 9.19 Eliminar a un titular con reservas activas -> 409 USUARIO_CON_RESERVAS_ACTIVAS
+# espera: 409 USUARIO_CON_RESERVAS_ACTIVAS
+DELETE {{base}}/api/usuarios/{{idHuesped1}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.19 Eliminar a un titular con reservas activas -> 409 USUARIO_CON_RESERVAS_ACTIVAS", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "USUARIO_CON_RESERVAS_ACTIVAS", "Se esperaba USUARIO_CON_RESERVAS_ACTIVAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.20 Perfil del administrador, para conocer su id
+# espera: 200
+# guarda: idAdmin = $.id
+GET {{base}}/api/usuarios/me
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.20 Perfil del administrador, para conocer su id", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("idAdmin", response.body.id);
+%}
+
+### 9.21 El administrador se elimina a sí mismo -> 409 AUTOELIMINACION_NO_PERMITIDA
+# espera: 409 AUTOELIMINACION_NO_PERMITIDA
+DELETE {{base}}/api/usuarios/{{idAdmin}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.21 El administrador se elimina a sí mismo -> 409 AUTOELIMINACION_NO_PERMITIDA", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "AUTOELIMINACION_NO_PERMITIDA", "Se esperaba AUTOELIMINACION_NO_PERMITIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.22 Eliminar a la usuaria nueva -> 204 (eliminación lógica)
+# espera: 204
+DELETE {{base}}/api/usuarios/{{usuarioNuevo}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.22 Eliminar a la usuaria nueva -> 204 (eliminación lógica)", () => {
+        client.assert(response.status === 204, "Se esperaba 204 y llegó " + response.status);
+    });
+%}
+
+### 9.23 Queda inactiva: ya no inicia sesión -> 401
+# espera: 401 CREDENCIALES_INVALIDAS
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local",
+  "contrasena": "Nueva2026Turno"
+}
+
+> {%
+    client.test("9.23 Queda inactiva: ya no inicia sesión -> 401", () => {
+        client.assert(response.status === 401, "Se esperaba 401 y llegó " + response.status);
+        client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.24 Usuario inexistente -> 404 USUARIO_NO_ENCONTRADO
+# espera: 404 USUARIO_NO_ENCONTRADO
+GET {{base}}/api/usuarios/00000000-0000-0000-0000-000000000999
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.24 Usuario inexistente -> 404 USUARIO_NO_ENCONTRADO", () => {
+        client.assert(response.status === 404, "Se esperaba 404 y llegó " + response.status);
+        client.assert(response.body.codigo === "USUARIO_NO_ENCONTRADO", "Se esperaba USUARIO_NO_ENCONTRADO y llegó " + response.body.codigo);
+    });
+%}
