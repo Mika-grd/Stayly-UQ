@@ -1,0 +1,877 @@
+/* ---------- Estructura general ---------- */
+
+.pagina {
+  padding-block: var(--e6) var(--e7);
+}
+
+.pila {
+  display: grid;
+  gap: var(--e4);
+}
+
+.pila-grande {
+  display: grid;
+  gap: var(--e7);
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: var(--e4);
+  font-weight: 700;
+}
+
+.nota {
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+  margin-top: var(--e3);
+}
+
+.titulo-con-accion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e4);
+}
+
+.titulo-con-accion h1,
+.titulo-con-accion h2 {
+  margin: 0;
+}
+
+.acciones {
+  display: grid;
+  gap: var(--e3);
+  margin-top: var(--e4);
+}
+
+.acciones--fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin-top: var(--e3);
+}
+
+/* ---------- Portada: la cuadra de seis fachadas ---------- */
+
+.portada {
+  background: var(--cal);
+  border-bottom: var(--borde);
+  padding-top: var(--e7);
+}
+
+.portada__rejilla {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+  gap: var(--e6);
+  align-items: end;
+  margin-bottom: var(--e6);
+}
+
+.portada__rejilla h1 {
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  font-stretch: 125%;
+  font-weight: 900;
+  margin: 0;
+}
+
+.portada__bajada {
+  font-size: var(--t1);
+  max-width: 34ch;
+  margin: 0;
+}
+
+.calle {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  height: 230px;
+  border-bottom: 10px solid var(--tinta);
+}
+
+.calle__casa {
+  flex: 1;
+  min-width: 0;
+  margin-inline: -6px;
+}
+
+.calle__casa svg {
+  background: transparent !important;
+}
+
+.portada__busqueda {
+  position: relative;
+  top: 40px;
+  margin-top: calc(-1 * var(--e3));
+}
+
+.busqueda {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 0.7fr 0.7fr auto;
+  gap: var(--e4);
+  align-items: end;
+}
+
+.busqueda__boton {
+  min-width: 140px;
+}
+
+@media (max-width: 900px) {
+  .portada__rejilla {
+    grid-template-columns: 1fr;
+  }
+  .calle {
+    height: 120px;
+  }
+  .busqueda {
+    grid-template-columns: 1fr 1fr;
+  }
+  .busqueda__boton {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Resultados ---------- */
+
+.resultados {
+  padding-top: calc(var(--e8) + var(--e4));
+}
+
+.resultados__cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e5);
+}
+
+.resultados__cabeza p {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--e6) var(--e5);
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  color: var(--tinta);
+  text-decoration: none;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.tarjeta:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: calc(var(--capa) + 3px) calc(var(--capa) + 3px) 0 0 var(--losa);
+}
+
+.tarjeta__imagen {
+  aspect-ratio: 4 / 3;
+  border-bottom: var(--borde);
+  overflow: hidden;
+}
+
+.tarjeta__cuerpo {
+  padding: var(--e4);
+  display: grid;
+  gap: var(--e1);
+}
+
+.tarjeta__cuerpo h3 {
+  margin: 0;
+}
+
+.tarjeta__datos,
+.tarjeta__advertencia {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.tarjeta__advertencia {
+  font-size: var(--t-1);
+}
+
+.tarjeta__precio {
+  margin: var(--e2) 0 0;
+}
+
+.tarjeta__precio .cifra {
+  font-size: var(--t1);
+}
+
+/* ---------- Ficha de apartamento y reserva ---------- */
+
+.ficha__cabeza {
+  margin-bottom: var(--e5);
+}
+
+.ficha__cabeza p {
+  color: var(--tinta-suave);
+  font-size: var(--t1);
+}
+
+.galeria {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  padding: 0;
+  overflow: hidden;
+  height: min(52vw, 440px);
+  margin-bottom: var(--e7);
+}
+
+.galeria__principal {
+  min-height: 0;
+  border-right: var(--borde);
+}
+
+.galeria__lado {
+  display: flex;
+  align-items: flex-end;
+  padding: var(--e4);
+}
+
+.galeria__codigo {
+  font-family: var(--letra-titular);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: clamp(var(--t2), 4vw, var(--t4));
+  color: var(--cal);
+  line-height: 1;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.ficha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: var(--e7);
+  align-items: start;
+}
+
+.ficha__texto {
+  display: grid;
+  gap: var(--e6);
+  min-width: 0;
+}
+
+.reservar {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: var(--e4);
+}
+
+.reservar__precio {
+  margin: 0;
+}
+
+.reservar__precio .cifra {
+  font-size: var(--t3);
+}
+
+.reservar__miniatura {
+  height: 120px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.fila--dos {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--e3);
+}
+
+.fila--accion {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  margin-top: var(--e4);
+}
+
+.fila--acompanante {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto;
+  align-items: end;
+  padding-bottom: var(--e4);
+  margin-bottom: var(--e4);
+  border-bottom: 1px solid var(--muro-hondo);
+}
+
+@media (max-width: 900px) {
+  .ficha {
+    grid-template-columns: 1fr;
+  }
+  .reservar {
+    position: static;
+  }
+  .galeria {
+    grid-template-columns: 1fr;
+  }
+  .galeria__lado {
+    display: none;
+  }
+  .galeria__principal {
+    border-right: 0;
+  }
+  .fila--acompanante {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lista-marcada {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+}
+
+.lista-marcada li {
+  padding: var(--e1) var(--e3);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+}
+
+.tramos {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--e4);
+  display: grid;
+  gap: var(--e2);
+}
+
+.tramos li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  align-items: baseline;
+  gap: var(--e3);
+}
+
+.tramos .cifra {
+  font-size: var(--t2);
+}
+
+.desglose {
+  border-top: var(--borde);
+  padding-top: var(--e3);
+}
+
+.grupo-campos {
+  margin: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.grupo-campos legend {
+  font-family: var(--letra-titular);
+  font-stretch: 112%;
+  font-weight: 800;
+  font-size: var(--t1);
+  padding: 0 var(--e2);
+  background: var(--cal);
+}
+
+.cuenta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--e2) var(--e4);
+  margin: 0;
+}
+
+.cuenta dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cuenta__total {
+  border-top: var(--borde);
+  padding-top: var(--e2);
+  font-weight: 800;
+}
+
+dd.cuenta__total {
+  font-size: var(--t2);
+}
+
+/* ---------- Detalle de reserva ---------- */
+
+.reserva__cabeza {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: var(--e5);
+  align-items: center;
+  margin-bottom: var(--e6);
+}
+
+.reserva__cabeza h1 {
+  font-size: clamp(var(--t2), 3.4vw, var(--t4));
+}
+
+.reserva__miniatura {
+  height: 160px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.reserva__codigo {
+  margin: 0 0 var(--e1);
+  font-weight: 700;
+  color: var(--tinta-suave);
+}
+
+@media (max-width: 640px) {
+  .reserva__cabeza {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* El recorrido sí es una secuencia: los números dicen en qué paso va la reserva */
+.recorrido {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--e6);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+  background: var(--cal);
+}
+
+.recorrido li {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e3) var(--e4);
+  border-right: var(--borde);
+  font-weight: 700;
+  color: var(--tinta-suave);
+}
+
+.recorrido li:last-child {
+  border-right: 0;
+}
+
+.recorrido__numero {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--borde);
+  border-radius: 50%;
+  font-family: var(--letra-titular);
+  font-weight: 800;
+  background: var(--cal);
+}
+
+.recorrido li.hecho {
+  background: var(--muro);
+  color: var(--tinta);
+}
+
+.recorrido li.actual {
+  background: var(--tinta);
+  color: var(--cal);
+}
+
+.recorrido li.actual .recorrido__numero {
+  background: var(--maiz);
+  color: var(--tinta);
+}
+
+@media (max-width: 640px) {
+  .recorrido {
+    grid-template-columns: 1fr 1fr;
+  }
+  .recorrido li:nth-child(2) {
+    border-right: 0;
+  }
+  .recorrido li:nth-child(-n + 2) {
+    border-bottom: var(--borde);
+  }
+}
+
+.ocupantes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--e4);
+  display: grid;
+  gap: var(--e2);
+}
+
+.ocupantes li {
+  display: grid;
+}
+
+.ocupantes span {
+  color: var(--tinta-suave);
+  font-size: var(--t-1);
+}
+
+/* ---------- Folio ---------- */
+
+.folio {
+  display: grid;
+  gap: var(--e4);
+}
+
+.folio__cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.folio__cabeza h2 {
+  margin: 0;
+}
+
+.folio__saldos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.folio__saldos > div {
+  display: grid;
+  padding: var(--e3) var(--e4);
+  border-right: var(--borde);
+}
+
+.folio__saldos > div:last-child {
+  border-right: 0;
+}
+
+.folio__saldos span {
+  font-size: var(--t-1);
+  font-weight: 700;
+}
+
+.folio__saldos strong {
+  font-size: var(--t1);
+}
+
+.folio__saldo--debe {
+  background: var(--maiz);
+}
+
+.folio__pago td {
+  color: var(--cafetal);
+}
+
+.folio__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+}
+
+.subformulario {
+  display: grid;
+  gap: var(--e4);
+  padding: var(--e4);
+  background: var(--muro);
+  border: var(--borde);
+  border-radius: var(--radio);
+}
+
+.subformulario > .boton {
+  justify-self: start;
+}
+
+@media (max-width: 640px) {
+  .folio__saldos {
+    grid-template-columns: 1fr;
+  }
+  .folio__saldos > div {
+    border-right: 0;
+    border-bottom: var(--borde);
+  }
+}
+
+/* ---------- Cuenta ---------- */
+
+.cuenta.pagina,
+main.cuenta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+  gap: var(--e7);
+  align-items: center;
+}
+
+.cuenta__ilustracion {
+  height: 420px;
+}
+
+.cuenta__ilustracion svg {
+  background: transparent !important;
+}
+
+@media (max-width: 860px) {
+  main.cuenta {
+    grid-template-columns: 1fr;
+  }
+  .cuenta__ilustracion {
+    display: none;
+  }
+}
+
+/* ---------- Mis viajes ---------- */
+
+.viajes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e5);
+}
+
+.viaje {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: var(--e4);
+  align-items: center;
+  color: var(--tinta);
+  text-decoration: none;
+}
+
+.viaje__fachada {
+  height: 96px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.viaje__texto h3,
+.viaje__texto p {
+  margin: 0 0 var(--e1);
+}
+
+.viaje__total {
+  font-size: var(--t1);
+}
+
+@media (max-width: 560px) {
+  .viaje {
+    grid-template-columns: 72px 1fr;
+  }
+  .viaje__total {
+    grid-column: 2;
+  }
+}
+
+/* ---------- Recepción ---------- */
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e4);
+  align-items: end;
+  margin-bottom: var(--e5);
+}
+
+.barra__titulo {
+  font-family: var(--letra-titular);
+  font-stretch: 118%;
+  font-weight: 800;
+  font-size: var(--t2);
+  margin: 0;
+}
+
+.campo--ancho {
+  flex: 1 1 260px;
+}
+
+.tablero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--e6);
+}
+
+.tablero h2 .cifra {
+  display: inline-block;
+  min-width: 2ch;
+  margin-left: var(--e2);
+  padding: 0 var(--e2);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--muro);
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .tablero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.movimientos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.movimiento {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--e3);
+  align-items: center;
+  padding: var(--e2);
+  border: var(--borde);
+  border-radius: var(--radio);
+  color: var(--tinta);
+  text-decoration: none;
+  background: var(--cal);
+}
+
+.movimiento:hover {
+  background: var(--muro);
+}
+
+.movimiento__apto {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  font-family: var(--letra-titular);
+  font-stretch: 118%;
+  font-weight: 900;
+  color: var(--cal);
+  box-shadow: 3px 3px 0 0 var(--tinta);
+}
+
+.movimiento__texto {
+  display: grid;
+}
+
+.movimiento__texto span {
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+}
+
+.tabla--filas tbody tr {
+  cursor: pointer;
+}
+
+.tabla--filas tbody tr:hover {
+  background: var(--muro);
+}
+
+/* ---------- Operación ---------- */
+
+.preparar {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e3);
+}
+
+.preparar > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+  padding-bottom: var(--e3);
+  border-bottom: 1px solid var(--muro-hondo);
+}
+
+.preparar > li > .boton {
+  margin-left: auto;
+}
+
+.estado-apto__motivo {
+  flex-basis: 100%;
+}
+
+.calendario {
+  overflow-x: auto;
+  display: grid;
+  gap: 4px;
+}
+
+.calendario__fila {
+  display: grid;
+  grid-template-columns: 96px repeat(var(--dias), minmax(34px, 1fr));
+  gap: 4px;
+  align-items: center;
+  min-width: 640px;
+}
+
+.calendario__fila--cabeza span {
+  display: grid;
+  text-align: center;
+  font-family: var(--letra-titular);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.calendario__fila--cabeza small {
+  font-family: var(--letra-texto);
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+
+.calendario__hoy {
+  background: var(--maiz);
+  border: var(--borde);
+  border-radius: var(--radio);
+}
+
+.calendario__apto {
+  font-weight: 700;
+}
+
+.calendario__noche {
+  display: block;
+  height: 34px;
+  border: var(--borde);
+  border-radius: 4px;
+}
+
+.calendario__noche--libre {
+  background: var(--cal);
+}
+
+.calendario__noche--bloqueada {
+  background: repeating-linear-gradient(45deg, var(--tinta) 0 4px, var(--cal) 4px 8px);
+}
+
+a.calendario__noche--reservada:hover {
+  outline: 3px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+.calendario__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e5);
+  margin-top: var(--e3);
+  font-size: var(--t-1);
+}
+
+.calendario__leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+}
+
+.calendario__leyenda i {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+}
