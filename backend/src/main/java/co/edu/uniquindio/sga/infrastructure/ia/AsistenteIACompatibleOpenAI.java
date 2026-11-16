@@ -47,7 +47,8 @@ public class AsistenteIACompatibleOpenAI implements AsistenteIA {
         this.modelo = modelo;
         this.clave = clave;
         this.tiempoMaximo = tiempoMaximo;
-        this.cliente = HttpClient.newBuilder().connectTimeout(tiempoMaximo).build();
+        // HTTP/1.1: lo hablan todos los proveedores y los servidores locales (Ollama) sin negociar HTTP/2
+        this.cliente = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(tiempoMaximo).build();
     }
 
     @Override
