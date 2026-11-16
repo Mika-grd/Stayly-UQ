@@ -11,13 +11,20 @@ y el contrato de la API en **OpenAPI 3.1**. Todavía no hay controladores ni bas
 Requiere un JDK 17 o superior para ejecutar Gradle. El proyecto compila con Java 21: si no está instalado, Gradle lo descarga solo (toolchain).
 
 ```bash
+cd backend
 ./gradlew clean test
 ```
 
 ## Estructura
 
 ```
-src/main/java/co/edu/uniquindio/sga/
+backend/      API en Spring Boot (Gradle)
+frontend/     aplicación web (pendiente)
+docs/         documentación compartida por ambos
+```
+
+```
+backend/src/main/java/co/edu/uniquindio/sga/
   domain/            modelo (agregados, objetos de valor), 13 servicios de dominio,
                      interfaces de repositorio, puerto ConfiguracionAlojamiento y ReglaDominioException.
                      Solo depende de java.*
@@ -34,7 +41,7 @@ docs/
 ```
 
 Los valores de la Ficha del Alojamiento (umbral de edad, horarios, anticipo, mascotas, recargo nocturno…) están en
-`src/main/resources/application.properties`; el dominio los pide al puerto `ConfiguracionAlojamiento`.
+`backend/src/main/resources/application.properties`; el dominio los pide al puerto `ConfiguracionAlojamiento`.
 
 ## Validar la API
 

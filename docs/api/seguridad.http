@@ -1,5 +1,5 @@
 ### Guía 12 - Casos 3 a 14 de la sección 9 (IntelliJ HTTP Client / VS Code REST Client)
-### Arranque la aplicación (./gradlew bootRun) y ejecute las peticiones en orden.
+### Arranque la aplicación (cd backend && ./gradlew bootRun) y ejecute las peticiones en orden.
 ### Antes de los casos 9 y 10, ejecute el caso 8 y copie en @reserva el código de la reserva de Laura Gomez.
 
 @base = http://localhost:8080
