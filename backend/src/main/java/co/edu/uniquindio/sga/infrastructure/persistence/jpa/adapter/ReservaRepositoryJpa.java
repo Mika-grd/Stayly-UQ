@@ -1,6 +1,7 @@
 package co.edu.uniquindio.sga.infrastructure.persistence.jpa.adapter;
 
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
+import co.edu.uniquindio.sga.domain.model.compartido.RangoFechas;
 import co.edu.uniquindio.sga.domain.model.compartido.Estancia;
 import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
 import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
@@ -112,6 +113,18 @@ public class ReservaRepositoryJpa implements ReservaRepository {
     @Override
     public List<Reserva> buscarConSalidaEl(LocalDate fecha) {
         return jpa.findByEstanciaSalidaOrderByApartamentoAsc(fecha).stream().map(ReservaMapper::aDominio).toList();
+    }
+
+    @Override
+    public List<Reserva> buscarQueSolapan(RangoFechas rango) {
+        return jpa.findByEstanciaEntradaBeforeAndEstanciaSalidaAfter(rango.fin(), rango.inicio()).stream()
+                .map(ReservaMapper::aDominio).toList();
+    }
+
+    @Override
+    public List<Reserva> buscarCreadasEntre(LocalDateTime desde, LocalDateTime hasta) {
+        return jpa.findByFechaCreacionGreaterThanEqualAndFechaCreacionLessThan(desde, hasta).stream()
+                .map(ReservaMapper::aDominio).toList();
     }
 
     /** RES-AAAA-NNNNN: el número se reinicia cada año y se toma con la fila del año bloqueada. */
