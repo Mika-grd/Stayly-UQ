@@ -47,7 +47,8 @@ confirmación, y errores que dicen qué pasó y qué hacer: el mensaje viene del
 
 Un interruptor en la cabecera cambia a la versión HARSH: la misma interfaz en clave gótica. Solo redefine tokens y decoración en `src/styles/harsh.css` (activado con `data-tema="harsh"` en `<html>` y guardado en el navegador); textos, estructura y comportamiento no cambian.
 
-- Fondo negro, texto y bordes color hueso; los seis colores de fachada pasan a sangre, acero, musgo, oro viejo, veneno y cripta.
+- Negros y grises con tinte morado (no un inverso): fondo casi negro, placas carbón, bordes de hierro y texto lavanda pálido. Los seis colores de fachada pasan a sangre, índigo de noche, musgo, bronce oxidado, morado obispo y pizarra; la sangre es el único acento encendido.
+- Fachadas con contorno negro y ventanas con luz de vela.
 - Metal Mania para titulares, Pirata One para cifras y Barlow Semi Condensed para leer.
 - Esquinas rectas, placas con filete interior y cortes en diente de sierra bajo la cabecera y sobre el pie.
 - En la portada, luna de sangre, cordilleras en silueta y murciélagos que cruzan el cielo.

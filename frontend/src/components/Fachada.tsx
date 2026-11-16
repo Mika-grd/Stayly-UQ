@@ -11,8 +11,8 @@ const DETALLE: Record<ColorFachada, string> = {
   aguamarina: 'var(--balcon)',
 };
 
-const TINTA = 'var(--tinta)';
-const CAL = 'var(--cal)';
+const TINTA = 'var(--trazo, var(--tinta))';
+const CAL = 'var(--ventana, var(--cal))';
 
 /** Piso del apartamento según su identificación (SUQ-201 → 2). */
 function pisoDe(identificacion: string) {
