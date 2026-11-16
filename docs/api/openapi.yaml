@@ -18,7 +18,7 @@ info:
 
     Todo error devuelve `ErrorNegocioResponse` con un `codigo` estable. Los valores monetarios son enteros en pesos colombianos (COP). Las fechas y horas se expresan en la zona America/Bogota. Los listados se paginan de a 10 elementos.
 
-    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5), operación diaria (7.6), folio (7.7) y canal externo y conflictos (7.8). Los reportes siguen documentados como contrato, pero aún no están implementados: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
+    **Alcance de la Entrega 2 (cortes 2 y 3)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5), operación diaria (7.6), folio (7.7), canal externo y conflictos (7.8) y reportes. Todas las operaciones del contrato están implementadas y aparecen en Swagger UI.
 servers:
 - url: http://localhost:8080
   description: Entorno local de desarrollo.
@@ -5238,7 +5238,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de ocupación (pendiente del corte 3)
+      summary: Reporte de ocupación
       description: |-
         Noches vendidas sobre noches disponibles de los apartamentos activos en el rango.
 
@@ -5313,7 +5313,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de ingresos (pendiente del corte 3)
+      summary: Reporte de ingresos
       description: |-
         Suma de pagos registrados en el rango, por medio de pago.
 
@@ -5388,7 +5388,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de reservas por canal (pendiente del corte 3)
+      summary: Reporte de reservas por canal
       description: |-
         Reservas, cancelaciones y no-show por canal en el rango.
 
