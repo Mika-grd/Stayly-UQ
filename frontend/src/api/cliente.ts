@@ -51,6 +51,16 @@ export function alExpirarSesion(accion: () => void) {
 
 type Metodo = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+/**
+ * URL base del API (Guía 22, 6.1). En producción VITE_API_URL trae la URL pública del backend con su
+ * /api; sin ella se usa /api en el mismo origen, que en desarrollo el proxy de Vite lleva al 8080.
+ */
+const BASE_API = (import.meta.env.VITE_API_URL?.trim() || '/api').replace(/\/+$/, '');
+const urlDe = (ruta: string) => BASE_API + ruta.replace(/^\/api/, '');
+
+/** 70 s: cubren el arranque en frío del plan gratuito, que tarda cerca de un minuto en despertar. */
+const TIEMPO_LIMITE_MS = 70_000;
+
 async function pedir<T>(metodo: Metodo, ruta: string, cuerpo?: unknown): Promise<T> {
   const sesion = leerSesion();
   const encabezados: Record<string, string> = { Accept: 'application/json' };
@@ -58,17 +68,24 @@ async function pedir<T>(metodo: Metodo, ruta: string, cuerpo?: unknown): Promise
   if (sesion) encabezados.Authorization = `Bearer ${sesion.token}`;
 
   let respuesta: Response;
+  const control = new AbortController();
+  const limite = setTimeout(() => control.abort(), TIEMPO_LIMITE_MS);
   try {
-    respuesta = await fetch(ruta, {
+    respuesta = await fetch(urlDe(ruta), {
       method: metodo,
       headers: encabezados,
       body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
+      signal: control.signal,
     });
   } catch {
     throw new ErrorApi(0, {
       codigo: 'SIN_CONEXION',
-      mensaje: 'No hay conexión con el servidor. Revise que el backend esté encendido en el puerto 8080.',
+      mensaje: control.signal.aborted
+        ? 'El servidor tardó demasiado en responder. Intente de nuevo en un momento.'
+        : 'No hay conexión con el servidor.',
     });
+  } finally {
+    clearTimeout(limite);
   }
 
   const texto = await respuesta.text();
