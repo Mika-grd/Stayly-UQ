@@ -8,6 +8,10 @@ sus **casos de uso** con Spring Boot, la **API REST** con DTOs, MapStruct y Bean
 H2** con adaptadores JPA y datos de prueba que se cargan solos, las **consultas paginadas** de a 10 y la
 **seguridad con JWT** (BCrypt, roles de 7.1 y verificación por propietario).
 
+Todas las operaciones de `docs/api/openapi.yaml` están implementadas: reservas y operación diaria, el **folio**
+(cargos, pagos y cierre, 7.7), el **canal externo** con su credencial `X-API-Key` y la revisión de **conflictos**
+(7.8) y los **reportes** del administrador (ocupación, ingresos y reservas por canal).
+
 ## Requisitos y clave del JWT
 
 Un JDK 17 o superior para ejecutar Gradle. El proyecto compila con Java 21: si no está instalado, Gradle lo
@@ -25,7 +29,8 @@ cd backend
 ./gradlew bootRun        # API en http://localhost:8080
 ```
 
-- Swagger UI: <http://localhost:8080/swagger-ui.html> (botón **Authorize** con el token de `POST /api/auth/login`).
+- Swagger UI: <http://localhost:8080/swagger-ui.html> (botón **Authorize** con el token de `POST /api/auth/login`,
+  o con la credencial del canal para `/api/externo/**`).
 - Consola de H2: <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:sga`, usuario `sa`, sin contraseña).
 - Colección de pruebas: `docs/api/coleccion-sga.http` (instrucciones en `docs/api/LEEME.md`).
 
@@ -38,6 +43,11 @@ Usuarios iniciales (se cargan solos al arrancar, con la contraseña en BCrypt):
 | Personal de servicio | servicio@stayly.local | Servicio2026 |
 | Huésped (Laura Gómez) | huesped1@stayly.local | Huesped2026 |
 | Huésped (Carlos Mejía) | huesped2@stayly.local | Huesped2026 |
+
+El canal externo no usa JWT sino su credencial en el encabezado `X-API-Key`. El administrador la obtiene al
+registrar el canal con `POST /api/canales` (se muestra una sola vez; solo se guarda su huella SHA-256). Para probar
+sin registrar nada, el canal del simulador de los datos de prueba usa la credencial `sim-canal-uq-2026`
+(`sga.canal-simulador.credencial` en `application.properties`; dato de prueba de H2, no una credencial real).
 
 ## Estructura
 
@@ -57,7 +67,7 @@ backend/src/main/java/co/edu/uniquindio/sga/
     exception/            excepciones de aplicación (recurso inexistente, acceso)
   infrastructure/
     web/                  controllers delgados, mappers MapStruct y @RestControllerAdvice
-    security/             cadena de filtros, JWT y verificación por propietario
+    security/             cadena de filtros, JWT, credencial X-API-Key del canal y verificación por propietario
     persistence/jpa/      entidades, @Embeddable, mappers y adaptadores de cada repositorio
     persistence/datos/    datos de prueba de la sección 12.3
     config/               beans del dominio y valores de la Ficha leídos de application.properties
@@ -80,3 +90,8 @@ Errores: toda respuesta de error es un `ErrorNegocioResponse`. 400 formato del m
 ```bash
 npx @redocly/cli lint docs/api/openapi.yaml
 ```
+
+El contrato es válido. Quedan tres advertencias de estilo que se aceptan: la licencia no tiene URL, el servidor es
+`localhost` (entorno de desarrollo) y `GET /api/politica-cancelacion/vigente` no documenta un 4XX porque es una
+consulta pública sin parámetros. Además, `ContratoOpenApiTest` comprueba en cada `./gradlew test` que el YAML y los
+controllers tengan las mismas operaciones.
