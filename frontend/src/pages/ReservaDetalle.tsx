@@ -45,7 +45,9 @@ export function ReservaDetalle() {
   const personal = es('RECEPCIONISTA', 'ADMINISTRADOR');
   const carga = useCarga(() => reservas.detalle(codigo), [codigo]);
   const accion = useAccion();
-  const [mensaje, setMensaje] = useState<string | null>(params.get('nueva') ? 'Reserva creada.' : null);
+  const [mensaje, setMensaje] = useState<string | null>(
+    params.get('nueva') ? 'Reserva creada.' : params.get('modificada') ? 'Reserva modificada. La diferencia quedó como ajuste en el folio.' : null,
+  );
   const [liquidacion, setLiquidacion] = useState<Liquidacion | null>(null);
   const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
   const [nuevaHora, setNuevaHora] = useState('');
@@ -173,6 +175,11 @@ export function ReservaDetalle() {
 
           {personal && (
             <div className="acciones">
+              {activa && (
+                <Link to={`/reservas/${r.codigo}/modificar`} className="boton boton--claro boton--ancho">
+                  Modificar reserva
+                </Link>
+              )}
               {r.estado === 'PENDIENTE' && (
                 <button className="boton boton--cobalto boton--ancho" disabled={accion.enCurso} onClick={() => transicion(() => reservas.confirmar(r.codigo), 'Reserva confirmada.')}>
                   Confirmar reserva
