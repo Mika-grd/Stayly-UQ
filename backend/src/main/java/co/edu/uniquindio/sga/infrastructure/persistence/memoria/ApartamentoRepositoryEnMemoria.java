@@ -27,4 +27,9 @@ public class ApartamentoRepositoryEnMemoria implements ApartamentoRepository {
     public List<Apartamento> listarActivos() {
         return apartamentos.values().stream().filter(Apartamento::estaActivo).toList();
     }
+
+    @Override
+    public List<Apartamento> listarTodos() {
+        return List.copyOf(apartamentos.values());
+    }
 }

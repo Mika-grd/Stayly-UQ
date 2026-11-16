@@ -13,4 +13,7 @@ public interface ApartamentoRepository {
     Optional<Apartamento> buscarPorIdentificacion(IdentificacionApartamento identificacion);
 
     List<Apartamento> listarActivos();
+
+    /** Todos, activos o no (incluidos los retirados): para la gestión del administrador (7.3). */
+    List<Apartamento> listarTodos();
 }
