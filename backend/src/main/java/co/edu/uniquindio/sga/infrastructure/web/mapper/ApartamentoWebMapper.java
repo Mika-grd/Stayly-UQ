@@ -34,17 +34,18 @@ public interface ApartamentoWebMapper {
         return aResumen(disponible.apartamento(), DominioWebMapperSoporte.dineroALong(disponible.valorEstimado().total()));
     }
 
-    default ApartamentoDetalleResponse aDetalle(Apartamento apartamento, UbicacionDTO ubicacion) {
+    default ApartamentoDetalleResponse aDetalle(Apartamento apartamento, UbicacionDTO ubicacion, String direccion) {
         return new ApartamentoDetalleResponse(apartamento.identificacion().valor(), apartamento.nombre(),
                 apartamento.descripcion(), apartamento.dormitorios(), apartamento.capacidad().personas(),
                 apartamento.caracteristicas().stream().map(c -> c.nombre()).toList(), apartamento.admiteMascotas(),
                 apartamento.advertenciaAcceso().orElse(null),
                 apartamento.imagenes().stream().map(DominioWebMapperSoporte::imagenADto).toList(),
-                apartamento.estadoOperativo(), apartamento.estaActivo(), ubicacion);
+                apartamento.estadoOperativo(), apartamento.estaActivo(), ubicacion, direccion);
     }
 
-    default ActualizacionApartamentoResponse aActualizacion(ApartamentoActualizado resultado, UbicacionDTO ubicacion) {
-        return new ActualizacionApartamentoResponse(aDetalle(resultado.apartamento(), ubicacion),
+    default ActualizacionApartamentoResponse aActualizacion(ApartamentoActualizado resultado, UbicacionDTO ubicacion,
+                                                            String direccion) {
+        return new ActualizacionApartamentoResponse(aDetalle(resultado.apartamento(), ubicacion, direccion),
                 codigosComoTexto(resultado.reservasSobreNuevaCapacidad()));
     }
 

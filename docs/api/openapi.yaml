@@ -6275,6 +6275,13 @@ components:
           allOf:
           - $ref: '#/components/schemas/UbicacionDTO'
           description: La del alojamiento.
+        direccion:
+          type:
+          - string
+          - 'null'
+          description: Dirección y ciudad del alojamiento (todos los apartamentos comparten edificio, F-13).
+          examples:
+          - Carrera 15 con Calle 12 Norte, sector norte, Armenia, Quindio
     ActualizacionApartamentoResponse:
       type: object
       description: Resultado de actualizar un apartamento, con advertencia de capacidad (7.3).

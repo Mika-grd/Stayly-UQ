@@ -85,7 +85,7 @@ public class ApartamentoController {
     public ApartamentoDetalleResponse consultarDetalle(@PathVariable String identificacion) {
         DetalleApartamento detalle = consultarDetalle.ejecutar(new IdentificacionApartamento(identificacion));
         UbicacionDTO ubicacion = new UbicacionDTO(detalle.ubicacion().latitud(), detalle.ubicacion().longitud());
-        return mapper.aDetalle(detalle.apartamento(), ubicacion);
+        return mapper.aDetalle(detalle.apartamento(), ubicacion, detalle.direccion());
     }
 
     @PostMapping("/api/apartamentos")
@@ -98,7 +98,8 @@ public class ApartamentoController {
         UbicacionDTO ubicacion = new UbicacionDTO(detalle.ubicacion().latitud(), detalle.ubicacion().longitud());
         var ubicacionRecurso = uri.path("/api/apartamentos/{identificacion}")
                 .buildAndExpand(apartamento.identificacion().valor()).toUri();
-        return ResponseEntity.created(ubicacionRecurso).body(mapper.aDetalle(apartamento, ubicacion));
+        return ResponseEntity.created(ubicacionRecurso)
+                .body(mapper.aDetalle(apartamento, ubicacion, detalle.direccion()));
     }
 
     @PutMapping("/api/apartamentos/{identificacion}")
@@ -108,7 +109,7 @@ public class ApartamentoController {
         var resultado = actualizar.ejecutar(new IdentificacionApartamento(identificacion), mapper.aDatos(request));
         DetalleApartamento detalle = consultarDetalle.ejecutar(resultado.apartamento().identificacion());
         UbicacionDTO ubicacion = new UbicacionDTO(detalle.ubicacion().latitud(), detalle.ubicacion().longitud());
-        return mapper.aActualizacion(resultado, ubicacion);
+        return mapper.aActualizacion(resultado, ubicacion, detalle.direccion());
     }
 
     @DeleteMapping("/api/apartamentos/{identificacion}")
@@ -125,6 +126,6 @@ public class ApartamentoController {
         Apartamento apartamento = activar.ejecutar(id);
         DetalleApartamento detalle = consultarDetalle.ejecutar(id);
         UbicacionDTO ubicacion = new UbicacionDTO(detalle.ubicacion().latitud(), detalle.ubicacion().longitud());
-        return mapper.aDetalle(apartamento, ubicacion);
+        return mapper.aDetalle(apartamento, ubicacion, detalle.direccion());
     }
 }

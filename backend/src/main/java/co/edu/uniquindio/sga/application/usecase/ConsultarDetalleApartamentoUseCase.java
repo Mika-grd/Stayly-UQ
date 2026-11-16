@@ -8,7 +8,7 @@ import co.edu.uniquindio.sga.domain.repository.ConfiguracionAlojamiento;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 7.1: detalle completo de un apartamento, con la ubicación del alojamiento para el mapa. */
+/** 7.1: detalle completo de un apartamento, con la ubicación y la dirección del alojamiento para el mapa. */
 @Service
 @Transactional(readOnly = true)
 public class ConsultarDetalleApartamentoUseCase {
@@ -24,9 +24,12 @@ public class ConsultarDetalleApartamentoUseCase {
 
     public DetalleApartamento ejecutar(IdentificacionApartamento identificacion) {
         Apartamento apartamento = Consultas.apartamento(apartamentos, identificacion);
-        return new DetalleApartamento(apartamento, configuracion.alojamiento().ubicacion());
+        var alojamiento = configuracion.alojamiento();
+        return new DetalleApartamento(apartamento, alojamiento.ubicacion(),
+                alojamiento.direccion() + ", " + alojamiento.ciudad());
     }
 
-    public record DetalleApartamento(Apartamento apartamento, Ubicacion ubicacion) {
+    /** {@code direccion}: la del alojamiento (F-13: todos los apartamentos comparten edificio). */
+    public record DetalleApartamento(Apartamento apartamento, Ubicacion ubicacion, String direccion) {
     }
 }

@@ -262,6 +262,15 @@ class RecorridosApiIntegracionTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("7.1 · El detalle trae la dirección del alojamiento, tomada de la configuración")
+    void detalleConDireccion() throws Exception {
+        mvc.perform(get("/api/apartamentos/SUQ-101"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.direccion").value(org.hamcrest.Matchers.containsString("Carrera 15")))
+                .andExpect(jsonPath("$.direccion").value(org.hamcrest.Matchers.containsString("Armenia")));
+    }
+
     // Calendario de disponibilidad del detalle (público)
 
     @Test
