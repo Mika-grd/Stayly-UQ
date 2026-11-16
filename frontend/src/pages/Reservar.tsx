@@ -5,6 +5,7 @@ import type { DatosAcompanante, DatosTitular } from '../api/tipos';
 import { useSesion } from '../auth/Sesion';
 import { aParametros, criteriosDe } from '../components/Busqueda';
 import { AvisoError, Cargando } from '../components/Comunes';
+import { Desglose } from '../components/Desglose';
 import { Fachada } from '../components/Fachada';
 import { colorDe, variable } from '../lib/colores';
 import { dinero, hoy, noches, rango, restarAnios } from '../lib/formato';
@@ -214,6 +215,7 @@ export function Reservar() {
               <dd className="cuenta__total cifra">{dinero(cotizacion.datos.total)}</dd>
             </dl>
           )}
+          {cotizacion.datos && <Desglose noches={cotizacion.datos.noches} />}
 
           <AvisoError error={accion.error} />
           <button type="submit" className="boton boton--principal boton--ancho" disabled={accion.enCurso}>

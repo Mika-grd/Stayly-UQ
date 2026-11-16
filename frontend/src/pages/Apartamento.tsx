@@ -1,12 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apartamentos, reservas } from '../api/servicios';
 import { useSesion } from '../auth/Sesion';
 import { aParametros, criteriosDe, fechasNacimientoAproximadas, type Criterios } from '../components/Busqueda';
 import { AvisoError, Cargando } from '../components/Comunes';
-import { Fachada } from '../components/Fachada';
+import { CalendarioDisponibilidad } from '../components/CalendarioDisponibilidad';
+import { Desglose } from '../components/Desglose';
+import { Galeria } from '../components/Galeria';
+import { Mapa } from '../components/Mapa';
 import { colorDe, variable } from '../lib/colores';
-import { dinero, fechaCorta, hoy, noches, sumarDias } from '../lib/formato';
+import { dinero, hoy, noches, sumarDias } from '../lib/formato';
 import { useCarga } from '../lib/useCarga';
 
 export function Apartamento() {
@@ -15,7 +18,6 @@ export function Apartamento() {
   const criterios = useMemo(() => criteriosDe(params), [params]);
   const { es } = useSesion();
   const navegar = useNavigate();
-  const [verNoches, setVerNoches] = useState(false);
 
   const detalle = useCarga(() => apartamentos.detalle(id), [id]);
   const politica = useCarga(() => reservas.politicaVigente(), []);
@@ -62,7 +64,6 @@ export function Apartamento() {
   const losa = variable(colorDe(apto.identificacion));
   const totalNoches = noches(criterios.entrada, criterios.salida);
   const total = cotizacion.datos?.total ?? disponible.datos?.valorEstimado ?? null;
-  const principal = apto.imagenes.find((i) => i.principal)?.url ?? apto.imagenes[0]?.url;
 
   return (
     <main className="contenedor pagina">
@@ -78,14 +79,7 @@ export function Apartamento() {
         </p>
       </header>
 
-      <div className="galeria placa" style={{ '--losa': losa } as React.CSSProperties}>
-        <div className="galeria__principal">
-          <Fachada identificacion={apto.identificacion} dormitorios={apto.dormitorios} imagen={principal} titulo={apto.nombre} />
-        </div>
-        <div className="galeria__lado" style={{ background: losa }}>
-          <span className="galeria__codigo">{apto.identificacion}</span>
-        </div>
-      </div>
+      <Galeria apto={apto} />
 
       <div className="ficha">
         <div className="ficha__texto">
@@ -108,6 +102,23 @@ export function Apartamento() {
                   <li key={c}>{c}</li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          <section>
+            <h2>Disponibilidad</h2>
+            <CalendarioDisponibilidad
+              identificacion={apto.identificacion}
+              entrada={criterios.entrada}
+              salida={criterios.salida}
+              alElegir={(entrada, salida) => cambiar({ entrada, salida })}
+            />
+          </section>
+
+          {apto.ubicacion && (
+            <section>
+              <h2>Ubicación</h2>
+              <Mapa ubicacion={apto.ubicacion} titulo={apto.nombre} />
             </section>
           )}
 
@@ -216,27 +227,12 @@ export function Apartamento() {
           )}
 
           {cotizacion.datos && (
-            <div className="desglose">
-              <button className="boton boton--texto" onClick={() => setVerNoches((v) => !v)} aria-expanded={verNoches}>
-                {verNoches ? 'Ocultar noches' : 'Precio por noche'}
-              </button>
-              {verNoches && (
-                <table className="tabla">
-                  <tbody>
-                    {cotizacion.datos.noches.map((n) => (
-                      <tr key={n.fecha}>
-                        <td>{fechaCorta(n.fecha)}</td>
-                        <td>{n.temporada}</td>
-                        <td className="num">{dinero(n.subtotal)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+            <>
+              <Desglose noches={cotizacion.datos.noches} />
               <p className="nota">
                 {cotizacion.datos.ocupantesFacturables} de {cotizacion.datos.ocupantesTotales} personas facturables
               </p>
-            </div>
+            </>
           )}
         </aside>
       </div>
