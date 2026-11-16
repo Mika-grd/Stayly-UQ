@@ -51,4 +51,4 @@ Un interruptor en la cabecera cambia a la versión HARSH: la misma interfaz en c
 - Fachadas con contorno negro y ventanas con luz de vela.
 - Metal Mania para titulares, Pirata One para cifras y Barlow Semi Condensed para leer.
 - Esquinas rectas, placas con filete interior y cortes en diente de sierra bajo la cabecera y sobre el pie.
-- En la portada, luna de sangre, cordilleras en silueta y murciélagos que cruzan el cielo.
+- En la portada, luna de sangre, cordilleras en silueta, murciélagos que cruzan el cielo y, en lugar del Willys sobre la vía, una chopper con jinete por una trocha de tierra con piedras y huellas.

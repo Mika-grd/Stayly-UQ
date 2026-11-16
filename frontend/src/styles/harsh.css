@@ -160,11 +160,79 @@
   fill: #000;
 }
 
+/* La vía se vuelve trocha: tierra oscura, piedras y dos huellas de rodada */
 [data-tema='harsh'] .paisaje__via {
+  height: 42px;
+  border-top: 0;
   background:
-    linear-gradient(90deg, var(--balcon) 0 48px, transparent 48px 96px) 0 15px / 96px 5px repeat-x,
-    #000;
-  border-top-color: var(--hierro);
+    /* pasto ralo en el borde */
+    linear-gradient(135deg, transparent 50%, #1f2e22 50%) 0 0 / 10px 7px repeat-x,
+    linear-gradient(225deg, transparent 50%, #1f2e22 50%) 5px 0 / 14px 9px repeat-x,
+    /* piedras */
+    radial-gradient(circle at 20px 16px, #6e5c4b 0 3px, transparent 3.5px) 0 0 / 96px 42px repeat-x,
+    radial-gradient(ellipse 5px 3px at 70px 33px, #574638 0 100%, transparent 100%) 0 0 / 96px 42px repeat-x,
+    radial-gradient(circle at 38px 26px, #4a3b2f 0 2px, transparent 2.5px) 0 0 / 48px 42px repeat-x,
+    /* huellas de rodada: charcos alargados e irregulares */
+    radial-gradient(ellipse 30px 3px at 30px 21px, #1a120c 0 100%, transparent 100%) 0 0 / 96px 42px repeat-x,
+    radial-gradient(ellipse 22px 3px at 10px 30px, #1a120c 0 100%, transparent 100%) 0 0 / 48px 42px repeat-x,
+    #3a2a1e;
+  animation-name: trocha;
+}
+
+@keyframes trocha {
+  to { background-position: -96px 0, -91px 0, -96px 0, -96px 0, -96px 0, -96px 0, -96px 0, 0 0; }
+}
+
+/* En HARSH va la moto en lugar del Willys */
+[data-tema='harsh'] .willys {
+  display: none;
+}
+
+.moto {
+  display: none;
+}
+
+[data-tema='harsh'] .moto {
+  display: block;
+  position: absolute;
+  z-index: 3;
+  left: 14%;
+  bottom: 18px;
+  width: 190px;
+}
+
+.moto__jinete,
+.moto__cuadro,
+.moto__horquilla,
+.moto__escape {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.moto__jinete { stroke: #000; stroke-width: 11; }
+.moto__casco { fill: #000; stroke: var(--hierro); stroke-width: 3; }
+.moto__cuadro { stroke: var(--balcon); stroke-width: 7; }
+.moto__tanque { fill: var(--balcon); stroke: #000; stroke-width: 3; }
+.moto__asiento { fill: #000; }
+.moto__motor { fill: #9a93a6; stroke: #000; stroke-width: 3; }
+.moto__escape { stroke: #9a93a6; stroke-width: 6; }
+.moto__horquilla { stroke: #9a93a6; stroke-width: 5; }
+.moto__farol { fill: var(--ventana); stroke: #000; stroke-width: 3; }
+.moto__llanta { fill: #000; stroke: var(--hierro); stroke-width: 4; }
+.moto__buje { fill: #9a93a6; }
+
+@media (max-width: 900px) {
+  [data-tema='harsh'] .moto {
+    width: 120px;
+    left: 6%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tema='harsh'] .paisaje__via {
+    animation: none;
+  }
 }
 
 [data-tema='harsh'] .willys__rueda circle:first-of-type {
@@ -195,7 +263,7 @@
   position: absolute;
   left: 100%;
   width: 46px;
-  fill: #000;
+  fill: #8a76a6;
   animation: volar var(--vuelo, 18s) linear infinite;
   animation-delay: var(--retraso, 0s);
 }
@@ -219,6 +287,7 @@
   to { transform: scaleY(0.45); }
 }
 
+[data-tema='harsh'] .portada--quieta .moto *,
 [data-tema='harsh'] .portada--quieta .murcielago,
 [data-tema='harsh'] .portada--quieta .murcielago svg {
   animation-play-state: paused;

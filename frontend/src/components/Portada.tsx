@@ -100,9 +100,11 @@ function Willys() {
 }
 
 const VUELOS = [
-  { top: 70, vuelo: '16s', retraso: '0s', escala: 1 },
-  { top: 130, vuelo: '22s', retraso: '-7s', escala: 0.7 },
-  { top: 40, vuelo: '19s', retraso: '-13s', escala: 0.55 },
+  { top: 60, vuelo: '15s', retraso: '0s', escala: 1.3 },
+  { top: 130, vuelo: '21s', retraso: '-6s', escala: 0.9 },
+  { top: 34, vuelo: '18s', retraso: '-11s', escala: 0.7 },
+  { top: 180, vuelo: '25s', retraso: '-3s', escala: 0.6 },
+  { top: 95, vuelo: '17s', retraso: '-14s', escala: 1 },
 ];
 
 /** Solo se ven en la versión HARSH. */
@@ -124,6 +126,38 @@ function Murcielagos() {
   );
 }
 
+/** La moto de la versión HARSH: chopper con jinete, horquilla larga y ruedas que giran. */
+function Moto() {
+  return (
+    <svg className="moto" viewBox="0 0 170 100" aria-hidden="true">
+      <g className="willys__carroceria">
+        {/* Jinete */}
+        <path d="M58 50 L64 22 L104 30" className="moto__jinete" />
+        <path d="M60 48 L84 54 L84 72" className="moto__jinete" />
+        <circle cx="66" cy="14" r="10" className="moto__casco" />
+        {/* Cuadro, tanque, asiento y escape */}
+        <path d="M38 78 L56 52 L98 46 L118 30" className="moto__cuadro" />
+        <path d="M70 46 Q 84 34 100 42 L98 50 L70 52 Z" className="moto__tanque" />
+        <rect x="46" y="44" width="26" height="8" className="moto__asiento" />
+        <rect x="66" y="56" width="26" height="18" className="moto__motor" />
+        <path d="M60 78 L114 82" className="moto__escape" />
+        {/* Horquilla, manubrio y farol */}
+        <path d="M116 26 L142 78" className="moto__horquilla" />
+        <path d="M104 22 L118 28 L124 18" className="moto__horquilla" />
+        <circle cx="126" cy="38" r="6" className="moto__farol" />
+      </g>
+      {[38, 142].map((cx) => (
+        <g key={cx} className="willys__rueda" style={{ transformOrigin: `${cx}px 78px` }}>
+          <circle cx={cx} cy="78" r="19" className="moto__llanta" />
+          <circle cx={cx} cy="78" r="6" className="moto__buje" />
+          <rect x={cx - 1.5} y="62" width="3" height="11" className="moto__buje" />
+          <rect x={cx - 1.5} y="83" width="3" height="11" className="moto__buje" />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export function Portada({ children }: { children?: React.ReactNode }) {
   const [quieto, setQuieto] = useState(false);
   return (
@@ -141,6 +175,7 @@ export function Portada({ children }: { children?: React.ReactNode }) {
         <Cordillera tipo="cerca" perfil={CERCA} palmas={PALMAS} />
         <Cuadra />
         <Willys />
+        <Moto />
         <div className="paisaje__via" />
       </div>
       <button
