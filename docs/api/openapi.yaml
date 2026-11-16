@@ -4584,6 +4584,57 @@ paths:
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
+  /api/usuarios/me/reservas:
+    get:
+      tags:
+      - Usuarios
+      summary: Consultar mis reservas
+      description: |-
+        Reservas cuyo titular tiene el documento del huésped autenticado (lo toma del token), de la más reciente a la más antigua, de a 10. Es la lista "Mis viajes" del portal.
+
+        Actor(es): Huésped.
+      operationId: consultarMisReservas
+      parameters:
+      - $ref: '#/components/parameters/Pagina'
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaReservaResumenResponse'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CREDENCIALES_INVALIDAS:
+                  summary: CREDENCIALES_INVALIDAS
+                  value:
+                    codigo: CREDENCIALES_INVALIDAS
+                    mensaje: Credenciales inválidas.
+                    regla: '7.2'
+                    ruta: /api/usuarios/me/reservas
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                ACCESO_DENEGADO:
+                  summary: ACCESO_DENEGADO
+                  value:
+                    codigo: ACCESO_DENEGADO
+                    mensaje: No tiene permiso sobre este recurso.
+                    regla: '7.2'
+                    ruta: /api/usuarios/me/reservas
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security:
+      - bearerAuth: []
   /api/canales:
     post:
       tags:

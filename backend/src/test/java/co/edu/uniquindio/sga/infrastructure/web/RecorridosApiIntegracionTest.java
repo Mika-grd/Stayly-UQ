@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -209,6 +210,20 @@ class RecorridosApiIntegracionTest {
                         .contentType(MediaType.APPLICATION_JSON).content(reglasPropias(-1)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("PARAMETRO_INVALIDO"));
+    }
+
+    // Mis reservas (portal)
+
+    @Test
+    @DisplayName("7.2 · El huésped ve solo las reservas de las que es titular; recepción no usa esta lista")
+    void misReservas() throws Exception {
+        mvc.perform(get("/api/usuarios/me/reservas").header(HttpHeaders.AUTHORIZATION, bearer(HUESPED_1)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[*].codigo").value(org.hamcrest.Matchers.hasItem(pendienteLaura)))
+                .andExpect(jsonPath("$.contenido[*].codigo").value(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.hasItem(confirmadaCarlos))));
+        mvc.perform(get("/api/usuarios/me/reservas").header(HttpHeaders.AUTHORIZATION, bearer(RECEPCION)))
+                .andExpect(status().isForbidden());
     }
 
     // Apoyo
