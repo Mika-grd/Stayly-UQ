@@ -342,6 +342,42 @@ class DisponibilidadYReservasUseCasesTest {
         assertThat(noches.get(1).reserva()).isEqualTo(reserva.codigo());
     }
 
+    @Test
+    @DisplayName("7.1 · El calendario del detalle dice qué noches se pueden vender, sin exponer reservas ni bloqueos")
+    void consultarDisponibilidadDelApartamento() {
+        // Arrange: reserva el 20 y el 21, bloqueo el 23 y el 24
+        crearReserva().ejecutar(comandoSuq301(LocalTime.of(16, 0), 0));
+        bloqueos.guardar(Bloqueo.registrar(new IdBloqueo(UUID.randomUUID()), suq301.identificacion(),
+                new RangoFechas(LocalDate.of(2026, 11, 23), LocalDate.of(2026, 11, 25)), "Pintura", "admin",
+                FichaStaylyUq.HOY));
+
+        // Act
+        var noches = consultarDisponibilidad()
+                .ejecutar(suq301.identificacion(), new RangoFechas(LocalDate.of(2026, 11, 19), LocalDate.of(2026, 11, 26)))
+                .noches();
+
+        // Assert
+        assertThat(noches).extracting(ConsultarDisponibilidadApartamentoUseCase.NocheDisponible::disponible)
+                .containsExactly(true, false, false, true, false, false, true);
+    }
+
+    @Test
+    @DisplayName("7.1 · Las noches pasadas no se ofrecen y el rango tiene un tope (caso de falla)")
+    void disponibilidadNochesPasadasYTope() {
+        // Act
+        var noches = consultarDisponibilidad()
+                .ejecutar(suq301.identificacion(), new RangoFechas(LocalDate.of(2026, 9, 29), LocalDate.of(2026, 10, 3)))
+                .noches();
+
+        // Assert
+        assertThat(noches).extracting(ConsultarDisponibilidadApartamentoUseCase.NocheDisponible::disponible)
+                .containsExactly(false, false, true, true);
+        assertThatThrownBy(() -> consultarDisponibilidad().ejecutar(suq301.identificacion(),
+                new RangoFechas(LocalDate.of(2026, 10, 1), LocalDate.of(2027, 10, 1))))
+                .isInstanceOf(ReglaDominioException.class)
+                .hasMessageContaining("como máximo");
+    }
+
     // Ensamblaje de los casos de uso con el reloj actual
 
     private CrearReservaUseCase crearReserva() {
@@ -372,6 +408,10 @@ class DisponibilidadYReservasUseCasesTest {
 
     private VencerReservasPendientesUseCase vencer() {
         return new VencerReservasPendientesUseCase(reservas, folios, configuracion, reloj);
+    }
+
+    private ConsultarDisponibilidadApartamentoUseCase consultarDisponibilidad() {
+        return new ConsultarDisponibilidadApartamentoUseCase(apartamentos, disponibilidad(), verificadorTarifas, reloj);
     }
 
     private DisponibilidadApartamentoService disponibilidad() {
