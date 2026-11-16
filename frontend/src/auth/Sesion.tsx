@@ -9,6 +9,7 @@ interface ContextoSesion {
   rol: Rol | null;
   iniciar: (correo: string, contrasena: string) => Promise<Rol>;
   cerrar: () => void;
+  actualizarUsuario: (u: Usuario) => void;
   es: (...roles: Rol[]) => boolean;
 }
 
@@ -43,7 +44,7 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   }, []);
 
   const valor = useMemo<ContextoSesion>(
-    () => ({ usuario, rol, iniciar, cerrar, es: (...roles) => rol !== null && roles.includes(rol) }),
+    () => ({ usuario, rol, iniciar, cerrar, actualizarUsuario: setUsuario, es: (...roles) => rol !== null && roles.includes(rol) }),
     [usuario, rol, iniciar, cerrar],
   );
 

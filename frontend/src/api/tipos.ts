@@ -37,6 +37,7 @@ export interface Usuario {
   telefono: string;
   rol: Rol;
   activo: boolean;
+  fotoUrl: string | null;
 }
 
 export interface ApartamentoResumen {
@@ -63,6 +64,30 @@ export interface ApartamentoDetalle {
   imagenes: { url: string; principal: boolean }[];
   estadoOperativo: EstadoOperativo;
   activo: boolean;
+  ubicacion: Ubicacion | null;
+}
+
+export interface Ubicacion {
+  latitud: number;
+  longitud: number;
+}
+
+export interface DisponibilidadApartamento {
+  identificacion: string;
+  desde: string;
+  hasta: string;
+  noches: { fecha: string; disponible: boolean }[];
+}
+
+export type GravedadNovedad = 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA';
+
+export interface Novedad {
+  id: string;
+  identificacionApartamento: string;
+  fecha: string;
+  autor: string;
+  descripcion: string;
+  gravedad: GravedadNovedad;
 }
 
 export interface CargoNoche {
@@ -92,6 +117,9 @@ export interface Ocupante {
   fechaNacimiento: string;
   facturable: boolean;
   titular: boolean;
+  documentoIdentidad: string | null;
+  correo: string | null;
+  telefono: string | null;
 }
 
 export interface Reserva {
