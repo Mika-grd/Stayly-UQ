@@ -88,6 +88,23 @@ cambia en caliente con `PUT /api/alojamiento` y `PUT /api/alojamiento/parametros
 Errores: toda respuesta de error es un `ErrorNegocioResponse`. 400 formato del mensaje, 401 y 403 seguridad,
 404 recurso inexistente y 409 regla del negocio violada.
 
+## Integraciones (sección 10)
+
+Cada integración está detrás de un puerto (I-01), tiene una alternativa local que funciona sin internet ni
+credenciales y que usan las pruebas (I-02, I-08), un tiempo máximo (I-03) y un comportamiento ante fallo que nunca
+impide reservar, registrar, cobrar ni cerrar un folio (I-04, I-05). Todo se cambia por configuración.
+
+| Integración | Puerto | Por defecto (local) | Real | Ante fallo |
+|---|---|---|---|---|
+| Avisos al titular al crear, confirmar y cancelar (10.3.2, opción A) | `NotificadorTitular`, `NotificadorCorreo` | Buzón simulado: el correo queda en el log | SMTP: `SGA_CORREO_PROVEEDOR=smtp` y `SGA_SMTP_HOST`, `SGA_SMTP_PUERTO`, `SGA_SMTP_USUARIO`, `SGA_SMTP_CLAVE`, `SGA_CORREO_REMITENTE` (Gmail con clave de aplicación, Brevo o Mailtrap, todos gratuitos) | Se envía después del commit y en otro hilo, con 5 s máximo; un fallo queda en el log y la reserva sigue. `sga.notificaciones.habilitadas=false` los apaga |
+| Modelo de IA: resumen del día en recepción (10.2) | `AsistenteIA` | Apagado (`SGA_IA_PROVEEDOR=ninguno`): recepción ve "Resumen automático no disponible" y sigue con sus listas | API compatible con OpenAI: `SGA_IA_PROVEEDOR=openai-compatible`, `SGA_IA_URL`, `SGA_IA_MODELO`, `SGA_IA_CLAVE` (Groq o Gemini con nivel gratuito, u Ollama local sin clave) | 8 s máximo; error o demora = resumen no disponible, nunca un error. Al modelo no van nombres, documentos ni contactos |
+| Canal externo (10.3.1) | `CredencialesCanalService` | Canal del simulador con credencial de prueba | Canales registrados por el administrador | Conflictos e idempotencia en el dominio (RN-18, RN-19) |
+| Mapa del alojamiento | (frontend) | Teselas de OpenStreetMap, sin credenciales | Mapbox con `VITE_MAPBOX_TOKEN` | Sin mapa, el resto de la página funciona |
+
+Ejemplos para encender la IA: Ollama local `SGA_IA_PROVEEDOR=openai-compatible SGA_IA_URL=http://localhost:11434/v1
+SGA_IA_MODELO=llama3.2`; Groq `SGA_IA_URL=https://api.groq.com/openai/v1 SGA_IA_MODELO=llama-3.1-8b-instant
+SGA_IA_CLAVE=...`. Para la sustentación con la IA deshabilitada basta `SGA_IA_PROVEEDOR=ninguno`.
+
 ## Despliegue
 
 El backend va a Render como contenedor (`backend/Dockerfile`) y el frontend a Vercel, según la Guía 22.
@@ -113,6 +130,9 @@ Configuración versionada: `backend/Dockerfile`, `backend/.dockerignore`, `backe
 | `SGA_CORS_ALLOWED_ORIGINS` | URL exacta de Vercel, sin `/` final |
 | `SGA_USUARIOS_INICIALES_HABILITADOS` | `true` (la base se borra al dormir el servicio) |
 | `SGA_ADMIN_CORREO`, `SGA_ADMIN_CONTRASENA`, `SGA_ADMIN_TELEFONO`, `SGA_ADMIN_DOCUMENTO`, `SGA_ADMIN_FECHA_NACIMIENTO` | Cuenta del administrador; la contraseña no va en el repositorio |
+
+Opcionales en Render: las variables de correo y de IA de la sección **Integraciones** (sin ellas, avisos al log e
+IA apagada).
 
 **Vercel** (Root Directory `frontend`, preset Vite): `VITE_API_URL` con la URL de Render terminada en `/api`, y
 opcionalmente `VITE_MAPBOX_TOKEN`.
