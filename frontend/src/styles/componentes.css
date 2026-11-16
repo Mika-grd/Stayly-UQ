@@ -1,0 +1,348 @@
+/* ---------- Capas: placa blanca sobre losa de color ---------- */
+
+.placa {
+  position: relative;
+  background: var(--cal);
+  border: var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--capa) var(--capa) 0 0 var(--losa, var(--tinta));
+  padding: var(--e5);
+}
+
+.placa--plana {
+  box-shadow: none;
+}
+
+.placa--chica {
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--losa, var(--tinta));
+  padding: var(--e4);
+}
+
+/* Tres capas: losa de color, losa de tinta y la placa (panel de reserva) */
+.placa--triple {
+  box-shadow:
+    var(--capa) var(--capa) 0 0 var(--losa, var(--maiz)),
+    calc(var(--capa) * 2) calc(var(--capa) * 2) 0 0 var(--tinta);
+}
+
+/* ---------- Botones ---------- */
+
+.boton {
+  --fondo: var(--tinta);
+  --texto: var(--cal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e2);
+  min-height: 44px;
+  padding: var(--e2) var(--e5);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo);
+  color: var(--texto);
+  font: 700 var(--t0) / 1.2 var(--letra-texto);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--tinta);
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out;
+}
+
+.boton:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 0 var(--tinta);
+}
+
+.boton:active {
+  transform: translate(var(--capa-chica), var(--capa-chica));
+  box-shadow: 0 0 0 0 var(--tinta);
+}
+
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--tinta);
+}
+
+.boton--principal { --fondo: var(--balcon); --texto: var(--sobre-balcon); }
+.boton--cobalto { --fondo: var(--cobalto); --texto: var(--sobre-cobalto); }
+.boton--cafetal { --fondo: var(--cafetal); --texto: var(--sobre-cafetal); }
+.boton--maiz { --fondo: var(--maiz); --texto: var(--sobre-maiz); }
+.boton--claro { --fondo: var(--cal); --texto: var(--tinta); }
+.boton--ancho { width: 100%; }
+
+.boton--texto {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--cobalto);
+  padding-inline: 0;
+  min-height: auto;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.boton--texto:hover,
+.boton--texto:active {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---------- Campos ---------- */
+
+.campo {
+  display: grid;
+  gap: var(--e1);
+}
+
+.campo > span {
+  font-weight: 700;
+  font-size: var(--t-1);
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--e2) var(--e3);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+  color: var(--tinta);
+  font: inherit;
+}
+
+.campo textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.campo small {
+  color: var(--tinta-suave);
+}
+
+.fila {
+  display: grid;
+  gap: var(--e4);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.fila > *,
+.campo input {
+  min-width: 0;
+}
+
+/* ---------- Avisos ---------- */
+
+.aviso {
+  border: var(--borde);
+  border-radius: var(--radio);
+  padding: var(--e3) var(--e4);
+  background: var(--cal);
+  border-left-width: 10px;
+}
+
+.aviso--error { border-left-color: var(--balcon); }
+.aviso--ok { border-left-color: var(--cafetal); }
+.aviso--info { border-left-color: var(--maiz); }
+
+.aviso strong {
+  display: block;
+}
+
+/* ---------- Estado de reserva y operativo ---------- */
+
+.chip {
+  display: inline-block;
+  padding: 2px var(--e3);
+  border: var(--borde);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: var(--t-1);
+  white-space: nowrap;
+  background: var(--chip, var(--muro));
+  color: var(--chip-texto, var(--tinta));
+}
+
+/* ---------- Cabecera ---------- */
+
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--cal);
+  border-bottom: var(--borde);
+}
+
+.cabecera__fila {
+  display: flex;
+  align-items: center;
+  gap: var(--e5);
+  min-height: 68px;
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  font-family: var(--letra-titular);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: var(--t2);
+  color: var(--tinta);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.nav {
+  display: flex;
+  gap: var(--e1);
+  margin-left: auto;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  padding: var(--e2) var(--e3);
+  border-radius: var(--radio);
+  color: var(--tinta);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nav a:hover {
+  background: var(--muro);
+}
+
+.nav a[aria-current='page'] {
+  background: var(--tinta);
+  color: var(--cal);
+}
+
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  padding-left: var(--e4);
+  border-left: var(--borde);
+}
+
+.usuario__rol {
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+}
+
+@media (max-width: 760px) {
+  .cabecera__fila {
+    flex-wrap: wrap;
+    padding-block: var(--e2);
+    gap: var(--e2);
+  }
+  .nav {
+    margin-left: 0;
+    width: 100%;
+  }
+  .usuario {
+    border-left: 0;
+    padding-left: 0;
+    margin-left: auto;
+  }
+}
+
+/* ---------- Pie ---------- */
+
+.pie {
+  margin-top: var(--e8);
+  border-top: var(--borde);
+  background: var(--tinta);
+  color: var(--cal);
+  padding-block: var(--e6);
+}
+
+.pie p {
+  margin: 0;
+  color: #c9d0dd;
+}
+
+/* ---------- Tablas ---------- */
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla th,
+.tabla td {
+  text-align: left;
+  padding: var(--e2) var(--e3);
+  border-bottom: 1px solid var(--muro-hondo);
+  vertical-align: middle;
+}
+
+.tabla th {
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+  border-bottom: var(--borde);
+}
+
+.tabla td.num,
+.tabla th.num {
+  text-align: right;
+}
+
+.tabla-envoltura {
+  overflow-x: auto;
+}
+
+/* ---------- Paginación ---------- */
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e4);
+  margin-top: var(--e5);
+}
+
+/* ---------- Pestañas ---------- */
+
+.pestanas {
+  display: flex;
+  gap: var(--e2);
+  margin-bottom: var(--e5);
+  flex-wrap: wrap;
+}
+
+.pestanas button {
+  min-height: 40px;
+  padding: var(--e2) var(--e4);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+  color: var(--tinta);
+  font: 700 var(--t0) var(--letra-texto);
+  cursor: pointer;
+}
+
+.pestanas button[aria-selected='true'] {
+  background: var(--tinta);
+  color: var(--cal);
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--maiz);
+}
+
+/* ---------- Vacío y carga ---------- */
+
+.vacio {
+  padding: var(--e6);
+  text-align: center;
+  border: 2px dashed var(--tinta-suave);
+  border-radius: var(--radio);
+  background: var(--cal);
+}
+
+.cargando {
+  padding: var(--e6);
+  color: var(--tinta-suave);
+}

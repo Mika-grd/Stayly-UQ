@@ -1,0 +1,67 @@
+/*
+ * Tokens de Stayly. La paleta sale de las fachadas pintadas de Salento y Filandia: muros encalados,
+ * balcones y puertas en colores planos y fuertes. Las "capas" son placas blancas con borde de tinta
+ * apoyadas sobre una losa de color sólido desplazada, sin desenfoque.
+ */
+:root {
+  /* Base */
+  --tinta: #1d2a44;
+  --tinta-suave: #4a5672;
+  --cal: #ffffff;
+  --muro: #eef1f4;
+  --muro-hondo: #dfe4ea;
+
+  /* Colores de fachada (planos, sin degradados) */
+  --balcon: #d62839;
+  --cobalto: #2347c8;
+  --cafetal: #13694a;
+  --maiz: #f2b300;
+  --lila: #6b3fc4;
+  --aguamarina: #0e8a8a;
+
+  /* Texto sobre cada color de fachada */
+  --sobre-balcon: #ffffff;
+  --sobre-cobalto: #ffffff;
+  --sobre-cafetal: #ffffff;
+  --sobre-maiz: #1d2a44;
+  --sobre-lila: #ffffff;
+  --sobre-aguamarina: #ffffff;
+
+  /* Tipografía: Archivo ancho para titulares y cifras; Hanken Grotesk para leer y operar */
+  --letra-titular: 'Archivo', 'Arial Narrow', sans-serif;
+  --letra-texto: 'Hanken Grotesk', system-ui, sans-serif;
+
+  /* Escala tipográfica (razón 1.25 sobre 16 px) */
+  --t-1: 0.8rem;
+  --t0: 1rem;
+  --t1: 1.25rem;
+  --t2: 1.563rem;
+  --t3: 1.953rem;
+  --t4: 2.441rem;
+  --t5: 3.815rem;
+
+  /* Espaciado */
+  --e1: 0.25rem;
+  --e2: 0.5rem;
+  --e3: 0.75rem;
+  --e4: 1rem;
+  --e5: 1.5rem;
+  --e6: 2rem;
+  --e7: 3rem;
+  --e8: 4.5rem;
+
+  /* Capas */
+  --borde: 2px solid var(--tinta);
+  --radio: 6px;
+  --capa: 8px;
+  --capa-chica: 4px;
+
+  --ancho: 1200px;
+}
+
+@media (max-width: 600px) {
+  :root {
+    --capa: 5px;
+    --capa-chica: 3px;
+  }
+}
