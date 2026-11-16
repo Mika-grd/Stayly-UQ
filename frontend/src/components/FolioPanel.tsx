@@ -33,7 +33,7 @@ export function FolioPanel({ codigo, alCambiar }: { codigo: string; alCambiar: (
     }
   };
 
-  if (carga.cargando && !carga.datos) return <Cargando texto="Cargando el folio…" />;
+  if (carga.cargando && !carga.datos) return <Cargando />;
   if (!carga.datos) return <AvisoError error={carga.error} />;
   const f = carga.datos;
   const abierto = f.estado === 'ABIERTO';
@@ -164,7 +164,7 @@ function FormularioPago({
         <label className="campo">
           <span>Valor</span>
           <input type="number" required step={1} value={valor} onChange={(e) => setValor(Number(e.target.value))} />
-          <small>Negativo solo para corregir un pago anterior.</small>
+          <small>Negativo para corregir</small>
         </label>
         <label className="campo">
           <span>Medio</span>
@@ -249,7 +249,7 @@ function FormularioCierre({
   if (saldo === 0) {
     return (
       <div className="subformulario">
-        <p>El saldo es cero: el folio se puede cerrar. Después ya no admite movimientos.</p>
+        
         <button className="boton" disabled={enCurso} onClick={() => alEnviar()}>
           Cerrar folio
         </button>
@@ -259,9 +259,8 @@ function FormularioCierre({
   if (!esAdmin) {
     return (
       <div className="subformulario">
-        <p>
-          El folio tiene {saldo > 0 ? 'saldo pendiente' : 'saldo a favor'} de {dinero(Math.abs(saldo))}. Registre el pago
-          o la devolución, o pida al administrador que lo cierre con su autorización.
+        <p className="nota">
+          {saldo > 0 ? 'Saldo pendiente' : 'Saldo a favor'}: {dinero(Math.abs(saldo))}. El cierre requiere administrador.
         </p>
       </div>
     );
@@ -277,7 +276,7 @@ function FormularioCierre({
       <label className="campo">
         <span>Motivo de la autorización</span>
         <textarea required value={motivo} onChange={(e) => setMotivo(e.target.value)} />
-        <small>Queda registrado con su nombre: el folio se cierra con saldo de {dinero(saldo)}.</small>
+        <small>Cierra con saldo de {dinero(saldo)}</small>
       </label>
       <button className="boton boton--principal" disabled={enCurso}>
         Autorizar y cerrar

@@ -61,7 +61,7 @@ export function Entrar() {
         </button>
       </form>
       <p>
-        ¿Primera vez? <Link to={`/registro${params.get('volver') ? `?volver=${encodeURIComponent(params.get('volver')!)}` : ''}`}>Cree su cuenta de huésped</Link>.
+        ¿Primera vez? <Link to={`/registro${params.get('volver') ? `?volver=${encodeURIComponent(params.get('volver')!)}` : ''}`}>Cree una cuenta</Link>
       </p>
     </Marco>
   );
@@ -107,7 +107,7 @@ export function Registro() {
         <label className="campo">
           <span>Contraseña</span>
           <input type="password" required minLength={8} autoComplete="new-password" {...campo('contrasena')} />
-          <small>Al menos 8 caracteres, con una mayúscula y un número.</small>
+          <small>8+ caracteres, mayúscula y número</small>
         </label>
         <div className="fila">
           <label className="campo">
@@ -129,7 +129,7 @@ export function Registro() {
         </button>
       </form>
       <p>
-        ¿Ya tiene cuenta? <Link to="/entrar">Entre aquí</Link>.
+        ¿Ya tiene cuenta? <Link to="/entrar">Entrar</Link>
       </p>
     </Marco>
   );

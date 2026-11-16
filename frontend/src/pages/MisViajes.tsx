@@ -18,8 +18,7 @@ export function MisViajes() {
       {cargando && <Cargando />}
       {datos && datos.contenido.length === 0 && (
         <div className="vacio">
-          <h3>Todavía no tiene reservas</h3>
-          <p>Busque fechas y elija uno de los seis apartamentos.</p>
+          <h3>Sin viajes</h3>
           <Link to="/" className="boton boton--principal">
             Buscar apartamento
           </Link>

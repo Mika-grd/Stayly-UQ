@@ -91,8 +91,7 @@ export function Reservar() {
       </Link>
       <h1>Reservar {apto.nombre}</h1>
       <p>
-        Del {rango(criterios.entrada, criterios.salida)}, {totalNoches} {totalNoches === 1 ? 'noche' : 'noches'}.
-        {esHuesped ? ' La reserva queda a su nombre.' : ' Reserva directa desde recepción.'}
+        {rango(criterios.entrada, criterios.salida)}, {totalNoches} {totalNoches === 1 ? 'noche' : 'noches'}
       </p>
 
       <form className="ficha" onSubmit={enviar}>
@@ -107,7 +106,6 @@ export function Reservar() {
               <label className="campo">
                 <span>Documento de identidad</span>
                 <input required {...campoTitular('documentoIdentidad')} inputMode="numeric" />
-                {esHuesped && <small>El mismo con el que creó su cuenta.</small>}
               </label>
               <label className="campo">
                 <span>Fecha de nacimiento</span>
@@ -126,7 +124,6 @@ export function Reservar() {
 
           <fieldset className="placa grupo-campos">
             <legend>Acompañantes</legend>
-            {acompanantes.length === 0 && <p>Viaja solo. Puede agregar acompañantes si cambia el grupo.</p>}
             {acompanantes.map((a, i) => (
               <div className="fila fila--acompanante" key={i}>
                 <label className="campo">
@@ -179,7 +176,6 @@ export function Reservar() {
               <label className="campo">
                 <span>Hora estimada de llegada</span>
                 <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
-                <small>Se necesita para confirmar la reserva. Puede indicarla después.</small>
               </label>
               {apto.admiteMascotas && (
                 <label className="campo">
@@ -198,8 +194,7 @@ export function Reservar() {
           <h3>{apto.nombre}</h3>
           <p>{rango(criterios.entrada, criterios.salida)}</p>
 
-          {!fechasCompletas && <p className="nota">Complete las fechas de nacimiento para ver el total.</p>}
-          {cotizacion.cargando && fechasCompletas && <Cargando texto="Calculando…" />}
+          {cotizacion.cargando && fechasCompletas && <Cargando />}
           <AvisoError error={cotizacion.error} />
           {cotizacion.datos && (
             <dl className="cuenta">
@@ -224,7 +219,6 @@ export function Reservar() {
           <button type="submit" className="boton boton--principal boton--ancho" disabled={accion.enCurso}>
             {accion.enCurso ? 'Reservando…' : 'Reservar'}
           </button>
-          <p className="nota">La reserva queda pendiente hasta que se pague el anticipo.</p>
         </aside>
       </form>
     </main>

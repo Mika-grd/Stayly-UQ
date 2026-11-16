@@ -45,13 +45,13 @@ function Hoy() {
             <h2>
               Llegan <span className="cifra">{datos.llegadas.length}</span>
             </h2>
-            {datos.llegadas.length === 0 ? <p>Nadie llega este día.</p> : <ul className="movimientos">{datos.llegadas.map((r) => <Movimiento key={r.codigo} reserva={r} />)}</ul>}
+            {datos.llegadas.length === 0 ? <p className="nota">Sin llegadas.</p> : <ul className="movimientos">{datos.llegadas.map((r) => <Movimiento key={r.codigo} reserva={r} />)}</ul>}
           </section>
           <section className="placa" style={{ '--losa': 'var(--balcon)' } as React.CSSProperties}>
             <h2>
               Salen <span className="cifra">{datos.salidas.length}</span>
             </h2>
-            {datos.salidas.length === 0 ? <p>Nadie sale este día.</p> : <ul className="movimientos">{datos.salidas.map((r) => <Movimiento key={r.codigo} reserva={r} />)}</ul>}
+            {datos.salidas.length === 0 ? <p className="nota">Sin salidas.</p> : <ul className="movimientos">{datos.salidas.map((r) => <Movimiento key={r.codigo} reserva={r} />)}</ul>}
           </section>
         </div>
       )}
@@ -134,7 +134,7 @@ function Listado() {
               ))}
             </tbody>
           </table>
-          {datos.contenido.length === 0 && <p className="vacio">Ninguna reserva coincide con el filtro.</p>}
+          {datos.contenido.length === 0 && <p className="vacio">Sin resultados.</p>}
         </div>
       )}
       {datos && <Paginacion pagina={datos.pagina} totalPaginas={datos.totalPaginas} totalElementos={datos.totalElementos} alCambiar={setPagina} />}

@@ -90,7 +90,7 @@ export function Apartamento() {
       <div className="ficha">
         <div className="ficha__texto">
           <section>
-            <h2>El apartamento</h2>
+            <h2>Descripción</h2>
             <p>{apto.descripcion}</p>
             {apto.advertenciaAcceso && (
               <div className="aviso aviso--info">
@@ -102,7 +102,7 @@ export function Apartamento() {
 
           {apto.caracteristicas.length > 0 && (
             <section>
-              <h2>Qué tiene</h2>
+              <h2>Comodidades</h2>
               <ul className="lista-marcada">
                 {apto.caracteristicas.map((c) => (
                   <li key={c}>{c}</li>
@@ -112,27 +112,27 @@ export function Apartamento() {
           )}
 
           <section>
-            <h2>Si necesita cancelar</h2>
+            <h2>Cancelación</h2>
             {politica.datos ? (
               <>
                 <ul className="tramos">
                   {[...politica.datos.tramos]
                     .sort((a, b) => b.antelacionMinimaDias - a.antelacionMinimaDias)
-                    .map((t) => (
+                    .map((t, i, todos) => (
                       <li key={t.antelacionMinimaDias}>
                         <span className="cifra">{t.porcentajeRetencion}%</span>
                         <span>
                           {t.antelacionMinimaDias === 0
-                            ? 'se retiene si cancela con menos días'
-                            : `se retiene si cancela con ${t.antelacionMinimaDias} días o más de antelación`}
+                            ? `menos de ${todos[i - 1]?.antelacionMinimaDias ?? 1} días antes`
+                            : `${t.antelacionMinimaDias} días antes o más`}
                         </span>
                       </li>
                     ))}
+                  <li>
+                    <span className="cifra">{politica.datos.porcentajeRetencionNoShow}%</span>
+                    <span>si no llega</span>
+                  </li>
                 </ul>
-                <p>
-                  Si no llega el día de entrada, se retiene el {politica.datos.porcentajeRetencionNoShow}%. Su reserva
-                  queda con la política vigente al momento de reservar.
-                </p>
               </>
             ) : (
               <Cargando />
@@ -195,7 +195,7 @@ export function Apartamento() {
             </label>
           </div>
 
-          {disponible.cargando && <Cargando texto="Revisando disponibilidad…" />}
+          {disponible.cargando && <Cargando />}
           <AvisoError error={disponible.error} />
           {!disponible.cargando && !disponible.error && !disponible.datos && (
             <div className="aviso aviso--error">
@@ -212,14 +212,13 @@ export function Apartamento() {
               >
                 Reservar
               </button>
-              {!puedeCotizar && <p className="nota">Para reservar le pediremos iniciar sesión.</p>}
             </>
           )}
 
           {cotizacion.datos && (
             <div className="desglose">
               <button className="boton boton--texto" onClick={() => setVerNoches((v) => !v)} aria-expanded={verNoches}>
-                {verNoches ? 'Ocultar el precio de cada noche' : 'Ver el precio de cada noche'}
+                {verNoches ? 'Ocultar noches' : 'Precio por noche'}
               </button>
               {verNoches && (
                 <table className="tabla">
@@ -235,8 +234,7 @@ export function Apartamento() {
                 </table>
               )}
               <p className="nota">
-                Pagan {cotizacion.datos.ocupantesFacturables} de {cotizacion.datos.ocupantesTotales} personas. Las
-                edades exactas se piden al reservar.
+                {cotizacion.datos.ocupantesFacturables} de {cotizacion.datos.ocupantesTotales} personas facturables
               </p>
             </div>
           )}

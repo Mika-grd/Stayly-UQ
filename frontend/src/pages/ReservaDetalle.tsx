@@ -21,8 +21,7 @@ function Recorrido({ estado }: { estado: EstadoReserva }) {
   if (estado === 'CANCELADA' || estado === 'NO_SHOW') {
     return (
       <div className="aviso aviso--error">
-        <strong>{estado === 'CANCELADA' ? 'Reserva cancelada' : 'El huésped no llegó'}</strong>
-        Las noches quedaron libres. El folio muestra lo retenido según la política.
+        <strong>{estado === 'CANCELADA' ? 'Cancelada' : 'No-show'}</strong>
       </div>
     );
   }
@@ -98,7 +97,7 @@ export function ReservaDetalle() {
           </h1>
           <p>
             Apartamento {r.identificacionApartamento}, {r.numeroNoches} {r.numeroNoches === 1 ? 'noche' : 'noches'},{' '}
-            {r.ocupantes.length} {r.ocupantes.length === 1 ? 'persona' : 'personas'}. Entró por {nombreCanal[r.canal].toLowerCase()}.
+            {r.ocupantes.length} {r.ocupantes.length === 1 ? 'persona' : 'personas'}. {nombreCanal[r.canal]}.
           </p>
           <EstadoReservaChip estado={r.estado} />
         </div>
@@ -170,7 +169,7 @@ export function ReservaDetalle() {
           <p>
             Saldo del folio: <strong className="cifra">{dinero(r.saldoFolio)}</strong>
           </p>
-          <p className="nota">Creada el {fechaHora(r.fechaCreacion)}, con la política versión {r.versionPolitica}.</p>
+          <p className="nota">{fechaHora(r.fechaCreacion)}, política v{r.versionPolitica}</p>
 
           {personal && (
             <div className="acciones">
@@ -206,7 +205,7 @@ export function ReservaDetalle() {
               ) : (
                 <div className="aviso aviso--error">
                   <strong>¿Cancelar la reserva {r.codigo}?</strong>
-                  Se retiene lo que indique la política según la antelación. Esto no se puede deshacer.
+                  No se puede deshacer.
                   <div className="acciones acciones--fila">
                     <button className="boton boton--principal" disabled={accion.enCurso} onClick={() => liquidar(() => reservas.cancelar(r.codigo), 'Reserva cancelada.')}>
                       Sí, cancelar

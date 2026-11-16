@@ -68,7 +68,7 @@ export function Pie() {
   return (
     <footer className="pie">
       <div className="contenedor">
-        <p>Stayly-UQ, seis apartamentos en la Carrera 15 con Calle 12 Norte, Armenia, Quindío.</p>
+        <p>Stayly-UQ. Armenia, Quindío.</p>
       </div>
     </footer>
   );

@@ -29,11 +29,11 @@ function PorPreparar() {
 
   return (
     <section className="placa" style={{ '--losa': 'var(--maiz)' } as React.CSSProperties}>
-      <h2>Apartamentos por preparar</h2>
+      <h2>Por preparar</h2>
       {mensaje && <AvisoOk>{mensaje}</AvisoOk>}
       <AvisoError error={carga.error ?? accion.error} />
       {carga.cargando && <Cargando />}
-      {carga.datos && carga.datos.length === 0 && <p>Todos los apartamentos están listos para recibir huéspedes.</p>}
+      {carga.datos && carga.datos.length === 0 && <p className="nota">Todo listo.</p>}
       <ul className="preparar">
         {carga.datos?.map((a) => (
           <li key={a.identificacion}>
@@ -136,7 +136,7 @@ function CalendarioOcupacion() {
     <>
       <section className="placa" style={{ '--losa': 'var(--cobalto)' } as React.CSSProperties}>
         <div className="titulo-con-accion">
-          <h2>Ocupación de las próximas dos semanas</h2>
+          <h2>Ocupación</h2>
           <div className="acciones acciones--fila">
             <button className="boton boton--claro" onClick={() => setDesde(sumarDias(desde, -7))}>
               Semana anterior
@@ -197,7 +197,7 @@ function CalendarioOcupacion() {
             })}
             <div className="calendario__leyenda">
               <span><i className="calendario__noche calendario__noche--libre" /> Libre</span>
-              <span><i className="calendario__noche" style={{ background: 'var(--cobalto)' }} /> Reservada, con el color del apartamento</span>
+              <span><i className="calendario__noche" style={{ background: 'var(--cobalto)' }} /> Reservada</span>
               <span><i className="calendario__noche calendario__noche--bloqueada" /> Bloqueada</span>
             </div>
           </div>
@@ -206,7 +206,7 @@ function CalendarioOcupacion() {
 
       {datos && (
         <section className="placa" style={{ '--losa': 'var(--cafetal)' } as React.CSSProperties}>
-          <h2>Estado de cada apartamento</h2>
+          <h2>Apartamentos</h2>
           <ul className="preparar">
             {datos.apartamentos.map((a) => (
               <FilaApartamento key={a.identificacion} id={a.identificacion} alCambiar={() => setVersion((v) => v + 1)} />
