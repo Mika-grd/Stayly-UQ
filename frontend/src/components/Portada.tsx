@@ -78,6 +78,13 @@ const PALMAS: [number, number][] = [
 function Willys() {
   return (
     <svg className="willys" viewBox="0 0 150 86" aria-hidden="true">
+      <defs>
+        <linearGradient id="haz-willys" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#ffd98a" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#ffd98a" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon className="willys__luz" points="142,42 560,10 600,92 170,92 142,52" fill="url(#haz-willys)" />
       <g className="willys__carroceria">
         <rect x="18" y="8" width="5" height="34" fill="var(--tinta)" />
         <rect x="70" y="14" width="34" height="5" fill="var(--tinta)" />
@@ -126,35 +133,55 @@ function Murcielagos() {
   );
 }
 
-/** La moto de la versión HARSH: chopper con jinete, horquilla larga y ruedas que giran. */
-function Moto() {
+/** Árbol seco: tronco y ramas torcidas, para el camino oscuro de la versión HARSH. */
+function arbol(x: number, alto: number, giro: number) {
+  const base = 220;
+  const copa = base - alto;
+  const g = giro;
+  return [
+    `M${x} ${base} L${x + 3 * g} ${copa + alto * 0.35} L${x - 2 * g} ${copa}`,
+    `M${x + 2 * g} ${copa + alto * 0.5} L${x + 30 * g} ${copa + alto * 0.28} L${x + 44 * g} ${copa + alto * 0.12}`,
+    `M${x + 22 * g} ${copa + alto * 0.33} L${x + 26 * g} ${copa + alto * 0.08}`,
+    `M${x} ${copa + alto * 0.42} L${x - 28 * g} ${copa + alto * 0.24} L${x - 36 * g} ${copa + alto * 0.04}`,
+    `M${x - 18 * g} ${copa + alto * 0.3} L${x - 40 * g} ${copa + alto * 0.3}`,
+    `M${x - 1 * g} ${copa + alto * 0.12} L${x + 14 * g} ${copa - 6}`,
+  ];
+}
+
+const ARBOLES: [number, number, number][] = [
+  [90, 170, 1],
+  [330, 120, -1],
+  [520, 196, 1],
+  [800, 140, -1],
+  [1010, 182, 1],
+  [1250, 110, 1],
+  [1430, 160, -1],
+];
+
+/** Solo en HARSH: árboles secos y postes de cerca en lugar de la cuadra. */
+function Bosque() {
   return (
-    <svg className="moto" viewBox="0 0 170 100" aria-hidden="true">
-      <g className="willys__carroceria">
-        {/* Jinete */}
-        <path d="M58 50 L64 22 L104 30" className="moto__jinete" />
-        <path d="M60 48 L84 54 L84 72" className="moto__jinete" />
-        <circle cx="66" cy="14" r="10" className="moto__casco" />
-        {/* Cuadro, tanque, asiento y escape */}
-        <path d="M38 78 L56 52 L98 46 L118 30" className="moto__cuadro" />
-        <path d="M70 46 Q 84 34 100 42 L98 50 L70 52 Z" className="moto__tanque" />
-        <rect x="46" y="44" width="26" height="8" className="moto__asiento" />
-        <rect x="66" y="56" width="26" height="18" className="moto__motor" />
-        <path d="M60 78 L114 82" className="moto__escape" />
-        {/* Horquilla, manubrio y farol */}
-        <path d="M116 26 L142 78" className="moto__horquilla" />
-        <path d="M104 22 L118 28 L124 18" className="moto__horquilla" />
-        <circle cx="126" cy="38" r="6" className="moto__farol" />
-      </g>
-      {[38, 142].map((cx) => (
-        <g key={cx} className="willys__rueda" style={{ transformOrigin: `${cx}px 78px` }}>
-          <circle cx={cx} cy="78" r="19" className="moto__llanta" />
-          <circle cx={cx} cy="78" r="6" className="moto__buje" />
-          <rect x={cx - 1.5} y="62" width="3" height="11" className="moto__buje" />
-          <rect x={cx - 1.5} y="83" width="3" height="11" className="moto__buje" />
-        </g>
+    <div className="paisaje__capa paisaje__capa--bosque">
+      {COPIAS.map((copia) => (
+        <svg key={copia} viewBox="0 0 1600 220" width="1600" height="220">
+          {ARBOLES.map(([x, alto, giro], i) => (
+            <g key={i} className="bosque__arbol">
+              {arbol(x, alto, giro).map((d, j) => (
+                <path key={j} d={d} strokeWidth={j === 0 ? 12 : 5} />
+              ))}
+            </g>
+          ))}
+          <g className="bosque__cerca">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <rect key={i} x={i * 80 + 20} y={i % 3 === 1 ? 182 : 178} width="7" height="44" transform={`rotate(${(i % 4) * 3 - 4} ${i * 80 + 23} 220)`} />
+            ))}
+            {[186, 200].map((y) => (
+              <path key={y} d={Array.from({ length: 20 }, (_, i) => `${i === 0 ? `M${23} ${y}` : ''} Q ${i * 80 + 63} ${y + 5} ${i * 80 + 103} ${y}`).join(' ')} />
+            ))}
+          </g>
+        </svg>
       ))}
-    </svg>
+    </div>
   );
 }
 
@@ -174,8 +201,8 @@ export function Portada({ children }: { children?: React.ReactNode }) {
         <Cordillera tipo="lejos" perfil={LEJOS} />
         <Cordillera tipo="cerca" perfil={CERCA} palmas={PALMAS} />
         <Cuadra />
+        <Bosque />
         <Willys />
-        <Moto />
         <div className="paisaje__via" />
       </div>
       <button

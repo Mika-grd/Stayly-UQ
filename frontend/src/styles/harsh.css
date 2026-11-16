@@ -183,50 +183,48 @@
   to { background-position: -96px 0, -91px 0, -96px 0, -96px 0, -96px 0, -96px 0, -96px 0, 0 0; }
 }
 
-/* En HARSH va la moto en lugar del Willys */
-[data-tema='harsh'] .willys {
+/* En HARSH no hay ciudad: el Willys va por un camino oscuro entre árboles secos */
+[data-tema='harsh'] .paisaje__capa--calle {
   display: none;
 }
 
-.moto {
+.paisaje__capa--bosque {
   display: none;
 }
 
-[data-tema='harsh'] .moto {
-  display: block;
-  position: absolute;
-  z-index: 3;
-  left: 14%;
-  bottom: 18px;
-  width: 190px;
+[data-tema='harsh'] .paisaje__capa--bosque {
+  --duracion: 60s;
+  display: flex;
+  bottom: 38px;
 }
 
-.moto__jinete,
-.moto__cuadro,
-.moto__horquilla,
-.moto__escape {
+.bosque__arbol path {
   fill: none;
+  stroke: #000;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.moto__jinete { stroke: #000; stroke-width: 11; }
-.moto__casco { fill: #000; stroke: var(--hierro); stroke-width: 3; }
-.moto__cuadro { stroke: var(--balcon); stroke-width: 7; }
-.moto__tanque { fill: var(--balcon); stroke: #000; stroke-width: 3; }
-.moto__asiento { fill: #000; }
-.moto__motor { fill: #9a93a6; stroke: #000; stroke-width: 3; }
-.moto__escape { stroke: #9a93a6; stroke-width: 6; }
-.moto__horquilla { stroke: #9a93a6; stroke-width: 5; }
-.moto__farol { fill: var(--ventana); stroke: #000; stroke-width: 3; }
-.moto__llanta { fill: #000; stroke: var(--hierro); stroke-width: 4; }
-.moto__buje { fill: #9a93a6; }
+.bosque__cerca rect {
+  fill: #000;
+}
 
-@media (max-width: 900px) {
-  [data-tema='harsh'] .moto {
-    width: 120px;
-    left: 6%;
-  }
+.bosque__cerca path {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2;
+}
+
+.willys__luz {
+  display: none;
+}
+
+[data-tema='harsh'] .willys {
+  overflow: visible;
+}
+
+[data-tema='harsh'] .willys__luz {
+  display: block;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -287,7 +285,6 @@
   to { transform: scaleY(0.45); }
 }
 
-[data-tema='harsh'] .portada--quieta .moto *,
 [data-tema='harsh'] .portada--quieta .murcielago,
 [data-tema='harsh'] .portada--quieta .murcielago svg {
   animation-play-state: paused;
