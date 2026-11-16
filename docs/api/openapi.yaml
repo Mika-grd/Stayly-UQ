@@ -605,6 +605,38 @@ paths:
       security:
       - bearerAuth: []
   /api/apartamentos:
+    get:
+      tags:
+      - Apartamentos
+      summary: Listar el inventario de apartamentos (7.3)
+      description: |-
+        Todos los apartamentos, activos o no (incluidos los retirados, que la búsqueda ignora), con su estado operativo y si tienen tarifas completas (condición para activarlos, A-5). De a 10, por identificación.
+
+        Actor(es): Administrador.
+      operationId: listarApartamentos
+      parameters:
+      - $ref: '#/components/parameters/Pagina'
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaApartamentoInventarioResponse'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+      security:
+      - bearerAuth: []
     post:
       tags:
       - Apartamentos
@@ -7818,6 +7850,64 @@ components:
           description: Siempre 10 (12.4).
           examples:
           - 10
+        totalElementos:
+          type: integer
+          format: int64
+        totalPaginas:
+          type: integer
+          format: int32
+    ApartamentoInventarioResponse:
+      type: object
+      description: Fila del inventario del administrador (7.3).
+      required:
+      - identificacion
+      - nombre
+      - dormitorios
+      - capacidad
+      - activo
+      - estadoOperativo
+      - tarifasCompletas
+      properties:
+        identificacion:
+          type: string
+          examples:
+          - SUQ-201
+        nombre:
+          type: string
+        dormitorios:
+          type: integer
+          format: int32
+        capacidad:
+          type: integer
+          format: int32
+        activo:
+          type: boolean
+          description: false si nunca se activó o si fue retirado (eliminación lógica).
+        estadoOperativo:
+          $ref: '#/components/schemas/EstadoOperativo'
+        tarifasCompletas:
+          type: boolean
+          description: Tiene tarifa en todas las temporadas (A-5).
+    PaginaApartamentoInventarioResponse:
+      type: object
+      description: Página del inventario de apartamentos (10 por página, 12.4).
+      required:
+      - contenido
+      - pagina
+      - tamano
+      - totalElementos
+      - totalPaginas
+      properties:
+        contenido:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApartamentoInventarioResponse'
+        pagina:
+          type: integer
+          format: int32
+        tamano:
+          type: integer
+          format: int32
         totalElementos:
           type: integer
           format: int64

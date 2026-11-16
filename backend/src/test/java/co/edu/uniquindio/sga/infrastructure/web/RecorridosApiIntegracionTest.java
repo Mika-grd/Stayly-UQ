@@ -238,6 +238,19 @@ class RecorridosApiIntegracionTest {
                         org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue())));
     }
 
+    @Test
+    @DisplayName("7.3 · Solo el administrador lista el inventario completo de apartamentos")
+    void inventarioDelAdministrador() throws Exception {
+        mvc.perform(get("/api/apartamentos").header(HttpHeaders.AUTHORIZATION, bearer(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].identificacion").value("SUQ-101"))
+                .andExpect(jsonPath("$.contenido[0].tarifasCompletas").value(true))
+                .andExpect(jsonPath("$.totalElementos").value(org.hamcrest.Matchers.greaterThanOrEqualTo(6)));
+        mvc.perform(get("/api/apartamentos").header(HttpHeaders.AUTHORIZATION, bearer(RECEPCION)))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/apartamentos")).andExpect(status().isUnauthorized());
+    }
+
     // Calendario de disponibilidad del detalle (público)
 
     @Test
