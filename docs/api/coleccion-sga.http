@@ -1,0 +1,2657 @@
+# Colección de pruebas de la API del SGA · Stayly-UQ (Entrega 2)
+#
+# Cliente: IntelliJ HTTP Client (botón "Run All Requests in File") o su CLI ijhttp:
+#   ijhttp docs/api/coleccion-sga.http
+# Se ejecuta completa, en orden, contra la aplicación recién arrancada (cd backend && ./gradlew bootRun),
+# sin preparar nada a mano: los tokens, las fechas (relativas a hoy) y los códigos de reserva los guarda
+# cada petición para las siguientes. Cada petición verifica su HTTP y, en los errores, su código de negocio.
+# Para repetirla, reinicie la aplicación: H2 vuelve a los datos de prueba de la sección 12.3.
+#
+# Las líneas "# espera:" y "# guarda:" las lee también la prueba ColeccionHttpIntegracionTest, que ejecuta
+# este mismo archivo con ./gradlew test. Archivo generado: si cambia una petición, cambie también su espera.
+
+@base = http://localhost:8080
+
+# ============================================================================================================
+# 0. Sesiones: un token por rol (7.1, 7.2)
+# ============================================================================================================
+
+### 0.1 Login del administrador -> 200 (además fija las fechas relativas a hoy)
+# espera: 200
+# guarda: tokenAdmin = $.token
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@stayly.local",
+  "contrasena": "Admin2026"
+}
+
+> {%
+    // Fechas relativas a hoy (hora local del equipo), para que la colección sirva cualquier día
+    const fecha = n => {
+        const d = new Date();
+        d.setDate(d.getDate() + n);
+        const dos = x => String(x).padStart(2, "0");
+        return d.getFullYear() + "-" + dos(d.getMonth() + 1) + "-" + dos(d.getDate());
+    };
+    client.global.set("hoy", fecha(0));
+    client.global.set("ayer", fecha(-1));
+    [1, 2, 4, 10, 11, 12, 13, 15, 40, 42, 60, 61, 63, 64, 70, 72, 80, 83].forEach(n => client.global.set("hoyMas" + n, fecha(n)));
+    client.test("0.1 Login del administrador -> 200 (además fija las fechas relativas a hoy)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("tokenAdmin", response.body.token);
+%}
+
+### 0.2 Login de recepción -> 200 con token Bearer
+# espera: 200
+# guarda: tokenRecepcion = $.token
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "recepcion@stayly.local",
+  "contrasena": "Recepcion2026"
+}
+
+> {%
+    client.test("0.2 Login de recepción -> 200 con token Bearer", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("tokenRecepcion", response.body.token);
+%}
+
+### 0.3 Login del huésped 1 (Laura Gómez, titular 1094000001) -> 200
+# espera: 200
+# guarda: tokenHuesped1 = $.token
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "huesped1@stayly.local",
+  "contrasena": "Huesped2026"
+}
+
+> {%
+    client.test("0.3 Login del huésped 1 (Laura Gómez, titular 1094000001) -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("tokenHuesped1", response.body.token);
+%}
+
+### 0.4 Login del huésped 2 (Carlos Mejía, titular 1094000002) -> 200
+# espera: 200
+# guarda: tokenHuesped2 = $.token
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "huesped2@stayly.local",
+  "contrasena": "Huesped2026"
+}
+
+> {%
+    client.test("0.4 Login del huésped 2 (Carlos Mejía, titular 1094000002) -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("tokenHuesped2", response.body.token);
+%}
+
+### 0.5 Login del personal de servicio -> 200
+# espera: 200
+# guarda: tokenServicio = $.token
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "servicio@stayly.local",
+  "contrasena": "Servicio2026"
+}
+
+> {%
+    client.test("0.5 Login del personal de servicio -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("tokenServicio", response.body.token);
+%}
+
+### 0.6 Contraseña errada -> 401 CREDENCIALES_INVALIDAS
+# espera: 401 CREDENCIALES_INVALIDAS
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "recepcion@stayly.local",
+  "contrasena": "Incorrecta1"
+}
+
+> {%
+    client.test("0.6 Contraseña errada -> 401 CREDENCIALES_INVALIDAS", () => {
+        client.assert(response.status === 401, "Se esperaba 401 y llegó " + response.status);
+        client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 0.7 Correo sin formato -> 400 FORMATO_INVALIDO
+# espera: 400 FORMATO_INVALIDO
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "no-es-correo",
+  "contrasena": "Recepcion2026"
+}
+
+> {%
+    client.test("0.7 Correo sin formato -> 400 FORMATO_INVALIDO", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "FORMATO_INVALIDO", "Se esperaba FORMATO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 0.8 Registro público de un huésped -> 201 (7.5.2)
+# espera: 201
+POST {{base}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Ana Torres",
+  "correo": "ana.torres@correo.co",
+  "contrasena": "Segura2026",
+  "telefono": "3005556677",
+  "documentoIdentidad": "1094777888",
+  "fechaNacimiento": "1996-08-20"
+}
+
+> {%
+    client.test("0.8 Registro público de un huésped -> 201 (7.5.2)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+%}
+
+### 0.9 El mismo registro otra vez -> 409 CORREO_YA_REGISTRADO (7.2)
+# espera: 409 CORREO_YA_REGISTRADO
+POST {{base}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Ana Torres",
+  "correo": "ana.torres@correo.co",
+  "contrasena": "Segura2026",
+  "telefono": "3005556677",
+  "documentoIdentidad": "1094777888",
+  "fechaNacimiento": "1996-08-20"
+}
+
+> {%
+    client.test("0.9 El mismo registro otra vez -> 409 CORREO_YA_REGISTRADO (7.2)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CORREO_YA_REGISTRADO", "Se esperaba CORREO_YA_REGISTRADO y llegó " + response.body.codigo);
+    });
+%}
+
+# ============================================================================================================
+# 1. Reservas de los datos de prueba (12.3): se buscan por titular, sin copiar códigos a mano
+# ============================================================================================================
+
+### 1.1 Reserva PENDIENTE de Laura Gómez
+# espera: 200
+# guarda: reservaLaura = $.contenido[0].codigo
+GET {{base}}/api/reservas?titular=1094000001
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("1.1 Reserva PENDIENTE de Laura Gómez", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("reservaLaura", response.body.contenido[0].codigo);
+%}
+
+### 1.2 Reserva CONFIRMADA de Carlos Mejía (entra en 10 días)
+# espera: 200
+# guarda: reservaCarlos = $.contenido[0].codigo
+GET {{base}}/api/reservas?titular=1094000002
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("1.2 Reserva CONFIRMADA de Carlos Mejía (entra en 10 días)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("reservaCarlos", response.body.contenido[0].codigo);
+%}
+
+### 1.3 Reserva CANCELADA de Daniel Castro
+# espera: 200
+# guarda: reservaCancelada = $.contenido[0].codigo
+GET {{base}}/api/reservas?titular=1094000005
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("1.3 Reserva CANCELADA de Daniel Castro", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("reservaCancelada", response.body.contenido[0].codigo);
+%}
+
+### 1.4 Reserva CONFIRMADA de Andrés Pérez (entró ayer y no llegó)
+# espera: 200
+# guarda: reservaSinLlegada = $.contenido[0].codigo
+GET {{base}}/api/reservas?titular=1094000007
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("1.4 Reserva CONFIRMADA de Andrés Pérez (entró ayer y no llegó)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("reservaSinLlegada", response.body.contenido[0].codigo);
+%}
+
+### 1.5 Listado filtrado por estado, de la más reciente a la más antigua, 10 por página
+# espera: 200
+GET {{base}}/api/reservas?estado=CONFIRMADA&pagina=0
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("1.5 Listado filtrado por estado, de la más reciente a la más antigua, 10 por página", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+# ============================================================================================================
+# 2. Consultas del catálogo, alojamiento y cotización
+# ============================================================================================================
+
+### 2.1 Alojamiento con sus parámetros vigentes (CU-22)
+# espera: 200
+GET {{base}}/api/alojamiento
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("2.1 Alojamiento con sus parámetros vigentes (CU-22)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 2.2 Búsqueda pública de apartamentos disponibles para una pareja (CU-20)
+# espera: 200
+GET {{base}}/api/apartamentos/disponibles?fechaEntrada={{hoyMas60}}&fechaSalida={{hoyMas63}}&fechasNacimiento=1990-03-14,1991-07-02
+
+> {%
+    client.test("2.2 Búsqueda pública de apartamentos disponibles para una pareja (CU-20)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 2.3 Detalle público de un apartamento
+# espera: 200
+GET {{base}}/api/apartamentos/SUQ-202
+
+> {%
+    client.test("2.3 Detalle público de un apartamento", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 2.4 Política de cancelación vigente
+# espera: 200
+GET {{base}}/api/politica-cancelacion/vigente
+
+> {%
+    client.test("2.4 Política de cancelación vigente", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 2.5 Cotización noche por noche antes de reservar (CU-01)
+# espera: 200
+POST {{base}}/api/cotizaciones
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "identificacionApartamento": "SUQ-202",
+  "fechaEntrada": "{{hoyMas60}}",
+  "fechaSalida": "{{hoyMas63}}",
+  "fechasNacimientoOcupantes": [
+    "1990-03-14"
+  ]
+}
+
+> {%
+    client.test("2.5 Cotización noche por noche antes de reservar (CU-01)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+# ============================================================================================================
+# 3. Flujo de una reserva por el portal: crear, consultar, hora de llegada, modificar y cancelar
+# ============================================================================================================
+
+### 3.1 El huésped 1 reserva a su nombre -> 201 con Location (CU-02, canal PORTAL)
+# espera: 201
+# guarda: reservaPortal = $.codigo
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "identificacionApartamento": "SUQ-202",
+  "fechaEntrada": "{{hoyMas60}}",
+  "fechaSalida": "{{hoyMas63}}",
+  "titular": {
+    "nombre": "Laura Gómez",
+    "documentoIdentidad": "1094000001",
+    "fechaNacimiento": "1990-03-14",
+    "correo": "laura.gomez@correo.co",
+    "telefono": "3004000001"
+  }
+}
+
+> {%
+    client.test("3.1 El huésped 1 reserva a su nombre -> 201 con Location (CU-02, canal PORTAL)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+    client.global.set("reservaPortal", response.body.codigo);
+%}
+
+### 3.2 El titular consulta su reserva -> 200
+# espera: 200
+GET {{base}}/api/reservas/{{reservaPortal}}
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("3.2 El titular consulta su reserva -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 3.3 Otro huésped consulta esa reserva -> 403 ACCESO_DENEGADO (propietario)
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/reservas/{{reservaPortal}}
+Authorization: Bearer {{tokenHuesped2}}
+
+> {%
+    client.test("3.3 Otro huésped consulta esa reserva -> 403 ACCESO_DENEGADO (propietario)", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 3.4 El titular indica la hora de llegada, después de las 21:00 -> 200 con recargo nocturno (CU-14, RP-03)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaPortal}}/hora-llegada
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "horaEstimadaLlegada": "22:00"
+}
+
+> {%
+    client.test("3.4 El titular indica la hora de llegada, después de las 21:00 -> 200 con recargo nocturno (CU-14, RP-03)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 3.5 Otro huésped intenta cambiar esa hora -> 403
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/reservas/{{reservaPortal}}/hora-llegada
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped2}}
+
+{
+  "horaEstimadaLlegada": "18:00"
+}
+
+> {%
+    client.test("3.5 Otro huésped intenta cambiar esa hora -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 3.6 Recepción corre la reserva un día -> 200, revalida y ajusta el folio (CU-13)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaPortal}}
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-202",
+  "fechaEntrada": "{{hoyMas61}}",
+  "fechaSalida": "{{hoyMas64}}",
+  "titular": {
+    "nombre": "Laura Gómez",
+    "documentoIdentidad": "1094000001",
+    "fechaNacimiento": "1990-03-14",
+    "correo": "laura.gomez@correo.co",
+    "telefono": "3004000001"
+  }
+}
+
+> {%
+    client.test("3.6 Recepción corre la reserva un día -> 200, revalida y ajusta el folio (CU-13)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 3.7 Un huésped no puede modificar reservas -> 403
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/reservas/{{reservaPortal}}
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "identificacionApartamento": "SUQ-202",
+  "fechaEntrada": "{{hoyMas61}}",
+  "fechaSalida": "{{hoyMas64}}",
+  "titular": {
+    "nombre": "Laura Gómez",
+    "documentoIdentidad": "1094000001",
+    "fechaNacimiento": "1990-03-14",
+    "correo": "laura.gomez@correo.co",
+    "telefono": "3004000001"
+  }
+}
+
+> {%
+    client.test("3.7 Un huésped no puede modificar reservas -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 3.8 Confirmar sin el anticipo pagado -> 409 ANTICIPO_INSUFICIENTE (L-11)
+# espera: 409 ANTICIPO_INSUFICIENTE
+PUT {{base}}/api/reservas/{{reservaPortal}}/confirmar
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("3.8 Confirmar sin el anticipo pagado -> 409 ANTICIPO_INSUFICIENTE (L-11)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "ANTICIPO_INSUFICIENTE", "Se esperaba ANTICIPO_INSUFICIENTE y llegó " + response.body.codigo);
+    });
+%}
+
+### 3.9 El titular cancela -> 200 con la liquidación según la política congelada (CU-04)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaPortal}}/cancelar
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("3.9 El titular cancela -> 200 con la liquidación según la política congelada (CU-04)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+# ============================================================================================================
+# 4. Flujo completo en recepción: reserva para hoy, confirmación y llegada (CU-02, CU-03, CU-05)
+# ============================================================================================================
+
+### 4.1 Recepción crea una reserva que entra hoy, sin hora de llegada -> 201 (canal DIRECTO)
+# espera: 201
+# guarda: reservaDirecta = $.codigo
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-201",
+  "fechaEntrada": "{{hoy}}",
+  "fechaSalida": "{{hoyMas2}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("4.1 Recepción crea una reserva que entra hoy, sin hora de llegada -> 201 (canal DIRECTO)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+    client.global.set("reservaDirecta", response.body.codigo);
+%}
+
+### 4.2 Confirmar sin hora estimada de llegada -> 409 HORA_LLEGADA_REQUERIDA (RN-09)
+# espera: 409 HORA_LLEGADA_REQUERIDA
+PUT {{base}}/api/reservas/{{reservaDirecta}}/confirmar
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("4.2 Confirmar sin hora estimada de llegada -> 409 HORA_LLEGADA_REQUERIDA (RN-09)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "HORA_LLEGADA_REQUERIDA", "Se esperaba HORA_LLEGADA_REQUERIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 4.3 Recepción registra la hora de llegada -> 200 (CU-14)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaDirecta}}/hora-llegada
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "horaEstimadaLlegada": "16:00"
+}
+
+> {%
+    client.test("4.3 Recepción registra la hora de llegada -> 200 (CU-14)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 4.4 Recepción no puede cambiar el alojamiento -> 403 (solo administrador)
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/alojamiento
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "nombre": "Stayly-UQ",
+  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
+  "ciudad": "Armenia, Quindio",
+  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
+  "ubicacion": {
+    "latitud": 4.5532,
+    "longitud": -75.6593
+  },
+  "horaEntrada": "15:00",
+  "horaSalida": "12:00",
+  "normasConvivencia": [
+    "Silencio de 22:00 a 7:00",
+    "Prohibido fumar dentro de los apartamentos",
+    "No se permiten fiestas ni eventos",
+    "Solo se permite estar a los ocupantes registrados",
+    "Mascotas con correa en las zonas comunes",
+    "Separar los residuos para reciclaje"
+  ],
+  "serviciosAdicionales": [
+    {
+      "nombre": "Desayuno tipico (por persona por dia)",
+      "generaCargo": true,
+      "valor": 18000
+    },
+    {
+      "nombre": "Parqueadero (por noche, cupo limitado)",
+      "generaCargo": true,
+      "valor": 15000
+    },
+    {
+      "nombre": "Lavanderia (por carga)",
+      "generaCargo": true,
+      "valor": 20000
+    },
+    {
+      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
+      "generaCargo": true,
+      "valor": 60000
+    }
+  ],
+  "parametros": {
+    "umbralEdadFacturable": 12,
+    "tiempoPreparacionHoras": 3,
+    "plazoConfirmacionHoras": 24,
+    "horaLimiteNoShow": "23:00",
+    "exigeAnticipo": false,
+    "porcentajeAnticipo": null,
+    "mediosPagoAceptados": [
+      "EFECTIVO",
+      "TRANSFERENCIA",
+      "TARJETA"
+    ]
+  }
+}
+
+> {%
+    client.test("4.4 Recepción no puede cambiar el alojamiento -> 403 (solo administrador)", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 4.5 El administrador deja de exigir anticipo -> 200 (CU-36: parámetro de la sección 6 sin recompilar)
+# espera: 200
+PUT {{base}}/api/alojamiento
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Stayly-UQ",
+  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
+  "ciudad": "Armenia, Quindio",
+  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
+  "ubicacion": {
+    "latitud": 4.5532,
+    "longitud": -75.6593
+  },
+  "horaEntrada": "15:00",
+  "horaSalida": "12:00",
+  "normasConvivencia": [
+    "Silencio de 22:00 a 7:00",
+    "Prohibido fumar dentro de los apartamentos",
+    "No se permiten fiestas ni eventos",
+    "Solo se permite estar a los ocupantes registrados",
+    "Mascotas con correa en las zonas comunes",
+    "Separar los residuos para reciclaje"
+  ],
+  "serviciosAdicionales": [
+    {
+      "nombre": "Desayuno tipico (por persona por dia)",
+      "generaCargo": true,
+      "valor": 18000
+    },
+    {
+      "nombre": "Parqueadero (por noche, cupo limitado)",
+      "generaCargo": true,
+      "valor": 15000
+    },
+    {
+      "nombre": "Lavanderia (por carga)",
+      "generaCargo": true,
+      "valor": 20000
+    },
+    {
+      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
+      "generaCargo": true,
+      "valor": 60000
+    }
+  ],
+  "parametros": {
+    "umbralEdadFacturable": 12,
+    "tiempoPreparacionHoras": 3,
+    "plazoConfirmacionHoras": 24,
+    "horaLimiteNoShow": "23:00",
+    "exigeAnticipo": false,
+    "porcentajeAnticipo": null,
+    "mediosPagoAceptados": [
+      "EFECTIVO",
+      "TRANSFERENCIA",
+      "TARJETA"
+    ]
+  }
+}
+
+> {%
+    client.test("4.5 El administrador deja de exigir anticipo -> 200 (CU-36: parámetro de la sección 6 sin recompilar)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 4.6 Confirmar -> 200 CONFIRMADA (CU-03)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaDirecta}}/confirmar
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("4.6 Confirmar -> 200 CONFIRMADA (CU-03)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 4.7 Registrar la llegada -> 200 EN_CURSO (CU-05)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaDirecta}}/registrar-llegada
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("4.7 Registrar la llegada -> 200 EN_CURSO (CU-05)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 4.8 Otra reserva para hoy en SUQ-301, que aún no está preparado -> 201
+# espera: 201
+# guarda: reservaSinPreparar = $.codigo
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-301",
+  "fechaEntrada": "{{hoy}}",
+  "fechaSalida": "{{hoyMas1}}",
+  "horaEstimadaLlegada": "17:00",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("4.8 Otra reserva para hoy en SUQ-301, que aún no está preparado -> 201", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+    client.global.set("reservaSinPreparar", response.body.codigo);
+%}
+
+### 4.9 Confirmarla -> 200
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaSinPreparar}}/confirmar
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("4.9 Confirmarla -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 4.10 Registrar la llegada con el apartamento sin preparar -> 409 APARTAMENTO_NO_PREPARADO (RN-11)
+# espera: 409 APARTAMENTO_NO_PREPARADO
+PUT {{base}}/api/reservas/{{reservaSinPreparar}}/registrar-llegada
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("4.10 Registrar la llegada con el apartamento sin preparar -> 409 APARTAMENTO_NO_PREPARADO (RN-11)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "APARTAMENTO_NO_PREPARADO", "Se esperaba APARTAMENTO_NO_PREPARADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 4.11 El administrador vuelve a exigir el 30 % de anticipo -> 200
+# espera: 200
+PUT {{base}}/api/alojamiento
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Stayly-UQ",
+  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
+  "ciudad": "Armenia, Quindio",
+  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
+  "ubicacion": {
+    "latitud": 4.5532,
+    "longitud": -75.6593
+  },
+  "horaEntrada": "15:00",
+  "horaSalida": "12:00",
+  "normasConvivencia": [
+    "Silencio de 22:00 a 7:00",
+    "Prohibido fumar dentro de los apartamentos",
+    "No se permiten fiestas ni eventos",
+    "Solo se permite estar a los ocupantes registrados",
+    "Mascotas con correa en las zonas comunes",
+    "Separar los residuos para reciclaje"
+  ],
+  "serviciosAdicionales": [
+    {
+      "nombre": "Desayuno tipico (por persona por dia)",
+      "generaCargo": true,
+      "valor": 18000
+    },
+    {
+      "nombre": "Parqueadero (por noche, cupo limitado)",
+      "generaCargo": true,
+      "valor": 15000
+    },
+    {
+      "nombre": "Lavanderia (por carga)",
+      "generaCargo": true,
+      "valor": 20000
+    },
+    {
+      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
+      "generaCargo": true,
+      "valor": 60000
+    }
+  ],
+  "parametros": {
+    "umbralEdadFacturable": 12,
+    "tiempoPreparacionHoras": 3,
+    "plazoConfirmacionHoras": 24,
+    "horaLimiteNoShow": "23:00",
+    "exigeAnticipo": true,
+    "porcentajeAnticipo": 30,
+    "mediosPagoAceptados": [
+      "EFECTIVO",
+      "TRANSFERENCIA",
+      "TARJETA"
+    ]
+  }
+}
+
+> {%
+    client.test("4.11 El administrador vuelve a exigir el 30 % de anticipo -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+# ============================================================================================================
+# 5. No-show (CU-12)
+# ============================================================================================================
+
+### 5.1 Antes de la hora límite del día de entrada -> 409 NO_SHOW_ANTES_DE_HORA_LIMITE (L-15)
+# espera: 409 NO_SHOW_ANTES_DE_HORA_LIMITE
+PUT {{base}}/api/reservas/{{reservaCarlos}}/no-show
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("5.1 Antes de la hora límite del día de entrada -> 409 NO_SHOW_ANTES_DE_HORA_LIMITE (L-15)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "NO_SHOW_ANTES_DE_HORA_LIMITE", "Se esperaba NO_SHOW_ANTES_DE_HORA_LIMITE y llegó " + response.body.codigo);
+    });
+%}
+
+### 5.2 La reserva que entró ayer y no llegó -> 200 NO_SHOW con la retención
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaSinLlegada}}/no-show
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("5.2 La reserva que entró ayer y no llegó -> 200 NO_SHOW con la retención", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 5.3 Repetir el no-show -> 409 TRANSICION_INVALIDA (RN-08)
+# espera: 409 TRANSICION_INVALIDA
+PUT {{base}}/api/reservas/{{reservaSinLlegada}}/no-show
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("5.3 Repetir el no-show -> 409 TRANSICION_INVALIDA (RN-08)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TRANSICION_INVALIDA", "Se esperaba TRANSICION_INVALIDA y llegó " + response.body.codigo);
+    });
+%}
+
+# ============================================================================================================
+# 6. Un 409 por cada regla de la reserva (7.5, sección 8, reglas propias)
+# ============================================================================================================
+
+### 6.1 Noches ocupadas por otra reserva -> 409 NOCHES_NO_DISPONIBLES (RN-01)
+# espera: 409 NOCHES_NO_DISPONIBLES
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-201",
+  "fechaEntrada": "{{hoyMas11}}",
+  "fechaSalida": "{{hoyMas12}}",
+  "horaEstimadaLlegada": "16:00",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("6.1 Noches ocupadas por otra reserva -> 409 NOCHES_NO_DISPONIBLES (RN-01)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "NOCHES_NO_DISPONIBLES", "Se esperaba NOCHES_NO_DISPONIBLES y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.2 Tres ocupantes en un apartamento para dos -> 409 CAPACIDAD_EXCEDIDA (RN-02)
+# espera: 409 CAPACIDAD_EXCEDIDA
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-101",
+  "fechaEntrada": "{{hoyMas70}}",
+  "fechaSalida": "{{hoyMas72}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  },
+  "acompanantes": [
+    {
+      "nombre": "Lina Gil",
+      "fechaNacimiento": "1986-01-10"
+    },
+    {
+      "nombre": "Mario Gil",
+      "fechaNacimiento": "1990-02-11"
+    }
+  ]
+}
+
+> {%
+    client.test("6.2 Tres ocupantes en un apartamento para dos -> 409 CAPACIDAD_EXCEDIDA (RN-02)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CAPACIDAD_EXCEDIDA", "Se esperaba CAPACIDAD_EXCEDIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.3 Salida igual a la entrada -> 409 ESTANCIA_SIN_NOCHES (RN-03)
+# espera: 409 ESTANCIA_SIN_NOCHES
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-101",
+  "fechaEntrada": "{{hoyMas70}}",
+  "fechaSalida": "{{hoyMas70}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("6.3 Salida igual a la entrada -> 409 ESTANCIA_SIN_NOCHES (RN-03)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "ESTANCIA_SIN_NOCHES", "Se esperaba ESTANCIA_SIN_NOCHES y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.4 Entrada ayer -> 409 FECHA_ENTRADA_PASADA (RN-04)
+# espera: 409 FECHA_ENTRADA_PASADA
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-102",
+  "fechaEntrada": "{{ayer}}",
+  "fechaSalida": "{{hoyMas1}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("6.4 Entrada ayer -> 409 FECHA_ENTRADA_PASADA (RN-04)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "FECHA_ENTRADA_PASADA", "Se esperaba FECHA_ENTRADA_PASADA y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.5 SUQ-302 bloqueado por reparación -> 409 APARTAMENTO_BLOQUEADO (RN-07)
+# espera: 409 APARTAMENTO_BLOQUEADO
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-302",
+  "fechaEntrada": "{{hoyMas2}}",
+  "fechaSalida": "{{hoyMas4}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("6.5 SUQ-302 bloqueado por reparación -> 409 APARTAMENTO_BLOQUEADO (RN-07)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "APARTAMENTO_BLOQUEADO", "Se esperaba APARTAMENTO_BLOQUEADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.6 El administrador sube el tiempo de preparación a 4 horas (no cabe entre 12:00 y 15:00) -> 200
+# espera: 200
+PUT {{base}}/api/alojamiento
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Stayly-UQ",
+  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
+  "ciudad": "Armenia, Quindio",
+  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
+  "ubicacion": {
+    "latitud": 4.5532,
+    "longitud": -75.6593
+  },
+  "horaEntrada": "15:00",
+  "horaSalida": "12:00",
+  "normasConvivencia": [
+    "Silencio de 22:00 a 7:00",
+    "Prohibido fumar dentro de los apartamentos",
+    "No se permiten fiestas ni eventos",
+    "Solo se permite estar a los ocupantes registrados",
+    "Mascotas con correa en las zonas comunes",
+    "Separar los residuos para reciclaje"
+  ],
+  "serviciosAdicionales": [
+    {
+      "nombre": "Desayuno tipico (por persona por dia)",
+      "generaCargo": true,
+      "valor": 18000
+    },
+    {
+      "nombre": "Parqueadero (por noche, cupo limitado)",
+      "generaCargo": true,
+      "valor": 15000
+    },
+    {
+      "nombre": "Lavanderia (por carga)",
+      "generaCargo": true,
+      "valor": 20000
+    },
+    {
+      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
+      "generaCargo": true,
+      "valor": 60000
+    }
+  ],
+  "parametros": {
+    "umbralEdadFacturable": 12,
+    "tiempoPreparacionHoras": 4,
+    "plazoConfirmacionHoras": 24,
+    "horaLimiteNoShow": "23:00",
+    "exigeAnticipo": true,
+    "porcentajeAnticipo": 30,
+    "mediosPagoAceptados": [
+      "EFECTIVO",
+      "TRANSFERENCIA",
+      "TARJETA"
+    ]
+  }
+}
+
+> {%
+    client.test("6.6 El administrador sube el tiempo de preparación a 4 horas (no cabe entre 12:00 y 15:00) -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 6.7 Entrar el mismo día en que sale Carlos Mejía -> 409 TIEMPO_PREPARACION_INSUFICIENTE (RN-20)
+# espera: 409 TIEMPO_PREPARACION_INSUFICIENTE
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-201",
+  "fechaEntrada": "{{hoyMas13}}",
+  "fechaSalida": "{{hoyMas15}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("6.7 Entrar el mismo día en que sale Carlos Mejía -> 409 TIEMPO_PREPARACION_INSUFICIENTE (RN-20)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TIEMPO_PREPARACION_INSUFICIENTE", "Se esperaba TIEMPO_PREPARACION_INSUFICIENTE y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.8 El administrador devuelve el tiempo de preparación a 3 horas -> 200
+# espera: 200
+PUT {{base}}/api/alojamiento
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Stayly-UQ",
+  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
+  "ciudad": "Armenia, Quindio",
+  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
+  "ubicacion": {
+    "latitud": 4.5532,
+    "longitud": -75.6593
+  },
+  "horaEntrada": "15:00",
+  "horaSalida": "12:00",
+  "normasConvivencia": [
+    "Silencio de 22:00 a 7:00",
+    "Prohibido fumar dentro de los apartamentos",
+    "No se permiten fiestas ni eventos",
+    "Solo se permite estar a los ocupantes registrados",
+    "Mascotas con correa en las zonas comunes",
+    "Separar los residuos para reciclaje"
+  ],
+  "serviciosAdicionales": [
+    {
+      "nombre": "Desayuno tipico (por persona por dia)",
+      "generaCargo": true,
+      "valor": 18000
+    },
+    {
+      "nombre": "Parqueadero (por noche, cupo limitado)",
+      "generaCargo": true,
+      "valor": 15000
+    },
+    {
+      "nombre": "Lavanderia (por carga)",
+      "generaCargo": true,
+      "valor": 20000
+    },
+    {
+      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
+      "generaCargo": true,
+      "valor": 60000
+    }
+  ],
+  "parametros": {
+    "umbralEdadFacturable": 12,
+    "tiempoPreparacionHoras": 3,
+    "plazoConfirmacionHoras": 24,
+    "horaLimiteNoShow": "23:00",
+    "exigeAnticipo": true,
+    "porcentajeAnticipo": 30,
+    "mediosPagoAceptados": [
+      "EFECTIVO",
+      "TRANSFERENCIA",
+      "TARJETA"
+    ]
+  }
+}
+
+> {%
+    client.test("6.8 El administrador devuelve el tiempo de preparación a 3 horas -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 6.9 Titular menor de 12 años -> 409 TITULAR_NO_FACTURABLE (3.2)
+# espera: 409 TITULAR_NO_FACTURABLE
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-101",
+  "fechaEntrada": "{{hoyMas70}}",
+  "fechaSalida": "{{hoyMas72}}",
+  "titular": {
+    "nombre": "Sara Gil",
+    "documentoIdentidad": "1094000101",
+    "fechaNacimiento": "2016-05-02",
+    "correo": "sara.gil@correo.co",
+    "telefono": "3004000101"
+  }
+}
+
+> {%
+    client.test("6.9 Titular menor de 12 años -> 409 TITULAR_NO_FACTURABLE (3.2)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TITULAR_NO_FACTURABLE", "Se esperaba TITULAR_NO_FACTURABLE y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.10 Una noche en temporada alta (exige 2) -> 409 ESTANCIA_MINIMA_NO_CUMPLIDA (RP-01)
+# espera: 409 ESTANCIA_MINIMA_NO_CUMPLIDA
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-101",
+  "fechaEntrada": "2027-03-22",
+  "fechaSalida": "2027-03-23",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("6.10 Una noche en temporada alta (exige 2) -> 409 ESTANCIA_MINIMA_NO_CUMPLIDA (RP-01)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "ESTANCIA_MINIMA_NO_CUMPLIDA", "Se esperaba ESTANCIA_MINIMA_NO_CUMPLIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.11 Una mascota en SUQ-101, que no las admite -> 409 MASCOTAS_NO_ADMITIDAS (RP-02)
+# espera: 409 MASCOTAS_NO_ADMITIDAS
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-101",
+  "fechaEntrada": "{{hoyMas70}}",
+  "fechaSalida": "{{hoyMas72}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  },
+  "mascotasAutorizadas": 1
+}
+
+> {%
+    client.test("6.11 Una mascota en SUQ-101, que no las admite -> 409 MASCOTAS_NO_ADMITIDAS (RP-02)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "MASCOTAS_NO_ADMITIDAS", "Se esperaba MASCOTAS_NO_ADMITIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.12 Tres mascotas con cupo de 2 -> 409 CUPO_MASCOTAS_EXCEDIDO (RP-02)
+# espera: 409 CUPO_MASCOTAS_EXCEDIDO
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-102",
+  "fechaEntrada": "{{hoyMas70}}",
+  "fechaSalida": "{{hoyMas72}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  },
+  "mascotasAutorizadas": 3
+}
+
+> {%
+    client.test("6.12 Tres mascotas con cupo de 2 -> 409 CUPO_MASCOTAS_EXCEDIDO (RP-02)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CUPO_MASCOTAS_EXCEDIDO", "Se esperaba CUPO_MASCOTAS_EXCEDIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.13 Confirmar una reserva cancelada -> 409 TRANSICION_INVALIDA (RN-08)
+# espera: 409 TRANSICION_INVALIDA
+PUT {{base}}/api/reservas/{{reservaCancelada}}/confirmar
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("6.13 Confirmar una reserva cancelada -> 409 TRANSICION_INVALIDA (RN-08)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TRANSICION_INVALIDA", "Se esperaba TRANSICION_INVALIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.14 Registrar la llegada 10 días antes -> 409 REGISTRO_ANTES_DE_ENTRADA (RN-10)
+# espera: 409 REGISTRO_ANTES_DE_ENTRADA
+PUT {{base}}/api/reservas/{{reservaCarlos}}/registrar-llegada
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("6.14 Registrar la llegada 10 días antes -> 409 REGISTRO_ANTES_DE_ENTRADA (RN-10)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "REGISTRO_ANTES_DE_ENTRADA", "Se esperaba REGISTRO_ANTES_DE_ENTRADA y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.15 Modificar una reserva cancelada -> 409 RESERVA_NO_MODIFICABLE (RN-14)
+# espera: 409 RESERVA_NO_MODIFICABLE
+PUT {{base}}/api/reservas/{{reservaCancelada}}
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-102",
+  "fechaEntrada": "{{hoyMas40}}",
+  "fechaSalida": "{{hoyMas42}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("6.15 Modificar una reserva cancelada -> 409 RESERVA_NO_MODIFICABLE (RN-14)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "RESERVA_NO_MODIFICABLE", "Se esperaba RESERVA_NO_MODIFICABLE y llegó " + response.body.codigo);
+    });
+%}
+
+### 6.16 Hora de llegada en una reserva cancelada -> 409 RESERVA_NO_MODIFICABLE (RN-09, RN-14)
+# espera: 409 RESERVA_NO_MODIFICABLE
+PUT {{base}}/api/reservas/{{reservaCancelada}}/hora-llegada
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "horaEstimadaLlegada": "18:00"
+}
+
+> {%
+    client.test("6.16 Hora de llegada en una reserva cancelada -> 409 RESERVA_NO_MODIFICABLE (RN-09, RN-14)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "RESERVA_NO_MODIFICABLE", "Se esperaba RESERVA_NO_MODIFICABLE y llegó " + response.body.codigo);
+    });
+%}
+
+# ============================================================================================================
+# 7. Apartamentos, bloqueos, temporadas, política y parámetros (7.3, 7.4)
+# ============================================================================================================
+
+### 7.1 El administrador crea SUQ-401 -> 201 (nace inactivo, CU-24)
+# espera: 201
+POST {{base}}/api/apartamentos
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "identificacion": "SUQ-401",
+  "nombre": "Apartamento 401",
+  "descripcion": "Apartamento nuevo del cuarto piso.",
+  "dormitorios": 1,
+  "capacidad": 2,
+  "caracteristicas": [
+    "Wifi",
+    "Cocineta"
+  ],
+  "admiteMascotas": false,
+  "advertenciaAcceso": null,
+  "imagenes": [
+    {
+      "url": "https://stayly-uq.co/img/suq-401-1.jpg",
+      "principal": true
+    },
+    {
+      "url": "https://stayly-uq.co/img/suq-401-1.jpg",
+      "principal": false
+    }
+  ]
+}
+
+> {%
+    client.test("7.1 El administrador crea SUQ-401 -> 201 (nace inactivo, CU-24)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+%}
+
+### 7.2 Crear otra vez SUQ-101 -> 409 IDENTIFICACION_DUPLICADA (L-04)
+# espera: 409 IDENTIFICACION_DUPLICADA
+POST {{base}}/api/apartamentos
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "identificacion": "SUQ-101",
+  "nombre": "Apartamento 101",
+  "descripcion": "Apartamento nuevo del cuarto piso.",
+  "dormitorios": 1,
+  "capacidad": 2,
+  "caracteristicas": [
+    "Wifi",
+    "Cocineta"
+  ],
+  "admiteMascotas": false,
+  "advertenciaAcceso": null,
+  "imagenes": [
+    {
+      "url": "https://stayly-uq.co/img/suq-401-1.jpg",
+      "principal": true
+    }
+  ]
+}
+
+> {%
+    client.test("7.2 Crear otra vez SUQ-101 -> 409 IDENTIFICACION_DUPLICADA (L-04)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "IDENTIFICACION_DUPLICADA", "Se esperaba IDENTIFICACION_DUPLICADA y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.3 Dos imágenes principales -> 409 IMAGENES_INVALIDAS (7.3)
+# espera: 409 IMAGENES_INVALIDAS
+POST {{base}}/api/apartamentos
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "identificacion": "SUQ-402",
+  "nombre": "Apartamento 402",
+  "descripcion": "Apartamento nuevo del cuarto piso.",
+  "dormitorios": 1,
+  "capacidad": 2,
+  "caracteristicas": [
+    "Wifi",
+    "Cocineta"
+  ],
+  "admiteMascotas": false,
+  "advertenciaAcceso": null,
+  "imagenes": [
+    {
+      "url": "https://stayly-uq.co/img/suq-402-2.jpg",
+      "principal": true
+    },
+    {
+      "url": "https://stayly-uq.co/img/suq-402-2.jpg",
+      "principal": true
+    }
+  ]
+}
+
+> {%
+    client.test("7.3 Dos imágenes principales -> 409 IMAGENES_INVALIDAS (7.3)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "IMAGENES_INVALIDAS", "Se esperaba IMAGENES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.4 Activar SUQ-401 sin tarifas -> 409 TARIFAS_INCOMPLETAS (7.4)
+# espera: 409 TARIFAS_INCOMPLETAS
+PUT {{base}}/api/apartamentos/SUQ-401/activar
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("7.4 Activar SUQ-401 sin tarifas -> 409 TARIFAS_INCOMPLETAS (7.4)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TARIFAS_INCOMPLETAS", "Se esperaba TARIFAS_INCOMPLETAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.5 El administrador define las tarifas de SUQ-401 en las tres temporadas -> 200 (CU-30)
+# espera: 200
+PUT {{base}}/api/apartamentos/SUQ-401/tarifas
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "tarifas": [
+    {
+      "idTemporada": "00000000-0000-0000-0000-00000000000b",
+      "valor": 80000
+    },
+    {
+      "idTemporada": "00000000-0000-0000-0000-00000000000a",
+      "valor": 110000
+    },
+    {
+      "idTemporada": "00000000-0000-0000-0000-00000000000c",
+      "valor": 95000
+    }
+  ]
+}
+
+> {%
+    client.test("7.5 El administrador define las tarifas de SUQ-401 en las tres temporadas -> 200 (CU-30)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 7.6 Reservar SUQ-401, que sigue inactivo -> 409 APARTAMENTO_INACTIVO (7.5)
+# espera: 409 APARTAMENTO_INACTIVO
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-401",
+  "fechaEntrada": "{{hoyMas70}}",
+  "fechaSalida": "{{hoyMas72}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("7.6 Reservar SUQ-401, que sigue inactivo -> 409 APARTAMENTO_INACTIVO (7.5)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "APARTAMENTO_INACTIVO", "Se esperaba APARTAMENTO_INACTIVO y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.7 Activar SUQ-401, ya con tarifas completas -> 200 (CU-26)
+# espera: 200
+PUT {{base}}/api/apartamentos/SUQ-401/activar
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("7.7 Activar SUQ-401, ya con tarifas completas -> 200 (CU-26)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 7.8 Bloquear noches con una reserva activa -> 409 BLOQUEO_SOBRE_RESERVAS_ACTIVAS (7.3)
+# espera: 409 BLOQUEO_SOBRE_RESERVAS_ACTIVAS
+POST {{base}}/api/apartamentos/SUQ-201/bloqueos
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "fechaInicio": "{{hoyMas10}}",
+  "fechaFin": "{{hoyMas12}}",
+  "motivo": "Mantenimiento del calentador"
+}
+
+> {%
+    client.test("7.8 Bloquear noches con una reserva activa -> 409 BLOQUEO_SOBRE_RESERVAS_ACTIVAS (7.3)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "BLOQUEO_SOBRE_RESERVAS_ACTIVAS", "Se esperaba BLOQUEO_SOBRE_RESERVAS_ACTIVAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.9 Retirar un apartamento con reservas activas -> 409 APARTAMENTO_CON_RESERVAS_ACTIVAS (7.3)
+# espera: 409 APARTAMENTO_CON_RESERVAS_ACTIVAS
+DELETE {{base}}/api/apartamentos/SUQ-201
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("7.9 Retirar un apartamento con reservas activas -> 409 APARTAMENTO_CON_RESERVAS_ACTIVAS (7.3)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "APARTAMENTO_CON_RESERVAS_ACTIVAS", "Se esperaba APARTAMENTO_CON_RESERVAS_ACTIVAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.10 Temporada que se cruza con la alta -> 409 TEMPORADAS_SOLAPADAS (7.4)
+# espera: 409 TEMPORADAS_SOLAPADAS
+POST {{base}}/api/temporadas
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Puente de diciembre",
+  "periodos": [
+    {
+      "fechaInicio": "2026-12-20",
+      "fechaFin": "2026-12-25"
+    }
+  ],
+  "esBase": false,
+  "estanciaMinima": 1
+}
+
+> {%
+    client.test("7.10 Temporada que se cruza con la alta -> 409 TEMPORADAS_SOLAPADAS (7.4)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TEMPORADAS_SOLAPADAS", "Se esperaba TEMPORADAS_SOLAPADAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.11 Una segunda temporada base -> 409 TEMPORADA_BASE_DUPLICADA (F-05)
+# espera: 409 TEMPORADA_BASE_DUPLICADA
+POST {{base}}/api/temporadas
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Otra base",
+  "periodos": [],
+  "esBase": true
+}
+
+> {%
+    client.test("7.11 Una segunda temporada base -> 409 TEMPORADA_BASE_DUPLICADA (F-05)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TEMPORADA_BASE_DUPLICADA", "Se esperaba TEMPORADA_BASE_DUPLICADA y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.12 Política con un solo tramo -> 409 TRAMOS_INSUFICIENTES (L-10)
+# espera: 409 TRAMOS_INSUFICIENTES
+POST {{base}}/api/politica-cancelacion/versiones
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "tramos": [
+    {
+      "antelacionMinimaDias": 7,
+      "porcentajeRetencion": 30
+    }
+  ],
+  "porcentajeRetencionNoShow": 30
+}
+
+> {%
+    client.test("7.12 Política con un solo tramo -> 409 TRAMOS_INSUFICIENTES (L-10)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TRAMOS_INSUFICIENTES", "Se esperaba TRAMOS_INSUFICIENTES y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.13 Hora de entrada antes de la de salida -> 409 PARAMETRO_INVALIDO (sección 6)
+# espera: 409 PARAMETRO_INVALIDO
+PUT {{base}}/api/alojamiento
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Stayly-UQ",
+  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
+  "ciudad": "Armenia, Quindio",
+  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
+  "ubicacion": {
+    "latitud": 4.5532,
+    "longitud": -75.6593
+  },
+  "horaEntrada": "10:00",
+  "horaSalida": "12:00",
+  "normasConvivencia": [
+    "Silencio de 22:00 a 7:00",
+    "Prohibido fumar dentro de los apartamentos",
+    "No se permiten fiestas ni eventos",
+    "Solo se permite estar a los ocupantes registrados",
+    "Mascotas con correa en las zonas comunes",
+    "Separar los residuos para reciclaje"
+  ],
+  "serviciosAdicionales": [
+    {
+      "nombre": "Desayuno tipico (por persona por dia)",
+      "generaCargo": true,
+      "valor": 18000
+    },
+    {
+      "nombre": "Parqueadero (por noche, cupo limitado)",
+      "generaCargo": true,
+      "valor": 15000
+    },
+    {
+      "nombre": "Lavanderia (por carga)",
+      "generaCargo": true,
+      "valor": 20000
+    },
+    {
+      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
+      "generaCargo": true,
+      "valor": 60000
+    }
+  ],
+  "parametros": {
+    "umbralEdadFacturable": 12,
+    "tiempoPreparacionHoras": 3,
+    "plazoConfirmacionHoras": 24,
+    "horaLimiteNoShow": "23:00",
+    "exigeAnticipo": true,
+    "porcentajeAnticipo": 30,
+    "mediosPagoAceptados": [
+      "EFECTIVO",
+      "TRANSFERENCIA",
+      "TARJETA"
+    ]
+  }
+}
+
+> {%
+    client.test("7.13 Hora de entrada antes de la de salida -> 409 PARAMETRO_INVALIDO (sección 6)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "PARAMETRO_INVALIDO", "Se esperaba PARAMETRO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.14 El administrador cambia los parámetros de RP-02 y RP-03 -> 200 (CU-37)
+# espera: 200
+PUT {{base}}/api/alojamiento/parametros
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "cupoMascotas": 3,
+  "cargoPorMascotaNoche": 25000,
+  "horaInicioLlegadaNocturna": "21:00",
+  "valorRecargoLlegadaNocturna": 30000
+}
+
+> {%
+    client.test("7.14 El administrador cambia los parámetros de RP-02 y RP-03 -> 200 (CU-37)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 7.15 Cupo de mascotas negativo -> 409 PARAMETRO_INVALIDO (RP-02)
+# espera: 409 PARAMETRO_INVALIDO
+PUT {{base}}/api/alojamiento/parametros
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "cupoMascotas": -1,
+  "cargoPorMascotaNoche": 25000,
+  "horaInicioLlegadaNocturna": "21:00",
+  "valorRecargoLlegadaNocturna": 30000
+}
+
+> {%
+    client.test("7.15 Cupo de mascotas negativo -> 409 PARAMETRO_INVALIDO (RP-02)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "PARAMETRO_INVALIDO", "Se esperaba PARAMETRO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 7.16 El administrador deja el cupo de mascotas como en la Ficha -> 200
+# espera: 200
+PUT {{base}}/api/alojamiento/parametros
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "cupoMascotas": 2,
+  "cargoPorMascotaNoche": 25000,
+  "horaInicioLlegadaNocturna": "21:00",
+  "valorRecargoLlegadaNocturna": 30000
+}
+
+> {%
+    client.test("7.16 El administrador deja el cupo de mascotas como en la Ficha -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+# ============================================================================================================
+# 8. Formato, recursos inexistentes y seguridad (400, 401, 403, 404)
+# ============================================================================================================
+
+### 8.1 Modificar sin fechas -> 400 FORMATO_INVALIDO
+# espera: 400 FORMATO_INVALIDO
+PUT {{base}}/api/reservas/{{reservaLaura}}
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacionApartamento": "SUQ-101"
+}
+
+> {%
+    client.test("8.1 Modificar sin fechas -> 400 FORMATO_INVALIDO", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "FORMATO_INVALIDO", "Se esperaba FORMATO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.2 Reserva inexistente -> 404 RESERVA_NO_ENCONTRADA
+# espera: 404 RESERVA_NO_ENCONTRADA
+GET {{base}}/api/reservas/RES-2026-99999
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("8.2 Reserva inexistente -> 404 RESERVA_NO_ENCONTRADA", () => {
+        client.assert(response.status === 404, "Se esperaba 404 y llegó " + response.status);
+        client.assert(response.body.codigo === "RESERVA_NO_ENCONTRADA", "Se esperaba RESERVA_NO_ENCONTRADA y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.3 Listado sin token -> 401 CREDENCIALES_INVALIDAS
+# espera: 401 CREDENCIALES_INVALIDAS
+GET {{base}}/api/reservas?estado=PENDIENTE
+
+> {%
+    client.test("8.3 Listado sin token -> 401 CREDENCIALES_INVALIDAS", () => {
+        client.assert(response.status === 401, "Se esperaba 401 y llegó " + response.status);
+        client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.4 Listado como huésped -> 403 ACCESO_DENEGADO
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/reservas?estado=PENDIENTE
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("8.4 Listado como huésped -> 403 ACCESO_DENEGADO", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.5 El personal de servicio intenta confirmar -> 403
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/reservas/{{reservaLaura}}/confirmar
+Authorization: Bearer {{tokenServicio}}
+
+> {%
+    client.test("8.5 El personal de servicio intenta confirmar -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.6 El huésped 1 intenta declarar un no-show -> 403
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/reservas/{{reservaLaura}}/no-show
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("8.6 El huésped 1 intenta declarar un no-show -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.7 Un huésped reserva a nombre de otra persona -> 403 (7.5.3)
+# espera: 403 ACCESO_DENEGADO
+POST {{base}}/api/reservas
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "identificacionApartamento": "SUQ-201",
+  "fechaEntrada": "{{hoyMas80}}",
+  "fechaSalida": "{{hoyMas83}}",
+  "titular": {
+    "nombre": "Pedro Gil",
+    "documentoIdentidad": "1094000100",
+    "fechaNacimiento": "1984-05-02",
+    "correo": "pedro.gil@correo.co",
+    "telefono": "3004000100"
+  }
+}
+
+> {%
+    client.test("8.7 Un huésped reserva a nombre de otra persona -> 403 (7.5.3)", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.8 Recepción intenta cambiar los parámetros de reglas propias -> 403
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/alojamiento/parametros
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "cupoMascotas": 2,
+  "cargoPorMascotaNoche": 25000,
+  "horaInicioLlegadaNocturna": "21:00",
+  "valorRecargoLlegadaNocturna": 30000
+}
+
+> {%
+    client.test("8.8 Recepción intenta cambiar los parámetros de reglas propias -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.9 Un huésped no accede a la configuración del alojamiento -> 403 (7.2)
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/alojamiento
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("8.9 Un huésped no accede a la configuración del alojamiento -> 403 (7.2)", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.10 Recepción no gestiona apartamentos -> 403 (solo administrador, 7.1)
+# espera: 403 ACCESO_DENEGADO
+POST {{base}}/api/apartamentos
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "identificacion": "SUQ-403",
+  "nombre": "Apartamento 403",
+  "descripcion": "Apartamento nuevo del cuarto piso.",
+  "dormitorios": 1,
+  "capacidad": 2,
+  "caracteristicas": [
+    "Wifi",
+    "Cocineta"
+  ],
+  "admiteMascotas": false,
+  "advertenciaAcceso": null,
+  "imagenes": [
+    {
+      "url": "https://stayly-uq.co/img/suq-403-3.jpg",
+      "principal": true
+    }
+  ]
+}
+
+> {%
+    client.test("8.10 Recepción no gestiona apartamentos -> 403 (solo administrador, 7.1)", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.11 El personal de servicio no registra bloqueos -> 403 (7.1)
+# espera: 403 ACCESO_DENEGADO
+POST {{base}}/api/apartamentos/SUQ-101/bloqueos
+Content-Type: application/json
+Authorization: Bearer {{tokenServicio}}
+
+{
+  "fechaInicio": "{{hoyMas80}}",
+  "fechaFin": "{{hoyMas83}}",
+  "motivo": "Pintura"
+}
+
+> {%
+    client.test("8.11 El personal de servicio no registra bloqueos -> 403 (7.1)", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.12 Un huésped no define tarifas -> 403
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/apartamentos/SUQ-101/tarifas
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "tarifas": [
+    {
+      "idTemporada": "00000000-0000-0000-0000-00000000000b",
+      "valor": 1000
+    }
+  ]
+}
+
+> {%
+    client.test("8.12 Un huésped no define tarifas -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 8.13 Token con la firma alterada -> 401
+# espera: 401 CREDENCIALES_INVALIDAS
+GET {{base}}/api/reservas?estado=PENDIENTE
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyZWNlcGNpb25Ac3RheWx5LmxvY2FsIiwicm9sZXMiOlsiQURNSU5JU1RSQURPUiJdfQ.firma-falsa
+
+> {%
+    client.test("8.13 Token con la firma alterada -> 401", () => {
+        client.assert(response.status === 401, "Se esperaba 401 y llegó " + response.status);
+        client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+# ============================================================================================================
+# 9. Usuarios, perfil y contraseña (7.2)
+# ============================================================================================================
+
+### 9.1 El administrador lista los usuarios, 10 por página (CU-38)
+# espera: 200
+GET {{base}}/api/usuarios?pagina=0
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.1 El administrador lista los usuarios, 10 por página (CU-38)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.2 Recepción no gestiona usuarios -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/usuarios
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("9.2 Recepción no gestiona usuarios -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.3 El administrador crea una recepcionista -> 201 (CU-38)
+# espera: 201
+# guarda: usuarioNuevo = $.id
+POST {{base}}/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "turno.noche@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.3 El administrador crea una recepcionista -> 201 (CU-38)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+    client.global.set("usuarioNuevo", response.body.id);
+%}
+
+### 9.4 El mismo correo otra vez -> 409 CORREO_YA_REGISTRADO
+# espera: 409 CORREO_YA_REGISTRADO
+POST {{base}}/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "turno.noche@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000078",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.4 El mismo correo otra vez -> 409 CORREO_YA_REGISTRADO", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CORREO_YA_REGISTRADO", "Se esperaba CORREO_YA_REGISTRADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.5 El documento de otro usuario -> 409 DOCUMENTO_YA_REGISTRADO
+# espera: 409 DOCUMENTO_YA_REGISTRADO
+POST {{base}}/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "otro.turno@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.5 El documento de otro usuario -> 409 DOCUMENTO_YA_REGISTRADO", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "DOCUMENTO_YA_REGISTRADO", "Se esperaba DOCUMENTO_YA_REGISTRADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.6 Consultar el usuario creado -> 200
+# espera: 200
+GET {{base}}/api/usuarios/{{usuarioNuevo}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.6 Consultar el usuario creado -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.7 Cambiarle el correo -> 409 CORREO_NO_EDITABLE
+# espera: 409 CORREO_NO_EDITABLE
+PUT {{base}}/api/usuarios/{{usuarioNuevo}}
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "cambiado@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "RECEPCIONISTA"
+}
+
+> {%
+    client.test("9.7 Cambiarle el correo -> 409 CORREO_NO_EDITABLE", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CORREO_NO_EDITABLE", "Se esperaba CORREO_NO_EDITABLE y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.8 Pasarla a personal de servicio -> 200
+# espera: 200
+PUT {{base}}/api/usuarios/{{usuarioNuevo}}
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Diana Turno Noche",
+  "correo": "turno.noche@stayly.local",
+  "telefono": "3002223344",
+  "documentoIdentidad": "1000000077",
+  "fechaNacimiento": "1993-09-12",
+  "rol": "PERSONAL_SERVICIO"
+}
+
+> {%
+    client.test("9.8 Pasarla a personal de servicio -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.9 La usuaria nueva inicia sesión con su rol -> 200
+# espera: 200
+# guarda: tokenNuevo = $.token
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local",
+  "contrasena": "TurnoNoche2026"
+}
+
+> {%
+    client.test("9.9 La usuaria nueva inicia sesión con su rol -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("tokenNuevo", response.body.token);
+%}
+
+### 9.10 Consulta su propio perfil -> 200 (CU-39)
+# espera: 200
+GET {{base}}/api/usuarios/me
+Authorization: Bearer {{tokenNuevo}}
+
+> {%
+    client.test("9.10 Consulta su propio perfil -> 200 (CU-39)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.11 Cambia su nombre, teléfono y foto -> 200 (el correo no cambia)
+# espera: 200
+PUT {{base}}/api/usuarios/me
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "nombre": "Diana Restrepo",
+  "telefono": "3005550000",
+  "fotoUrl": "https://stayly-uq.co/perfil/diana.jpg"
+}
+
+> {%
+    client.test("9.11 Cambia su nombre, teléfono y foto -> 200 (el correo no cambia)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 9.12 Cambio de contraseña con la actual errada -> 409 CONTRASENA_ACTUAL_INCORRECTA
+# espera: 409 CONTRASENA_ACTUAL_INCORRECTA
+PUT {{base}}/api/usuarios/me/contrasena
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "contrasenaActual": "Errada2026",
+  "contrasenaNueva": "Nueva2026Turno"
+}
+
+> {%
+    client.test("9.12 Cambio de contraseña con la actual errada -> 409 CONTRASENA_ACTUAL_INCORRECTA", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CONTRASENA_ACTUAL_INCORRECTA", "Se esperaba CONTRASENA_ACTUAL_INCORRECTA y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.13 Cambio de contraseña con la actual correcta -> 204
+# espera: 204
+PUT {{base}}/api/usuarios/me/contrasena
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "contrasenaActual": "TurnoNoche2026",
+  "contrasenaNueva": "Nueva2026Turno"
+}
+
+> {%
+    client.test("9.13 Cambio de contraseña con la actual correcta -> 204", () => {
+        client.assert(response.status === 204, "Se esperaba 204 y llegó " + response.status);
+    });
+%}
+
+### 9.14 Contraseña sin mayúsculas ni números -> 400 FORMATO_INVALIDO
+# espera: 400 FORMATO_INVALIDO
+PUT {{base}}/api/usuarios/me/contrasena
+Content-Type: application/json
+Authorization: Bearer {{tokenNuevo}}
+
+{
+  "contrasenaActual": "Nueva2026Turno",
+  "contrasenaNueva": "debil"
+}
+
+> {%
+    client.test("9.14 Contraseña sin mayúsculas ni números -> 400 FORMATO_INVALIDO", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "FORMATO_INVALIDO", "Se esperaba FORMATO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.15 Pide un código de recuperación -> 202 (llega al correo; en esta versión, al log) (CU-40)
+# espera: 202
+POST {{base}}/api/auth/recuperacion
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local"
+}
+
+> {%
+    client.test("9.15 Pide un código de recuperación -> 202 (llega al correo; en esta versión, al log) (CU-40)", () => {
+        client.assert(response.status === 202, "Se esperaba 202 y llegó " + response.status);
+    });
+%}
+
+### 9.16 Un correo que no existe también responde 202 (no revela quién está registrado)
+# espera: 202
+POST {{base}}/api/auth/recuperacion
+Content-Type: application/json
+
+{
+  "correo": "nadie@stayly.local"
+}
+
+> {%
+    client.test("9.16 Un correo que no existe también responde 202 (no revela quién está registrado)", () => {
+        client.assert(response.status === 202, "Se esperaba 202 y llegó " + response.status);
+    });
+%}
+
+### 9.17 Confirmar con un código errado -> 409 CODIGO_RECUPERACION_INVALIDO
+# espera: 409 CODIGO_RECUPERACION_INVALIDO
+POST {{base}}/api/auth/recuperacion/confirmar
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local",
+  "codigo": "000000",
+  "contrasenaNueva": "Recuperada2026"
+}
+
+> {%
+    client.test("9.17 Confirmar con un código errado -> 409 CODIGO_RECUPERACION_INVALIDO", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CODIGO_RECUPERACION_INVALIDO", "Se esperaba CODIGO_RECUPERACION_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.18 Perfil del huésped 1, para conocer su id
+# espera: 200
+# guarda: idHuesped1 = $.id
+GET {{base}}/api/usuarios/me
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("9.18 Perfil del huésped 1, para conocer su id", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("idHuesped1", response.body.id);
+%}
+
+### 9.19 Eliminar a un titular con reservas activas -> 409 USUARIO_CON_RESERVAS_ACTIVAS
+# espera: 409 USUARIO_CON_RESERVAS_ACTIVAS
+DELETE {{base}}/api/usuarios/{{idHuesped1}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.19 Eliminar a un titular con reservas activas -> 409 USUARIO_CON_RESERVAS_ACTIVAS", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "USUARIO_CON_RESERVAS_ACTIVAS", "Se esperaba USUARIO_CON_RESERVAS_ACTIVAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.20 Perfil del administrador, para conocer su id
+# espera: 200
+# guarda: idAdmin = $.id
+GET {{base}}/api/usuarios/me
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.20 Perfil del administrador, para conocer su id", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("idAdmin", response.body.id);
+%}
+
+### 9.21 El administrador se elimina a sí mismo -> 409 AUTOELIMINACION_NO_PERMITIDA
+# espera: 409 AUTOELIMINACION_NO_PERMITIDA
+DELETE {{base}}/api/usuarios/{{idAdmin}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.21 El administrador se elimina a sí mismo -> 409 AUTOELIMINACION_NO_PERMITIDA", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "AUTOELIMINACION_NO_PERMITIDA", "Se esperaba AUTOELIMINACION_NO_PERMITIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.22 Eliminar a la usuaria nueva -> 204 (eliminación lógica)
+# espera: 204
+DELETE {{base}}/api/usuarios/{{usuarioNuevo}}
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.22 Eliminar a la usuaria nueva -> 204 (eliminación lógica)", () => {
+        client.assert(response.status === 204, "Se esperaba 204 y llegó " + response.status);
+    });
+%}
+
+### 9.23 Queda inactiva: ya no inicia sesión -> 401
+# espera: 401 CREDENCIALES_INVALIDAS
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "turno.noche@stayly.local",
+  "contrasena": "Nueva2026Turno"
+}
+
+> {%
+    client.test("9.23 Queda inactiva: ya no inicia sesión -> 401", () => {
+        client.assert(response.status === 401, "Se esperaba 401 y llegó " + response.status);
+        client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 9.24 Usuario inexistente -> 404 USUARIO_NO_ENCONTRADO
+# espera: 404 USUARIO_NO_ENCONTRADO
+GET {{base}}/api/usuarios/00000000-0000-0000-0000-000000000999
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("9.24 Usuario inexistente -> 404 USUARIO_NO_ENCONTRADO", () => {
+        client.assert(response.status === 404, "Se esperaba 404 y llegó " + response.status);
+        client.assert(response.body.codigo === "USUARIO_NO_ENCONTRADO", "Se esperaba USUARIO_NO_ENCONTRADO y llegó " + response.body.codigo);
+    });
+%}
+
+# ============================================================================================================
+# 10. Operación diaria: estado operativo, novedades, calendario, movimientos y salida (7.6)
+# ============================================================================================================
+
+### 10.1 El personal de servicio consulta los apartamentos por preparar -> 200 (CU-43)
+# espera: 200
+GET {{base}}/api/apartamentos/por-preparar
+Authorization: Bearer {{tokenServicio}}
+
+> {%
+    client.test("10.1 El personal de servicio consulta los apartamentos por preparar -> 200 (CU-43)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.2 Marcar preparado SUQ-301 sin haber iniciado -> 409 TRANSICION_ESTADO_OPERATIVO_INVALIDA (7.6)
+# espera: 409 TRANSICION_ESTADO_OPERATIVO_INVALIDA
+PUT {{base}}/api/apartamentos/SUQ-301/marcar-preparado
+Authorization: Bearer {{tokenServicio}}
+
+> {%
+    client.test("10.2 Marcar preparado SUQ-301 sin haber iniciado -> 409 TRANSICION_ESTADO_OPERATIVO_INVALIDA (7.6)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TRANSICION_ESTADO_OPERATIVO_INVALIDA", "Se esperaba TRANSICION_ESTADO_OPERATIVO_INVALIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.3 Inicia la preparación de SUQ-301 -> 200 EN_PREPARACION (CU-09)
+# espera: 200
+PUT {{base}}/api/apartamentos/SUQ-301/iniciar-preparacion
+Authorization: Bearer {{tokenServicio}}
+
+> {%
+    client.test("10.3 Inicia la preparación de SUQ-301 -> 200 EN_PREPARACION (CU-09)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.4 Lo marca preparado -> 200 PREPARADO (CU-10)
+# espera: 200
+PUT {{base}}/api/apartamentos/SUQ-301/marcar-preparado
+Authorization: Bearer {{tokenServicio}}
+
+> {%
+    client.test("10.4 Lo marca preparado -> 200 PREPARADO (CU-10)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.5 Ahora sí se registra la llegada que en 4.10 respondió 409 -> 200 EN_CURSO (RN-11)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaSinPreparar}}/registrar-llegada
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.5 Ahora sí se registra la llegada que en 4.10 respondió 409 -> 200 EN_CURSO (RN-11)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.6 El personal de servicio no declara fuera de servicio -> 403 (7.1)
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/apartamentos/SUQ-102/declarar-fuera-de-servicio
+Content-Type: application/json
+Authorization: Bearer {{tokenServicio}}
+
+{
+  "motivo": "Fuga en el lavamanos"
+}
+
+> {%
+    client.test("10.6 El personal de servicio no declara fuera de servicio -> 403 (7.1)", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.7 Declarar fuera de servicio un apartamento ocupado -> 409 APARTAMENTO_OCUPADO (A-3)
+# espera: 409 APARTAMENTO_OCUPADO
+PUT {{base}}/api/apartamentos/SUQ-202/declarar-fuera-de-servicio
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "motivo": "Revisión eléctrica"
+}
+
+> {%
+    client.test("10.7 Declarar fuera de servicio un apartamento ocupado -> 409 APARTAMENTO_OCUPADO (A-3)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "APARTAMENTO_OCUPADO", "Se esperaba APARTAMENTO_OCUPADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.8 El administrador declara fuera de servicio SUQ-102 -> 200 (CU-15; el motivo queda como novedad)
+# espera: 200
+PUT {{base}}/api/apartamentos/SUQ-102/declarar-fuera-de-servicio
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "motivo": "Fuga en el lavamanos"
+}
+
+> {%
+    client.test("10.8 El administrador declara fuera de servicio SUQ-102 -> 200 (CU-15; el motivo queda como novedad)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.9 Lo devuelve a servicio -> 200 PENDIENTE_PREPARACION (CU-21)
+# espera: 200
+PUT {{base}}/api/apartamentos/SUQ-102/volver-a-servicio
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("10.9 Lo devuelve a servicio -> 200 PENDIENTE_PREPARACION (CU-21)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.10 Volver a servicio otra vez -> 409 TRANSICION_ESTADO_OPERATIVO_INVALIDA
+# espera: 409 TRANSICION_ESTADO_OPERATIVO_INVALIDA
+PUT {{base}}/api/apartamentos/SUQ-102/volver-a-servicio
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("10.10 Volver a servicio otra vez -> 409 TRANSICION_ESTADO_OPERATIVO_INVALIDA", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "TRANSICION_ESTADO_OPERATIVO_INVALIDA", "Se esperaba TRANSICION_ESTADO_OPERATIVO_INVALIDA y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.11 El personal de servicio registra una novedad -> 201 (CU-11)
+# espera: 201
+POST {{base}}/api/apartamentos/SUQ-102/novedades
+Content-Type: application/json
+Authorization: Bearer {{tokenServicio}}
+
+{
+  "descripcion": "Falta una toalla de baño",
+  "gravedad": "BAJA"
+}
+
+> {%
+    client.test("10.11 El personal de servicio registra una novedad -> 201 (CU-11)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+    });
+%}
+
+### 10.12 Novedades de SUQ-102, la más reciente primero -> 200 (CU-41)
+# espera: 200
+GET {{base}}/api/apartamentos/SUQ-102/novedades?pagina=0
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.12 Novedades de SUQ-102, la más reciente primero -> 200 (CU-41)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.13 Novedad sin gravedad -> 400 FORMATO_INVALIDO
+# espera: 400 FORMATO_INVALIDO
+POST {{base}}/api/apartamentos/SUQ-102/novedades
+Content-Type: application/json
+Authorization: Bearer {{tokenServicio}}
+
+{
+  "descripcion": "Bombillo fundido"
+}
+
+> {%
+    client.test("10.13 Novedad sin gravedad -> 400 FORMATO_INVALIDO", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "FORMATO_INVALIDO", "Se esperaba FORMATO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.14 Un huésped no registra novedades -> 403
+# espera: 403 ACCESO_DENEGADO
+POST {{base}}/api/apartamentos/SUQ-102/novedades
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "descripcion": "Ruido",
+  "gravedad": "BAJA"
+}
+
+> {%
+    client.test("10.14 Un huésped no registra novedades -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.15 Novedades de un apartamento inexistente -> 404 APARTAMENTO_NO_ENCONTRADO
+# espera: 404 APARTAMENTO_NO_ENCONTRADO
+GET {{base}}/api/apartamentos/SUQ-999/novedades
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.15 Novedades de un apartamento inexistente -> 404 APARTAMENTO_NO_ENCONTRADO", () => {
+        client.assert(response.status === 404, "Se esperaba 404 y llegó " + response.status);
+        client.assert(response.body.codigo === "APARTAMENTO_NO_ENCONTRADO", "Se esperaba APARTAMENTO_NO_ENCONTRADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.16 Calendario de ocupación de las próximas dos semanas -> 200 (CU-35)
+# espera: 200
+GET {{base}}/api/calendario-ocupacion?desde={{hoy}}&hasta={{hoyMas15}}
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.16 Calendario de ocupación de las próximas dos semanas -> 200 (CU-35)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.17 Calendario con el rango al revés -> 400 RANGO_FECHAS_INVALIDO
+# espera: 400 RANGO_FECHAS_INVALIDO
+GET {{base}}/api/calendario-ocupacion?desde={{hoyMas15}}&hasta={{hoy}}
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.17 Calendario con el rango al revés -> 400 RANGO_FECHAS_INVALIDO", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "RANGO_FECHAS_INVALIDO", "Se esperaba RANGO_FECHAS_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.18 Un huésped no ve el calendario de ocupación -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/calendario-ocupacion?desde={{hoy}}&hasta={{hoyMas15}}
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("10.18 Un huésped no ve el calendario de ocupación -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.19 Llegadas y salidas de hoy -> 200 (CU-42)
+# espera: 200
+GET {{base}}/api/reservas/movimientos-del-dia
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.19 Llegadas y salidas de hoy -> 200 (CU-42)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.20 Llegadas y salidas de una fecha dada -> 200
+# espera: 200
+GET {{base}}/api/reservas/movimientos-del-dia?fecha={{hoyMas10}}
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.20 Llegadas y salidas de una fecha dada -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 10.21 Registrar la salida con el folio abierto -> 409 FOLIO_ABIERTO (7.6)
+# espera: 409 FOLIO_ABIERTO
+PUT {{base}}/api/reservas/{{reservaDirecta}}/registrar-salida
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("10.21 Registrar la salida con el folio abierto -> 409 FOLIO_ABIERTO (7.6)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "FOLIO_ABIERTO", "Se esperaba FOLIO_ABIERTO y llegó " + response.body.codigo);
+    });
+%}
+
+### 10.22 Un huésped no registra salidas -> 403
+# espera: 403 ACCESO_DENEGADO
+PUT {{base}}/api/reservas/{{reservaDirecta}}/registrar-salida
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("10.22 Un huésped no registra salidas -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}

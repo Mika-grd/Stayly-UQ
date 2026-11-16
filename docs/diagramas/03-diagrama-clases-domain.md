@@ -43,6 +43,7 @@ classDiagram
     +crear(codigo, apartamento, estancia, ocupantes, ...)$ Reserva
     +reconstituir(codigo, apartamento, estancia, ocupantes, estado, ...)$ Reserva
     +indicarHoraEstimadaLlegada(hora, autor, ahora) void
+    +verificarConfirmable() void
     +confirmar(String autor, LocalDateTime ahora) void
     +puedeRegistrarLlegada(LocalDate hoy) boolean
     +registrarLlegada(String autor, LocalDateTime ahora) void
@@ -591,6 +592,8 @@ classDiagram
     -Alojamiento(...)
     +crear(id, nombre, descripcion, ...)$ Alojamiento
     +actualizarParametros(...) void
+    +actualizarDatos(nombre, descripcion, ciudad, direccion, ubicacion, normas, servicios, mediosPago) void
+    +actualizarReglasPropias(CupoMascotas, CargoPorMascota, RecargoLlegadaNocturna) void
     +aceptaMedioPago(MedioPago medio) boolean
     +equals(Object o) boolean
     +hashCode() int
@@ -738,6 +741,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class BloqueoRepository {
     <<Interface>>
@@ -755,6 +760,8 @@ classDiagram
     +cupoMascotas() CupoMascotas
     +cargoPorMascota() CargoPorMascota
     +recargoLlegadaNocturna() RecargoLlegadaNocturna
+    +alojamiento() Alojamiento
+    +guardar(Alojamiento alojamiento) void
   }
   class TemporadaRepository {
     <<Interface>>
@@ -839,6 +846,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class TemporadaRepository {
     <<Interface>>
@@ -906,6 +915,8 @@ classDiagram
     +cupoMascotas() CupoMascotas
     +cargoPorMascota() CargoPorMascota
     +recargoLlegadaNocturna() RecargoLlegadaNocturna
+    +alojamiento() Alojamiento
+    +guardar(Alojamiento alojamiento) void
   }
   VerificadorEstanciaMinimaService ..> Temporada : coordina
   VerificadorEstanciaMinimaService ..> TemporadaRepository : depende
@@ -927,6 +938,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class ApartamentoRepository {
     <<Interface>>
@@ -966,6 +979,7 @@ classDiagram
     <<Interface>>
     +guardar(Novedad novedad) void
     +listarPorApartamento(id) List~Novedad~
+    +buscarPorApartamento(id, PeticionPagina) Pagina~Novedad~
   }
   class CanalRepository {
     <<Interface>>
@@ -988,6 +1002,8 @@ classDiagram
     +cupoMascotas() CupoMascotas
     +cargoPorMascota() CargoPorMascota
     +recargoLlegadaNocturna() RecargoLlegadaNocturna
+    +alojamiento() Alojamiento
+    +guardar(Alojamiento alojamiento) void
   }
   class ReglaDominioException {
     <<Excepción>>
@@ -1036,6 +1052,7 @@ classDiagram
     +crear(codigo, apartamento, estancia, ocupantes, ...)$ Reserva
     +reconstituir(codigo, apartamento, estancia, ocupantes, estado, ...)$ Reserva
     +indicarHoraEstimadaLlegada(hora, autor, ahora) void
+    +verificarConfirmable() void
     +confirmar(String autor, LocalDateTime ahora) void
     +puedeRegistrarLlegada(LocalDate hoy) boolean
     +registrarLlegada(String autor, LocalDateTime ahora) void
@@ -1525,6 +1542,8 @@ classDiagram
     -Alojamiento(...)
     +crear(id, nombre, descripcion, ...)$ Alojamiento
     +actualizarParametros(...) void
+    +actualizarDatos(nombre, descripcion, ciudad, direccion, ubicacion, normas, servicios, mediosPago) void
+    +actualizarReglasPropias(CupoMascotas, CargoPorMascota, RecargoLlegadaNocturna) void
     +aceptaMedioPago(MedioPago medio) boolean
     +equals(Object o) boolean
     +hashCode() int
@@ -1633,6 +1652,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class BloqueoRepository {
     <<Interface>>
@@ -1650,6 +1671,8 @@ classDiagram
     +cupoMascotas() CupoMascotas
     +cargoPorMascota() CargoPorMascota
     +recargoLlegadaNocturna() RecargoLlegadaNocturna
+    +alojamiento() Alojamiento
+    +guardar(Alojamiento alojamiento) void
   }
   class TemporadaRepository {
     <<Interface>>
@@ -1722,6 +1745,7 @@ classDiagram
     <<Interface>>
     +guardar(Novedad novedad) void
     +listarPorApartamento(id) List~Novedad~
+    +buscarPorApartamento(id, PeticionPagina) Pagina~Novedad~
   }
   class CanalRepository {
     <<Interface>>

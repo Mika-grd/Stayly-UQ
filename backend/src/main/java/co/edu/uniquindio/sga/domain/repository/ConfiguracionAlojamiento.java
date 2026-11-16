@@ -1,0 +1,44 @@
+package co.edu.uniquindio.sga.domain.repository;
+
+import co.edu.uniquindio.sga.domain.model.alojamiento.Alojamiento;
+import co.edu.uniquindio.sga.domain.model.alojamiento.Anticipo;
+import co.edu.uniquindio.sga.domain.model.alojamiento.CargoPorMascota;
+import co.edu.uniquindio.sga.domain.model.alojamiento.CupoMascotas;
+import co.edu.uniquindio.sga.domain.model.alojamiento.HoraLimiteNoShow;
+import co.edu.uniquindio.sga.domain.model.alojamiento.HorarioAlojamiento;
+import co.edu.uniquindio.sga.domain.model.alojamiento.PlazoConfirmacion;
+import co.edu.uniquindio.sga.domain.model.alojamiento.RecargoLlegadaNocturna;
+import co.edu.uniquindio.sga.domain.model.alojamiento.TiempoPreparacion;
+import co.edu.uniquindio.sga.domain.model.alojamiento.UmbralEdadFacturable;
+
+/**
+ * Puerto del dominio para leer y cambiar la configuración vigente del Alojamiento (valores de la
+ * Ficha, Anexo A). Los servicios y casos de uso lo reciben por constructor: ningún valor se escribe
+ * en el dominio.
+ */
+public interface ConfiguracionAlojamiento {
+
+    UmbralEdadFacturable umbralEdad();
+
+    TiempoPreparacion tiempoPreparacion();
+
+    HorarioAlojamiento horario();
+
+    PlazoConfirmacion plazoConfirmacion();
+
+    HoraLimiteNoShow horaLimiteNoShow();
+
+    Anticipo anticipo();
+
+    CupoMascotas cupoMascotas();
+
+    CargoPorMascota cargoPorMascota();
+
+    RecargoLlegadaNocturna recargoLlegadaNocturna();
+
+    /** El alojamiento completo (F-13): identidad, ubicación, normas, servicios, medios de pago y parámetros. */
+    Alojamiento alojamiento();
+
+    /** Deja vigente la configuración modificada (CU-36, CU-37): los servicios leen el valor nuevo desde ya. */
+    void guardar(Alojamiento alojamiento);
+}
