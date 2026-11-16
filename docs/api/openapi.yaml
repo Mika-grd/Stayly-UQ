@@ -18,7 +18,7 @@ info:
 
     Todo error devuelve `ErrorNegocioResponse` con un `codigo` estable. Los valores monetarios son enteros en pesos colombianos (COP). Las fechas y horas se expresan en la zona America/Bogota. Los listados se paginan de a 10 elementos.
 
-    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5). Las operaciones del folio, el canal externo y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
+    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5), operación diaria (7.6) y folio (7.7). Las operaciones del canal externo y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
 servers:
 - url: http://localhost:8080
   description: Entorno local de desarrollo.
@@ -2770,7 +2770,7 @@ paths:
     get:
       tags:
       - Folio
-      summary: Consultar folio (CU-19) (pendiente del corte 3)
+      summary: Consultar folio (CU-19)
       description: |-
         Devuelve cargos, pagos y saldo calculado del folio de la reserva (RN-15). El huésped solo consulta los suyos.
 
@@ -2835,7 +2835,7 @@ paths:
     post:
       tags:
       - Folio
-      summary: Registrar pago (CU-07) (pendiente del corte 3)
+      summary: Registrar pago (CU-07)
       description: |-
         Registra un abono en el folio con su medio y fecha (RN-15). Admite pagos parciales; nada se edita ni se borra.
 
@@ -2952,7 +2952,7 @@ paths:
     post:
       tags:
       - Folio
-      summary: Registrar cargo (pendiente del corte 3)
+      summary: Registrar cargo
       description: |-
         Registra un cargo manual (SERVICIO_ADICIONAL o AJUSTE) en el folio (RN-16).
 
@@ -3061,7 +3061,7 @@ paths:
     put:
       tags:
       - Folio
-      summary: Cerrar folio (CU-18) (pendiente del corte 3)
+      summary: Cerrar folio (CU-18)
       description: |-
         Cierra el folio si el saldo es cero; con saldo distinto de cero exige autorización del administrador con motivo (RN-17).
 
