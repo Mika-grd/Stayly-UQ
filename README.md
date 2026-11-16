@@ -111,12 +111,13 @@ El backend va a Render como contenedor (`backend/Dockerfile`) y el frontend a Ve
 
 | Parte | URL |
 |---|---|
-| Aplicación | _pendiente: URL de Vercel_ |
-| API | _pendiente: URL de Render_ |
-| Estado del API | _pendiente: URL de Render_ + `/actuator/health` |
+| Aplicación | <https://stayly-uq.vercel.app> |
+| API | <https://stayly-uq-api.onrender.com> |
+| Estado del API | <https://stayly-uq-api.onrender.com/actuator/health> |
 
 > El API usa el plan gratuito de Render: la primera petición después de 15 minutos sin uso tarda cerca de un
-> minuto, y los datos vuelven al estado inicial en cada reinicio.
+> minuto, y los datos vuelven al estado inicial en cada reinicio. La cuenta del administrador desplegado se entrega
+> al docente por el canal del curso; no está en este repositorio.
 
 Configuración versionada: `backend/Dockerfile`, `backend/.dockerignore`, `backend/.gitattributes`,
 `backend/src/main/resources/application-prod.properties`, `frontend/vercel.json` y `frontend/.env.example`.
