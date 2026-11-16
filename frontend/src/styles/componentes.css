@@ -83,7 +83,8 @@
 }
 
 .boton--texto:hover,
-.boton--texto:active {
+.boton--texto:active,
+.boton--texto:disabled {
   transform: none;
   box-shadow: none;
 }

@@ -32,6 +32,7 @@ export function Cabecera() {
           {es('HUESPED') && <NavLink to="/viajes">Mis viajes</NavLink>}
           {es('RECEPCIONISTA', 'ADMINISTRADOR') && <NavLink to="/recepcion">Recepción</NavLink>}
           {es('RECEPCIONISTA', 'ADMINISTRADOR', 'PERSONAL_SERVICIO') && <NavLink to="/operacion">Operación</NavLink>}
+          {es('ADMINISTRADOR') && <NavLink to="/admin">Administración</NavLink>}
         </nav>
         <button type="button" className="tema" aria-pressed={tema === 'harsh'} onClick={alternar}>
           {tema === 'harsh' ? 'Normal' : 'Harsh'}
