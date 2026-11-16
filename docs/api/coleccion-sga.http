@@ -2777,3 +2777,271 @@ Authorization: Bearer {{tokenAdmin}}
         client.assert(response.body.autorizacionCierre.motivo === "Cortesía por cambio de apartamento", "Se esperaba autorizacionCierre.motivo Cortesía por cambio de apartamento y llegó " + response.body.autorizacionCierre.motivo);
     });
 %}
+
+# ============================================================================================================
+# 12. Canal externo y conflictos: credencial X-API-Key, reserva idempotente, conflicto y bitácora (7.8, CU-08)
+# ============================================================================================================
+
+### 12.1 El administrador registra un canal -> 201 con la credencial, que solo se muestra aquí
+# espera: 201
+# guarda: claveCanal = $.credencialGenerada
+POST {{base}}/api/canales
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "nombre": "Booking",
+  "tipo": "EXTERNO"
+}
+
+> {%
+    client.test("12.1 El administrador registra un canal -> 201 con la credencial, que solo se muestra aquí", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+        client.assert(response.body.activo === true, "Se esperaba activo true y llegó " + response.body.activo);
+    });
+    client.global.set("claveCanal", response.body.credencialGenerada);
+%}
+
+### 12.2 El administrador lista los canales, sin credencial -> 200
+# espera: 200
+GET {{base}}/api/canales
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("12.2 El administrador lista los canales, sin credencial -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 12.3 Recepción no administra canales -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/canales
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("12.3 Recepción no administra canales -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 12.4 El canal sin X-API-Key -> 401 CREDENCIALES_INVALIDAS
+# espera: 401 CREDENCIALES_INVALIDAS
+GET {{base}}/api/externo/disponibilidad?fechaEntrada={{hoyMas80}}&fechaSalida={{hoyMas83}}&fechasNacimiento=1991-04-10&fechasNacimiento=1990-02-01
+
+> {%
+    client.test("12.4 El canal sin X-API-Key -> 401 CREDENCIALES_INVALIDAS", () => {
+        client.assert(response.status === 401, "Se esperaba 401 y llegó " + response.status);
+        client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 12.5 Un JWT no sirve como credencial del canal -> 401
+# espera: 401 CREDENCIALES_INVALIDAS
+GET {{base}}/api/externo/disponibilidad?fechaEntrada={{hoyMas80}}&fechaSalida={{hoyMas83}}&fechasNacimiento=1991-04-10&fechasNacimiento=1990-02-01
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("12.5 Un JWT no sirve como credencial del canal -> 401", () => {
+        client.assert(response.status === 401, "Se esperaba 401 y llegó " + response.status);
+        client.assert(response.body.codigo === "CREDENCIALES_INVALIDAS", "Se esperaba CREDENCIALES_INVALIDAS y llegó " + response.body.codigo);
+    });
+%}
+
+### 12.6 El canal consulta la disponibilidad con su credencial -> 200 (10.3.1)
+# espera: 200
+GET {{base}}/api/externo/disponibilidad?fechaEntrada={{hoyMas80}}&fechaSalida={{hoyMas83}}&fechasNacimiento=1991-04-10&fechasNacimiento=1990-02-01
+X-API-Key: {{claveCanal}}
+
+> {%
+    client.test("12.6 El canal consulta la disponibilidad con su credencial -> 200 (10.3.1)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+%}
+
+### 12.7 El canal envía una reserva nueva -> 201 CREADA (CU-08)
+# espera: 201
+# guarda: reservaExterna = $.codigoReserva
+POST {{base}}/api/externo/reservas
+Content-Type: application/json
+X-API-Key: {{claveCanal}}
+
+{
+  "identificadorExterno": "BKG-778812",
+  "identificacionApartamento": "SUQ-201",
+  "fechaEntrada": "{{hoyMas80}}",
+  "fechaSalida": "{{hoyMas83}}",
+  "horaEstimadaLlegada": "16:00",
+  "titular": {
+    "nombre": "Ana Rojas",
+    "documentoIdentidad": "1094555001",
+    "fechaNacimiento": "1991-04-10",
+    "correo": "ana.rojas@correo.co",
+    "telefono": "3005550001"
+  },
+  "acompanantes": [
+    {
+      "nombre": "Luis Rojas",
+      "fechaNacimiento": "1990-02-01"
+    }
+  ]
+}
+
+> {%
+    client.test("12.7 El canal envía una reserva nueva -> 201 CREADA (CU-08)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+        client.assert(response.body.resultado === "CREADA", "Se esperaba resultado CREADA y llegó " + response.body.resultado);
+    });
+    client.global.set("reservaExterna", response.body.codigoReserva);
+%}
+
+### 12.8 El mismo mensaje otra vez -> 200 YA_EXISTIA, sin duplicar (RN-19)
+# espera: 200
+POST {{base}}/api/externo/reservas
+Content-Type: application/json
+X-API-Key: {{claveCanal}}
+
+{
+  "identificadorExterno": "BKG-778812",
+  "identificacionApartamento": "SUQ-201",
+  "fechaEntrada": "{{hoyMas80}}",
+  "fechaSalida": "{{hoyMas83}}",
+  "horaEstimadaLlegada": "16:00",
+  "titular": {
+    "nombre": "Ana Rojas",
+    "documentoIdentidad": "1094555001",
+    "fechaNacimiento": "1991-04-10",
+    "correo": "ana.rojas@correo.co",
+    "telefono": "3005550001"
+  },
+  "acompanantes": [
+    {
+      "nombre": "Luis Rojas",
+      "fechaNacimiento": "1990-02-01"
+    }
+  ]
+}
+
+> {%
+    client.test("12.8 El mismo mensaje otra vez -> 200 YA_EXISTIA, sin duplicar (RN-19)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.resultado === "YA_EXISTIA", "Se esperaba resultado YA_EXISTIA y llegó " + response.body.resultado);
+    });
+%}
+
+### 12.9 Otra reserva sobre las mismas noches -> 409 CONFLICTO_CANAL (RN-18)
+# espera: 409 CONFLICTO_CANAL
+POST {{base}}/api/externo/reservas
+Content-Type: application/json
+X-API-Key: {{claveCanal}}
+
+{
+  "identificadorExterno": "BKG-778813",
+  "identificacionApartamento": "SUQ-201",
+  "fechaEntrada": "{{hoyMas80}}",
+  "fechaSalida": "{{hoyMas83}}",
+  "horaEstimadaLlegada": "16:00",
+  "titular": {
+    "nombre": "Ana Rojas",
+    "documentoIdentidad": "1094555001",
+    "fechaNacimiento": "1991-04-10",
+    "correo": "ana.rojas@correo.co",
+    "telefono": "3005550001"
+  },
+  "acompanantes": [
+    {
+      "nombre": "Luis Rojas",
+      "fechaNacimiento": "1990-02-01"
+    }
+  ]
+}
+
+> {%
+    client.test("12.9 Otra reserva sobre las mismas noches -> 409 CONFLICTO_CANAL (RN-18)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CONFLICTO_CANAL", "Se esperaba CONFLICTO_CANAL y llegó " + response.body.codigo);
+    });
+%}
+
+### 12.10 El administrador ve el conflicto pendiente -> 200
+# espera: 200
+# guarda: conflicto = $.contenido[0].id
+GET {{base}}/api/conflictos-canal?estado=PENDIENTE
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("12.10 El administrador ve el conflicto pendiente -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    });
+    client.global.set("conflicto", response.body.contenido[0].id);
+%}
+
+### 12.11 El administrador resuelve el conflicto -> 200 RESUELTO
+# espera: 200
+PUT {{base}}/api/conflictos-canal/{{conflicto}}/resolver
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "resolucion": "Se avisó al canal y se reubicó al huésped en otra fecha"
+}
+
+> {%
+    client.test("12.11 El administrador resuelve el conflicto -> 200 RESUELTO", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.estado === "RESUELTO", "Se esperaba estado RESUELTO y llegó " + response.body.estado);
+    });
+%}
+
+### 12.12 Resolverlo otra vez -> 409 CONFLICTO_YA_RESUELTO
+# espera: 409 CONFLICTO_YA_RESUELTO
+PUT {{base}}/api/conflictos-canal/{{conflicto}}/resolver
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "resolucion": "Otra vez"
+}
+
+> {%
+    client.test("12.12 Resolverlo otra vez -> 409 CONFLICTO_YA_RESUELTO", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "CONFLICTO_YA_RESUELTO", "Se esperaba CONFLICTO_YA_RESUELTO y llegó " + response.body.codigo);
+    });
+%}
+
+### 12.13 Otro canal no cancela una reserva que no envió -> 404 RESERVA_NO_ENCONTRADA
+# espera: 404 RESERVA_NO_ENCONTRADA
+PUT {{base}}/api/externo/reservas/BKG-778812/cancelar
+X-API-Key: sim-canal-uq-2026
+
+> {%
+    client.test("12.13 Otro canal no cancela una reserva que no envió -> 404 RESERVA_NO_ENCONTRADA", () => {
+        client.assert(response.status === 404, "Se esperaba 404 y llegó " + response.status);
+        client.assert(response.body.codigo === "RESERVA_NO_ENCONTRADA", "Se esperaba RESERVA_NO_ENCONTRADA y llegó " + response.body.codigo);
+    });
+%}
+
+### 12.14 El canal cancela su reserva -> 200 con la liquidación
+# espera: 200
+PUT {{base}}/api/externo/reservas/BKG-778812/cancelar
+X-API-Key: {{claveCanal}}
+
+> {%
+    client.test("12.14 El canal cancela su reserva -> 200 con la liquidación", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.estado === "CANCELADA", "Se esperaba estado CANCELADA y llegó " + response.body.estado);
+    });
+%}
+
+### 12.15 Bitácora del canal, del evento más reciente al más antiguo -> 200
+# espera: 200
+GET {{base}}/api/canales/bitacora?canal=Booking
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("12.15 Bitácora del canal, del evento más reciente al más antiguo -> 200", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.totalElementos === 5, "Se esperaba totalElementos 5 y llegó " + response.body.totalElementos);
+    });
+%}
