@@ -20,6 +20,7 @@ descarga solo (toolchain).
 La clave del JWT no se versiona. Antes de arrancar, copie
 `backend/src/main/resources/application-secrets.properties.example` como `application-secrets.properties` en la
 misma carpeta y ponga una clave aleatoria de al menos 32 caracteres (por ejemplo, `openssl rand -base64 48`).
+También puede pasarla en la variable `SGA_JWT_SECRET`, que tiene prioridad. Ese archivo nunca entra al jar.
 
 ## Ejecutar
 
@@ -86,6 +87,39 @@ cambia en caliente con `PUT /api/alojamiento` y `PUT /api/alojamiento/parametros
 
 Errores: toda respuesta de error es un `ErrorNegocioResponse`. 400 formato del mensaje, 401 y 403 seguridad,
 404 recurso inexistente y 409 regla del negocio violada.
+
+## Despliegue
+
+El backend va a Render como contenedor (`backend/Dockerfile`) y el frontend a Vercel, según la Guía 22.
+
+| Parte | URL |
+|---|---|
+| Aplicación | _pendiente: URL de Vercel_ |
+| API | _pendiente: URL de Render_ |
+| Estado del API | _pendiente: URL de Render_ + `/actuator/health` |
+
+> El API usa el plan gratuito de Render: la primera petición después de 15 minutos sin uso tarda cerca de un
+> minuto, y los datos vuelven al estado inicial en cada reinicio.
+
+Configuración versionada: `backend/Dockerfile`, `backend/.dockerignore`, `backend/.gitattributes`,
+`backend/src/main/resources/application-prod.properties`, `frontend/vercel.json` y `frontend/.env.example`.
+
+**Render** (Web Service, Docker, Root Directory `backend`, Health Check Path `/actuator/health`):
+
+| Variable | Valor |
+|---|---|
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+| `SGA_JWT_SECRET` | `openssl rand -hex 32`, distinta a la local |
+| `SGA_CORS_ALLOWED_ORIGINS` | URL exacta de Vercel, sin `/` final |
+| `SGA_USUARIOS_INICIALES_HABILITADOS` | `true` (la base se borra al dormir el servicio) |
+| `SGA_ADMIN_CORREO`, `SGA_ADMIN_CONTRASENA`, `SGA_ADMIN_TELEFONO`, `SGA_ADMIN_DOCUMENTO`, `SGA_ADMIN_FECHA_NACIMIENTO` | Cuenta del administrador; la contraseña no va en el repositorio |
+
+**Vercel** (Root Directory `frontend`, preset Vite): `VITE_API_URL` con la URL de Render terminada en `/api`, y
+opcionalmente `VITE_MAPBOX_TOKEN`.
+
+En el perfil `prod` la consola de H2 y Swagger quedan cerrados, solo existe la cuenta del administrador (las de la
+tabla anterior no se crean) y el arranque falla si falta la clave o un dato de esa cuenta. Los datos de prueba del
+alojamiento (apartamentos, tarifas y reservas) sí se cargan, para que el catálogo funcione en la demostración.
 
 ## Validar el contrato
 

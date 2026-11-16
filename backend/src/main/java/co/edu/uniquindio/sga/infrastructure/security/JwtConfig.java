@@ -19,7 +19,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Firma y validación del JWT con HMAC-SHA256 (Guía 12, 5.1). Una sola clave firma y valida: el SGA
- * emite y valida sus propios tokens.
+ * emite y valida sus propios tokens. La clave sale de la variable SGA_JWT_SECRET (producción) o, en
+ * local, de application-secrets.properties (Guía 22, 4.2); con menos de 32 caracteres no arranca.
  */
 @Configuration
 public class JwtConfig {
@@ -27,7 +28,7 @@ public class JwtConfig {
     private final SecretKey clave;
     private final String emisor;
 
-    public JwtConfig(@Value("${sga.jwt.secret}") String secreto, @Value("${sga.jwt.emisor}") String emisor) {
+    public JwtConfig(@Value("${SGA_JWT_SECRET:${sga.jwt.secret}}") String secreto, @Value("${sga.jwt.emisor}") String emisor) {
         byte[] bytes = secreto.getBytes(StandardCharsets.UTF_8);
         if (bytes.length < 32) {
             throw new IllegalStateException("sga.jwt.secret debe tener al menos 32 caracteres (256 bits) para HS256");
