@@ -46,6 +46,7 @@ export function Entrar() {
   return (
     <Marco titulo="Entrar">
       {params.get('registrado') && <AvisoOk>Cuenta creada. Ya puede entrar con su correo y contraseña.</AvisoOk>}
+      {params.get('recuperada') && <AvisoOk>Contraseña actualizada. Entre con la nueva.</AvisoOk>}
       <form className="pila" onSubmit={enviar}>
         <label className="campo">
           <span>Correo</span>
@@ -60,6 +61,9 @@ export function Entrar() {
           {accion.enCurso ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
+      <p className="nota">
+        <Link to="/recuperar">Olvidé mi contraseña</Link>
+      </p>
       <p>
         ¿Primera vez? <Link to={`/registro${params.get('volver') ? `?volver=${encodeURIComponent(params.get('volver')!)}` : ''}`}>Cree una cuenta</Link>
       </p>
@@ -130,6 +134,83 @@ export function Registro() {
       </form>
       <p>
         ¿Ya tiene cuenta? <Link to="/entrar">Entrar</Link>
+      </p>
+    </Marco>
+  );
+}
+
+/** Recuperación de contraseña (7.2, CU-40): código al correo, 15 minutos, un solo uso. */
+export function Recuperar() {
+  const navegar = useNavigate();
+  const solicitud = useAccion();
+  const confirmacion = useAccion();
+  const [correo, setCorreo] = useState('');
+  const [enviado, setEnviado] = useState(false);
+  const [codigo, setCodigo] = useState('');
+  const [nueva, setNueva] = useState('');
+
+  const pedir = async (e: FormEvent) => {
+    e.preventDefault();
+    const ok = await solicitud.ejecutar(async () => {
+      await servicioSesion.solicitarRecuperacion(correo);
+      return true;
+    });
+    if (ok) setEnviado(true);
+  };
+
+  const confirmar = async (e: FormEvent) => {
+    e.preventDefault();
+    const ok = await confirmacion.ejecutar(async () => {
+      await servicioSesion.confirmarRecuperacion(correo, codigo.trim(), nueva);
+      return true;
+    });
+    if (ok) navegar('/entrar?recuperada=1', { replace: true });
+  };
+
+  return (
+    <Marco titulo="Recuperar contraseña">
+      {!enviado ? (
+        <form className="pila" onSubmit={pedir}>
+          <label className="campo">
+            <span>Correo de la cuenta</span>
+            <input type="email" required autoComplete="username" value={correo} onChange={(e) => setCorreo(e.target.value)} />
+          </label>
+          <AvisoError error={solicitud.error} />
+          <button className="boton boton--principal boton--ancho" disabled={solicitud.enCurso}>
+            Enviar código
+          </button>
+        </form>
+      ) : (
+        <form className="pila" onSubmit={confirmar}>
+          <AvisoOk>Si el correo está registrado, le llegó un código válido por 15 minutos.</AvisoOk>
+          <label className="campo">
+            <span>Código</span>
+            <input required inputMode="numeric" autoComplete="one-time-code" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
+          </label>
+          <label className="campo">
+            <span>Nueva contraseña</span>
+            <input
+              type="password"
+              required
+              minLength={8}
+              pattern="(?=.*[A-Z])(?=.*\d).{8,}"
+              autoComplete="new-password"
+              value={nueva}
+              onChange={(e) => setNueva(e.target.value)}
+            />
+            <small>8+ caracteres, mayúscula y número</small>
+          </label>
+          <AvisoError error={confirmacion.error} />
+          <button className="boton boton--principal boton--ancho" disabled={confirmacion.enCurso}>
+            Cambiar contraseña
+          </button>
+          <button type="button" className="boton boton--texto" onClick={() => setEnviado(false)}>
+            Usar otro correo
+          </button>
+        </form>
+      )}
+      <p>
+        <Link to="/entrar">Volver a entrar</Link>
       </p>
     </Marco>
   );

@@ -3,10 +3,12 @@ import { useEffect } from 'react';
 import { PERSONAL, ProveedorSesion, Requiere } from './auth/Sesion';
 import { Cabecera, Pie } from './components/Cabecera';
 import { Apartamento } from './pages/Apartamento';
-import { Entrar, Registro } from './pages/Cuenta';
+import { Entrar, Recuperar, Registro } from './pages/Cuenta';
 import { Inicio } from './pages/Inicio';
 import { MisViajes } from './pages/MisViajes';
+import { ModificarReserva } from './pages/ModificarReserva';
 import { Operacion } from './pages/Operacion';
+import { Perfil } from './pages/Perfil';
 import { Recepcion } from './pages/Recepcion';
 import { Reservar } from './pages/Reservar';
 import { ReservaDetalle } from './pages/ReservaDetalle';
@@ -43,6 +45,15 @@ export function App() {
           <Route path="/apartamentos/:id" element={<Apartamento />} />
           <Route path="/entrar" element={<Entrar />} />
           <Route path="/registro" element={<Registro />} />
+          <Route path="/recuperar" element={<Recuperar />} />
+          <Route
+            path="/perfil"
+            element={
+              <Requiere>
+                <Perfil />
+              </Requiere>
+            }
+          />
           <Route
             path="/reservar/:id"
             element={
@@ -64,6 +75,14 @@ export function App() {
             element={
               <Requiere>
                 <ReservaDetalle />
+              </Requiere>
+            }
+          />
+          <Route
+            path="/reservas/:codigo/modificar"
+            element={
+              <Requiere roles={PERSONAL}>
+                <ModificarReserva />
               </Requiere>
             }
           />

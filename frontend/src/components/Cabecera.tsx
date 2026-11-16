@@ -39,10 +39,10 @@ export function Cabecera() {
         <div className="usuario">
           {rol ? (
             <>
-              <div>
+              <Link to="/perfil" className="usuario__nombre">
                 <div>{usuario?.nombre ?? 'Sesión iniciada'}</div>
                 <div className="usuario__rol">{nombreRol[rol]}</div>
-              </div>
+              </Link>
               <button
                 className="boton boton--claro"
                 onClick={() => {
