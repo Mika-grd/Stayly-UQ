@@ -42,6 +42,9 @@ public interface ReservaRepository {
     /** Reservas cuya fecha de salida es {@code fecha}, en cualquier estado (salidas del día, 7.6). */
     List<Reserva> buscarConSalidaEl(LocalDate fecha);
 
+    /** Reservas cuyo titular tiene exactamente ese documento, de la más reciente a la más antigua, de a 10. */
+    Pagina<Reserva> buscarPorDocumentoTitular(String documento, PeticionPagina pagina);
+
     /** Reservas en cualquier estado cuya estancia comparte al menos una noche con el rango (reportes). */
     List<Reserva> buscarQueSolapan(RangoFechas rango);
 

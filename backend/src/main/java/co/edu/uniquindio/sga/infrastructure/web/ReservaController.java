@@ -13,6 +13,7 @@ import co.edu.uniquindio.sga.application.usecase.CancelarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConfirmarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarDetalleApartamentoUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarFolioUseCase;
+import co.edu.uniquindio.sga.application.usecase.ConsultarMisReservasUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarMovimientosDelDiaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarReservasUseCase;
@@ -74,6 +75,7 @@ public class ReservaController {
     private final ConsultarFolioUseCase consultarFolio;
     private final ConsultarDetalleApartamentoUseCase consultarApartamento;
     private final ConsultarReservasUseCase listar;
+    private final ConsultarMisReservasUseCase misReservas;
     private final ModificarReservaUseCase modificar;
     private final IndicarHoraEstimadaLlegadaUseCase indicarHoraLlegada;
     private final DeclararNoShowUseCase declararNoShow;
@@ -86,6 +88,7 @@ public class ReservaController {
                              CancelarReservaUseCase cancelar, RegistrarLlegadaUseCase registrarLlegada,
                              ConsultarReservaUseCase consultarReserva, ConsultarFolioUseCase consultarFolio,
                              ConsultarDetalleApartamentoUseCase consultarApartamento, ConsultarReservasUseCase listar,
+                             ConsultarMisReservasUseCase misReservas,
                              ModificarReservaUseCase modificar, IndicarHoraEstimadaLlegadaUseCase indicarHoraLlegada,
                              DeclararNoShowUseCase declararNoShow, RegistrarSalidaUseCase registrarSalida,
                              ConsultarMovimientosDelDiaUseCase movimientosDelDia,
@@ -98,6 +101,7 @@ public class ReservaController {
         this.consultarFolio = consultarFolio;
         this.consultarApartamento = consultarApartamento;
         this.listar = listar;
+        this.misReservas = misReservas;
         this.modificar = modificar;
         this.indicarHoraLlegada = indicarHoraLlegada;
         this.declararNoShow = declararNoShow;
@@ -150,6 +154,17 @@ public class ReservaController {
         var contenido = resultado.contenido().stream().map(mapper::aResumen).toList();
         return new PaginaReservaResumenResponse(contenido, resultado.numero(), resultado.tamano(),
                 resultado.totalElementos(), resultado.totalPaginas());
+    }
+
+    /** Las reservas del huésped autenticado, por el documento de su token (portal, 7.2). */
+    @GetMapping("/api/usuarios/me/reservas")
+    @PreAuthorize("hasAuthority('HUESPED')")
+    public PaginaReservaResumenResponse misReservas(@AuthenticationPrincipal Jwt jwt,
+                                                    @RequestParam(defaultValue = "0") int pagina) {
+        Pagina<Reserva> resultado = misReservas.ejecutar(UsuarioAutenticado.de(jwt).documento(),
+                new PeticionPagina(pagina));
+        return new PaginaReservaResumenResponse(resultado.contenido().stream().map(mapper::aResumen).toList(),
+                resultado.numero(), resultado.tamano(), resultado.totalElementos(), resultado.totalPaginas());
     }
 
     /** CU-13: repite las validaciones de CU-02 sin contar la propia reserva y ajusta el folio (RN-14). */

@@ -95,6 +95,14 @@ public class ReservaRepositoryEnMemoria implements ReservaRepository {
     }
 
     @Override
+    public Pagina<Reserva> buscarPorDocumentoTitular(String documento, PeticionPagina pagina) {
+        return Pagina.de(reservas.values().stream()
+                .filter(r -> r.titular().documento().map(doc -> doc.numero().equals(documento)).orElse(false))
+                .sorted(Comparator.comparing(Reserva::fechaCreacion).reversed())
+                .toList(), pagina);
+    }
+
+    @Override
     public List<Reserva> buscarQueSolapan(RangoFechas rango) {
         return reservas.values().stream().filter(r -> rango.seSolapaCon(r.estancia())).toList();
     }

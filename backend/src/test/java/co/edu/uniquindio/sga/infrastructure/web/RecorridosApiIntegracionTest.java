@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -209,6 +210,51 @@ class RecorridosApiIntegracionTest {
                         .contentType(MediaType.APPLICATION_JSON).content(reglasPropias(-1)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("PARAMETRO_INVALIDO"));
+    }
+
+    // Mis reservas (portal)
+
+    @Test
+    @DisplayName("7.2 · El huésped ve solo las reservas de las que es titular; recepción no usa esta lista")
+    void misReservas() throws Exception {
+        mvc.perform(get("/api/usuarios/me/reservas").header(HttpHeaders.AUTHORIZATION, bearer(HUESPED_1)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[*].codigo").value(org.hamcrest.Matchers.hasItem(pendienteLaura)))
+                .andExpect(jsonPath("$.contenido[*].codigo").value(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.hasItem(confirmadaCarlos))));
+        mvc.perform(get("/api/usuarios/me/reservas").header(HttpHeaders.AUTHORIZATION, bearer(RECEPCION)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("7.5 · La reserva devuelve el documento y el contacto del titular, y no los de los acompañantes")
+    void contactoDelTitularEnLaReserva() throws Exception {
+        mvc.perform(get("/api/reservas/" + pendienteLaura).header(HttpHeaders.AUTHORIZATION, bearer(RECEPCION)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ocupantes[?(@.titular == true)].documentoIdentidad").value(
+                        org.hamcrest.Matchers.contains("1094000001")))
+                .andExpect(jsonPath("$.ocupantes[?(@.titular == true)].correo").isNotEmpty())
+                .andExpect(jsonPath("$.ocupantes[?(@.titular == false)].correo").value(
+                        org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue())));
+    }
+
+    // Calendario de disponibilidad del detalle (público)
+
+    @Test
+    @DisplayName("7.1 · El calendario de disponibilidad es público y no expone códigos de reserva")
+    void calendarioDisponibilidadPublico() throws Exception {
+        LocalDate hoy = LocalDate.now(java.time.ZoneId.of("America/Bogota"));
+        mvc.perform(get("/api/apartamentos/SUQ-101/disponibilidad")
+                        .param("desde", hoy.toString()).param("hasta", hoy.plusDays(14).toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.identificacion").value("SUQ-101"))
+                .andExpect(jsonPath("$.noches.length()").value(14))
+                .andExpect(jsonPath("$.noches[0].disponible").isBoolean())
+                .andExpect(jsonPath("$.noches[0].codigoReserva").doesNotExist());
+        mvc.perform(get("/api/apartamentos/SUQ-101/disponibilidad")
+                        .param("desde", hoy.toString()).param("hasta", hoy.plusYears(1).toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("RANGO_FECHAS_INVALIDO"));
     }
 
     // Apoyo

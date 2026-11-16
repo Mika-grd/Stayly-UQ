@@ -1,0 +1,1460 @@
+/* ---------- Estructura general ---------- */
+
+.pagina {
+  padding-block: var(--e6) var(--e7);
+}
+
+.pila {
+  display: grid;
+  gap: var(--e4);
+}
+
+.pila-grande {
+  display: grid;
+  gap: var(--e7);
+}
+
+/* Los hijos de una rejilla no deben ensancharla: lo ancho (tablas, calendario) se desplaza por dentro */
+.pila > *,
+.pila-grande > * {
+  min-width: 0;
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: var(--e4);
+  font-weight: 700;
+}
+
+.nota {
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+  margin-top: var(--e3);
+}
+
+.titulo-con-accion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e4);
+}
+
+.titulo-con-accion h1,
+.titulo-con-accion h2 {
+  margin: 0;
+}
+
+.acciones {
+  display: grid;
+  gap: var(--e3);
+  margin-top: var(--e4);
+}
+
+.acciones--fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin-top: var(--e3);
+}
+
+/* ---------- Portada: cielo, dos cordilleras, la cuadra en movimiento y la vía ---------- */
+
+.portada {
+  position: relative;
+  overflow-x: clip;
+  background: var(--tinta);
+  color: var(--cal);
+  border-bottom: var(--borde);
+  padding-top: var(--e8);
+}
+
+.portada__sol {
+  position: absolute;
+  top: 48px;
+  right: max(6vw, 40px);
+  width: clamp(110px, 16vw, 210px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--maiz);
+  box-shadow: 14px 14px 0 0 var(--balcon);
+}
+
+.portada__titulo {
+  position: relative;
+  z-index: 2;
+}
+
+.portada__titulo h1 {
+  font-size: clamp(2.6rem, 7vw, 5.6rem);
+  font-stretch: 125%;
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin: 0 0 var(--e3);
+  max-width: 11ch;
+}
+
+.portada__titulo h1 em {
+  font-style: normal;
+  color: var(--maiz);
+}
+
+.portada__titulo p {
+  margin: 0;
+  color: #b9c2d6;
+  font-weight: 500;
+}
+
+/* Capas del paisaje: cada una se desliza a su velocidad (paralaje) */
+.paisaje {
+  position: relative;
+  overflow: hidden;
+  height: 300px;
+  margin-top: calc(-1 * var(--e5));
+}
+
+.paisaje__capa {
+  position: absolute;
+  left: 0;
+  bottom: 30px;
+  display: flex;
+  width: max-content;
+  animation: deslizar var(--duracion) linear infinite;
+  will-change: transform;
+}
+
+.paisaje__capa svg {
+  flex: none;
+  display: block;
+}
+
+.paisaje__capa--lejos {
+  --duracion: 150s;
+  bottom: 90px;
+  fill: var(--aguamarina);
+}
+
+.paisaje__capa--cerca {
+  --duracion: 90s;
+  bottom: 40px;
+  fill: var(--cafetal);
+}
+
+.paisaje__capa--cerca .palma rect {
+  fill: var(--tinta);
+}
+
+.paisaje__capa--cerca .palma ellipse {
+  fill: var(--tinta);
+}
+
+.paisaje__capa--calle {
+  --duracion: 60s;
+  align-items: flex-end;
+}
+
+.cuadra {
+  display: flex;
+  align-items: flex-end;
+  flex: none;
+  padding-inline: 30px;
+}
+
+.cuadra__casa {
+  flex: none;
+}
+
+.cuadra__casa svg {
+  background: transparent !important;
+}
+
+.paisaje__via {
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  background:
+    linear-gradient(90deg, var(--maiz) 0 48px, transparent 48px 96px) 0 15px / 96px 5px repeat-x,
+    var(--tinta);
+  border-top: 4px solid var(--cal);
+  animation: via 1.6s linear infinite;
+}
+
+.willys {
+  position: absolute;
+  z-index: 3;
+  left: 14%;
+  bottom: 14px;
+  width: 150px;
+}
+
+.willys__carroceria {
+  animation: traqueteo 0.36s steps(2) infinite;
+}
+
+.willys__rueda {
+  animation: girar 0.6s linear infinite;
+}
+
+.portada__pausa {
+  position: absolute;
+  z-index: 4;
+  right: var(--e4);
+  top: var(--e4);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--cal);
+  border-radius: var(--radio);
+  background: var(--tinta);
+  color: var(--cal);
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.portada__pausa:hover,
+.portada__pausa:focus-visible {
+  opacity: 1;
+}
+
+.portada__pausa svg {
+  width: 12px;
+  height: 12px;
+}
+
+.portada--quieta .paisaje__capa,
+.portada--quieta .paisaje__via,
+.portada--quieta .willys * {
+  animation-play-state: paused;
+}
+
+@keyframes deslizar {
+  to { transform: translateX(calc(-100% / 3)); }
+}
+
+/* 60 s por tercio de la cuadra: la vía avanza a la misma velocidad que las casas */
+@keyframes via {
+  to { background-position: -96px 15px, 0 0; }
+}
+
+@keyframes traqueteo {
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paisaje__capa,
+  .paisaje__via,
+  .willys * {
+    animation: none;
+  }
+  .portada__pausa {
+    display: none;
+  }
+}
+
+.portada__busqueda {
+  position: relative;
+  z-index: 5;
+  color: var(--tinta);
+  top: 40px;
+  margin-top: calc(-1 * var(--e3));
+}
+
+.busqueda {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 0.7fr 0.7fr auto;
+  gap: var(--e4);
+  align-items: end;
+}
+
+.busqueda__boton {
+  min-width: 140px;
+}
+
+@media (max-width: 900px) {
+  .paisaje {
+    height: 230px;
+  }
+  .paisaje__capa--calle {
+    transform-origin: bottom left;
+    zoom: 0.72;
+  }
+  .willys {
+    width: 96px;
+    left: 6%;
+  }
+  .portada__sol {
+    top: 22px;
+    right: 72px;
+    width: 44px;
+    box-shadow: 7px 7px 0 0 var(--balcon);
+  }
+  .paisaje {
+    margin-top: 0;
+  }
+  .busqueda {
+    grid-template-columns: 1fr 1fr;
+  }
+  .busqueda__boton {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Resultados ---------- */
+
+.resultados {
+  padding-top: calc(var(--e8) + var(--e4));
+}
+
+.resultados__cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e5);
+}
+
+.resultados__cabeza p {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--e6) var(--e5);
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  color: var(--tinta);
+  text-decoration: none;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.tarjeta:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: calc(var(--capa) + 3px) calc(var(--capa) + 3px) 0 0 var(--losa);
+}
+
+.tarjeta__imagen {
+  aspect-ratio: 4 / 3;
+  border-bottom: var(--borde);
+  overflow: hidden;
+}
+
+.tarjeta__cuerpo {
+  padding: var(--e4);
+  display: grid;
+  gap: var(--e1);
+}
+
+.tarjeta__cuerpo h3 {
+  margin: 0;
+}
+
+.tarjeta__datos,
+.tarjeta__advertencia {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.tarjeta__advertencia {
+  font-size: var(--t-1);
+}
+
+.tarjeta__precio {
+  margin: var(--e2) 0 0;
+}
+
+.tarjeta__precio .cifra {
+  font-size: var(--t1);
+}
+
+/* ---------- Ficha de apartamento y reserva ---------- */
+
+.ficha__cabeza {
+  margin-bottom: var(--e5);
+}
+
+.ficha__cabeza p {
+  color: var(--tinta-suave);
+  font-size: var(--t1);
+}
+
+.galeria {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  padding: 0;
+  overflow: hidden;
+  height: min(52vw, 440px);
+  margin-bottom: var(--e7);
+}
+
+.galeria__principal {
+  min-height: 0;
+  border-right: var(--borde);
+}
+
+.galeria__lado {
+  display: flex;
+  align-items: flex-end;
+  padding: var(--e4);
+}
+
+.galeria__codigo {
+  font-family: var(--letra-titular);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: clamp(var(--t2), 4vw, var(--t4));
+  color: var(--cal);
+  line-height: 1;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.ficha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: var(--e7);
+  align-items: start;
+}
+
+.ficha__texto {
+  display: grid;
+  gap: var(--e6);
+  min-width: 0;
+}
+
+.reservar {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: var(--e4);
+}
+
+.reservar__precio {
+  margin: 0;
+}
+
+.reservar__precio .cifra {
+  font-size: var(--t3);
+}
+
+.reservar__miniatura {
+  height: 120px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.fila--dos {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--e3);
+}
+
+.fila--accion {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  margin-top: var(--e4);
+}
+
+.fila--acompanante {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto;
+  align-items: end;
+  padding-bottom: var(--e4);
+  margin-bottom: var(--e4);
+  border-bottom: 1px solid var(--muro-hondo);
+}
+
+@media (max-width: 900px) {
+  .ficha {
+    grid-template-columns: 1fr;
+  }
+  .reservar {
+    position: static;
+  }
+  .galeria {
+    grid-template-columns: 1fr;
+  }
+  .galeria__lado {
+    display: none;
+  }
+  .galeria__principal {
+    border-right: 0;
+  }
+  .fila--acompanante {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lista-marcada {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+}
+
+.lista-marcada li {
+  padding: var(--e1) var(--e3);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+}
+
+.tramos {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--e4);
+  display: grid;
+  gap: var(--e2);
+}
+
+.tramos li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  align-items: baseline;
+  gap: var(--e3);
+}
+
+.tramos .cifra {
+  font-size: var(--t2);
+}
+
+.desglose {
+  border-top: var(--borde);
+  padding-top: var(--e3);
+}
+
+.grupo-campos {
+  margin: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.grupo-campos legend {
+  font-family: var(--letra-titular);
+  font-stretch: 112%;
+  font-weight: 800;
+  font-size: var(--t1);
+  padding: 0 var(--e2);
+  background: var(--cal);
+}
+
+.cuenta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--e2) var(--e4);
+  margin: 0;
+}
+
+.cuenta dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cuenta__total {
+  border-top: var(--borde);
+  padding-top: var(--e2);
+  font-weight: 800;
+}
+
+dd.cuenta__total {
+  font-size: var(--t2);
+}
+
+/* ---------- Detalle de reserva ---------- */
+
+.reserva__cabeza {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: var(--e5);
+  align-items: center;
+  margin-bottom: var(--e6);
+}
+
+.reserva__cabeza h1 {
+  font-size: clamp(var(--t2), 3.4vw, var(--t4));
+}
+
+.reserva__miniatura {
+  height: 160px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.reserva__codigo {
+  margin: 0 0 var(--e1);
+  font-weight: 700;
+  color: var(--tinta-suave);
+}
+
+@media (max-width: 640px) {
+  .reserva__cabeza {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* El recorrido sí es una secuencia: los números dicen en qué paso va la reserva */
+.recorrido {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--e6);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+  background: var(--cal);
+}
+
+.recorrido li {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e3) var(--e4);
+  border-right: var(--borde);
+  font-weight: 700;
+  color: var(--tinta-suave);
+}
+
+.recorrido li:last-child {
+  border-right: 0;
+}
+
+.recorrido__numero {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--borde);
+  border-radius: 50%;
+  font-family: var(--letra-titular);
+  font-weight: 800;
+  background: var(--cal);
+}
+
+.recorrido li.hecho {
+  background: var(--muro);
+  color: var(--tinta);
+}
+
+.recorrido li.actual {
+  background: var(--tinta);
+  color: var(--cal);
+}
+
+.recorrido li.actual .recorrido__numero {
+  background: var(--maiz);
+  color: var(--tinta);
+}
+
+@media (max-width: 640px) {
+  .recorrido {
+    grid-template-columns: 1fr 1fr;
+  }
+  .recorrido li:nth-child(2) {
+    border-right: 0;
+  }
+  .recorrido li:nth-child(-n + 2) {
+    border-bottom: var(--borde);
+  }
+}
+
+.ocupantes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--e4);
+  display: grid;
+  gap: var(--e2);
+}
+
+.ocupantes li {
+  display: grid;
+}
+
+.ocupantes span {
+  color: var(--tinta-suave);
+  font-size: var(--t-1);
+}
+
+/* ---------- Folio ---------- */
+
+.folio {
+  display: grid;
+  gap: var(--e4);
+}
+
+.folio__cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.folio__cabeza h2 {
+  margin: 0;
+}
+
+.folio__saldos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.folio__saldos > div {
+  display: grid;
+  padding: var(--e3) var(--e4);
+  border-right: var(--borde);
+}
+
+.folio__saldos > div:last-child {
+  border-right: 0;
+}
+
+.folio__saldos span {
+  font-size: var(--t-1);
+  font-weight: 700;
+}
+
+.folio__saldos strong {
+  font-size: var(--t1);
+}
+
+.folio__saldo--debe {
+  background: var(--maiz);
+}
+
+.folio__pago td {
+  color: var(--cafetal);
+}
+
+.folio__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+}
+
+.subformulario {
+  display: grid;
+  gap: var(--e4);
+  padding: var(--e4);
+  background: var(--muro);
+  border: var(--borde);
+  border-radius: var(--radio);
+}
+
+.subformulario > .boton {
+  justify-self: start;
+}
+
+@media (max-width: 640px) {
+  .folio__saldos {
+    grid-template-columns: 1fr;
+  }
+  .folio__saldos > div {
+    border-right: 0;
+    border-bottom: var(--borde);
+  }
+}
+
+/* ---------- Cuenta ---------- */
+
+.cuenta.pagina,
+main.cuenta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+  gap: var(--e7);
+  align-items: center;
+}
+
+.cuenta__ilustracion {
+  height: 420px;
+}
+
+.cuenta__ilustracion svg {
+  background: transparent !important;
+}
+
+@media (max-width: 860px) {
+  main.cuenta {
+    grid-template-columns: 1fr;
+  }
+  .cuenta__ilustracion {
+    display: none;
+  }
+}
+
+/* ---------- Mis viajes ---------- */
+
+.viajes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e5);
+}
+
+.viaje {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: var(--e4);
+  align-items: center;
+  color: var(--tinta);
+  text-decoration: none;
+}
+
+.viaje__fachada {
+  height: 96px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.viaje__texto h3,
+.viaje__texto p {
+  margin: 0 0 var(--e1);
+}
+
+.viaje__total {
+  font-size: var(--t1);
+}
+
+@media (max-width: 560px) {
+  .viaje {
+    grid-template-columns: 72px 1fr;
+  }
+  .viaje__total {
+    grid-column: 2;
+  }
+}
+
+/* ---------- Recepción ---------- */
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e4);
+  align-items: end;
+  margin-bottom: var(--e5);
+}
+
+.barra__titulo {
+  font-family: var(--letra-titular);
+  font-stretch: 118%;
+  font-weight: 800;
+  font-size: var(--t2);
+  margin: 0;
+}
+
+.campo--ancho {
+  flex: 1 1 260px;
+}
+
+.tablero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--e6);
+}
+
+.tablero h2 .cifra {
+  display: inline-block;
+  min-width: 2ch;
+  margin-left: var(--e2);
+  padding: 0 var(--e2);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--muro);
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .tablero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.movimientos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.movimiento {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--e3);
+  align-items: center;
+  padding: var(--e2);
+  border: var(--borde);
+  border-radius: var(--radio);
+  color: var(--tinta);
+  text-decoration: none;
+  background: var(--cal);
+}
+
+.movimiento:hover {
+  background: var(--muro);
+}
+
+.movimiento__apto {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  font-family: var(--letra-titular);
+  font-stretch: 118%;
+  font-weight: 900;
+  color: var(--cal);
+  box-shadow: 3px 3px 0 0 var(--tinta);
+}
+
+.movimiento__texto {
+  display: grid;
+}
+
+.movimiento__texto span {
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+}
+
+.tabla--filas tbody tr {
+  cursor: pointer;
+}
+
+.tabla--filas tbody tr:hover {
+  background: var(--muro);
+}
+
+/* ---------- Operación ---------- */
+
+.preparar {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--e3);
+}
+
+.preparar > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+  padding-bottom: var(--e3);
+  border-bottom: 1px solid var(--muro-hondo);
+}
+
+.preparar > li > .boton {
+  margin-left: auto;
+}
+
+.estado-apto__motivo {
+  flex-basis: 100%;
+}
+
+.calendario {
+  position: relative; /* contiene las etiquetas sr-only para que no desborden la página */
+  overflow-x: auto;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.calendario__fila {
+  display: grid;
+  grid-template-columns: 96px repeat(var(--dias), minmax(34px, 1fr));
+  gap: 4px;
+  align-items: center;
+  min-width: 640px;
+}
+
+.calendario__fila--cabeza span {
+  display: grid;
+  text-align: center;
+  font-family: var(--letra-titular);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.calendario__fila--cabeza small {
+  font-family: var(--letra-texto);
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+
+.calendario__hoy {
+  background: var(--maiz);
+  border: var(--borde);
+  border-radius: var(--radio);
+}
+
+.calendario__apto {
+  font-weight: 700;
+}
+
+.calendario__noche {
+  display: block;
+  height: 34px;
+  border: var(--borde);
+  border-radius: 4px;
+}
+
+.calendario__noche--libre {
+  background: var(--cal);
+}
+
+.calendario__noche--bloqueada {
+  background: repeating-linear-gradient(45deg, var(--tinta) 0 4px, var(--cal) 4px 8px);
+}
+
+a.calendario__noche--reservada:hover {
+  outline: 3px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+.calendario__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e5);
+  margin-top: var(--e3);
+  font-size: var(--t-1);
+}
+
+.calendario__leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+}
+
+.calendario__leyenda i {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+}
+
+/* ---------- Galería con miniaturas ---------- */
+
+.galeria__principal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.galeria__miniaturas {
+  display: grid;
+  gap: var(--e2);
+  width: 100%;
+  align-self: stretch;
+  align-content: start;
+  overflow-y: auto;
+}
+
+.galeria__miniatura {
+  padding: 0;
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.galeria__miniatura img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.galeria__miniatura[aria-pressed='true'] {
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--tinta);
+}
+
+/* ---------- Calendario de disponibilidad del detalle ---------- */
+
+.disponibilidad {
+  display: grid;
+  gap: var(--e3);
+}
+
+.disponibilidad__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e3);
+}
+
+.disponibilidad__barra .boton {
+  min-height: 36px;
+  padding-inline: var(--e3);
+}
+
+.disponibilidad__meses {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--e5);
+}
+
+.disponibilidad__barra {
+  max-width: 680px;
+}
+
+.disponibilidad__mes h3 {
+  margin-bottom: var(--e2);
+}
+
+.disponibilidad__rejilla {
+  max-width: 320px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.disponibilidad__dia {
+  text-align: center;
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+}
+
+.noche {
+  display: inline-grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  border: 2px solid var(--muro-hondo);
+  border-radius: var(--radio);
+  background: var(--cal);
+  color: var(--tinta);
+  font: 600 var(--t-1) var(--letra-texto);
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+}
+
+button.noche {
+  cursor: pointer;
+}
+
+button.noche:disabled {
+  cursor: default;
+}
+
+.noche--libre {
+  border-color: var(--tinta);
+}
+
+.noche--libre:not(:disabled):hover {
+  background: var(--muro);
+}
+
+.noche--ocupada {
+  background: repeating-linear-gradient(45deg, var(--muro-hondo) 0 3px, var(--cal) 3px 6px);
+  color: var(--tinta-suave);
+  text-decoration: line-through;
+}
+
+.noche--elegida {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--cal);
+  text-decoration: none;
+}
+
+.noche--salida {
+  border-color: var(--tinta);
+  box-shadow: inset 0 0 0 2px var(--tinta);
+}
+
+.disponibilidad__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e4);
+  margin: 0;
+}
+
+.disponibilidad__leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+}
+
+.disponibilidad__leyenda .noche {
+  width: 18px;
+}
+
+/* ---------- Mapa ---------- */
+
+.mapa {
+  position: relative;
+  display: block;
+  border: var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--muro);
+}
+
+.mapa > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mapa__teselas {
+  position: absolute;
+  width: 1280px;
+  height: 768px;
+}
+
+.mapa__teselas img {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  max-width: none;
+  user-select: none;
+}
+
+[data-tema='harsh'] .mapa__teselas {
+  filter: invert(1) hue-rotate(200deg) brightness(0.8) contrast(1.1);
+}
+
+.mapa__pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30px;
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(3px 3px 0 var(--tinta));
+}
+
+.mapa__pin path {
+  fill: var(--balcon);
+  stroke: var(--tinta);
+  stroke-width: 1.5;
+}
+
+.mapa__pin circle {
+  fill: var(--cal);
+}
+
+.mapa__creditos {
+  position: absolute;
+  left: var(--e2);
+  bottom: var(--e1);
+  font-size: 0.7rem;
+  background: rgb(255 255 255 / 0.8);
+  color: #333;
+  padding: 0 var(--e1);
+}
+
+.mapa__enlace {
+  position: absolute;
+  right: var(--e3);
+  bottom: var(--e3);
+  padding: var(--e1) var(--e3);
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--cal);
+  font-weight: 700;
+  font-size: var(--t-1);
+}
+
+.resultados__mapa {
+  margin-top: var(--e7);
+}
+
+/* ---------- Filtros de la búsqueda ---------- */
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--e4);
+  margin-bottom: var(--e5);
+}
+
+.filtros .campo {
+  width: 170px;
+}
+
+.filtros__caracteristicas {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  min-width: 0;
+}
+
+.filtros__caracteristicas legend {
+  font-weight: 700;
+  font-size: var(--t-1);
+  margin-bottom: var(--e1);
+  padding: 0;
+}
+
+.chip--filtro {
+  cursor: pointer;
+  font-family: var(--letra-texto);
+  background: var(--cal);
+}
+
+.chip--filtro[aria-pressed='true'] {
+  background: var(--tinta);
+  color: var(--cal);
+}
+
+.tarjeta__lugar {
+  display: flex;
+  align-items: center;
+  gap: var(--e1);
+  margin: 0;
+  font-size: var(--t-1);
+  color: var(--tinta-suave);
+}
+
+.tarjeta__lugar svg {
+  width: 10px;
+  fill: currentColor;
+}
+
+/* ---------- Desglose compacto ---------- */
+
+.tabla--compacta th,
+.tabla--compacta td {
+  padding: var(--e1) var(--e2);
+  font-size: var(--t-1);
+  white-space: nowrap;
+}
+
+/* ---------- Novedades ---------- */
+
+.novedades__form {
+  max-width: 640px;
+  margin-bottom: var(--e5);
+}
+
+.novedades {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+}
+
+.novedades li {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: var(--e3);
+  align-items: start;
+  padding-block: var(--e3);
+  border-top: 1px solid var(--muro-hondo);
+}
+
+.novedades li .chip {
+  justify-self: start;
+}
+
+.novedades p {
+  margin: 0;
+}
+
+/* ---------- Perfil ---------- */
+
+.perfil__cabeza {
+  display: flex;
+  align-items: center;
+  gap: var(--e5);
+  margin-bottom: var(--e6);
+}
+
+.perfil__cabeza h1 {
+  margin: 0;
+}
+
+.perfil__foto {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  border: var(--borde);
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--maiz);
+  color: var(--sobre-maiz);
+  box-shadow: var(--capa-chica) var(--capa-chica) 0 0 var(--tinta);
+  font: 900 var(--t3) var(--letra-titular);
+}
+
+.perfil__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.perfil__columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--e7);
+  align-items: start;
+}
+
+.perfil__columnas h2 {
+  margin: 0;
+}
+
+.usuario__nombre {
+  color: var(--tinta);
+  text-decoration: none;
+  border-radius: var(--radio);
+  padding: var(--e1) var(--e2);
+}
+
+.usuario__nombre:hover {
+  background: var(--muro);
+}
+
+@media (max-width: 760px) {
+  .galeria {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .galeria__principal {
+    aspect-ratio: 4 / 3;
+    border-right: 0;
+  }
+  .galeria__lado {
+    border-top: var(--borde);
+  }
+  .galeria__miniaturas {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .galeria__codigo {
+    writing-mode: horizontal-tb;
+    transform: none;
+  }
+  .filtros .campo {
+    width: calc(50% - var(--e2));
+  }
+}

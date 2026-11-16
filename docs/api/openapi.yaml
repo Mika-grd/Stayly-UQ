@@ -1386,6 +1386,57 @@ paths:
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
+  /api/apartamentos/{identificacion}/disponibilidad:
+    get:
+      tags:
+      - Apartamentos
+      summary: Consultar calendario de disponibilidad de un apartamento (7.1)
+      description: |-
+        Para cada noche de [desde, hasta) dice si el apartamento se puede vender, con las mismas reglas de la búsqueda (RN-01, RN-07, RN-12, RN-20). Las noches pasadas no se ofrecen. No expone reservas ni bloqueos. El rango abarca como máximo 93 noches.
+
+        Actor(es): público (detalle del apartamento).
+      operationId: consultarDisponibilidadApartamento
+      parameters:
+      - $ref: '#/components/parameters/IdentificacionApartamento'
+      - $ref: '#/components/parameters/Desde'
+      - $ref: '#/components/parameters/Hasta'
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisponibilidadApartamentoResponse'
+        '400':
+          description: 'Formato inválido o rango fuera de lo permitido. Códigos: FORMATO_INVALIDO, RANGO_FECHAS_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                RANGO_FECHAS_INVALIDO:
+                  summary: RANGO_FECHAS_INVALIDO
+                  value:
+                    codigo: RANGO_FECHAS_INVALIDO
+                    mensaje: 'El calendario de disponibilidad abarca como máximo 93 noches.'
+                    regla: '3.1'
+                    ruta: /api/apartamentos/SUQ-201/disponibilidad
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '404':
+          description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                APARTAMENTO_NO_ENCONTRADO:
+                  summary: APARTAMENTO_NO_ENCONTRADO
+                  value:
+                    codigo: APARTAMENTO_NO_ENCONTRADO
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/SUQ-201/disponibilidad
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security: []
   /api/calendario-ocupacion:
     get:
       tags:
@@ -4584,6 +4635,57 @@ paths:
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
+  /api/usuarios/me/reservas:
+    get:
+      tags:
+      - Usuarios
+      summary: Consultar mis reservas
+      description: |-
+        Reservas cuyo titular tiene el documento del huésped autenticado (lo toma del token), de la más reciente a la más antigua, de a 10. Es la lista "Mis viajes" del portal.
+
+        Actor(es): Huésped.
+      operationId: consultarMisReservas
+      parameters:
+      - $ref: '#/components/parameters/Pagina'
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaReservaResumenResponse'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CREDENCIALES_INVALIDAS:
+                  summary: CREDENCIALES_INVALIDAS
+                  value:
+                    codigo: CREDENCIALES_INVALIDAS
+                    mensaje: Credenciales inválidas.
+                    regla: '7.2'
+                    ruta: /api/usuarios/me/reservas
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                ACCESO_DENEGADO:
+                  summary: ACCESO_DENEGADO
+                  value:
+                    codigo: ACCESO_DENEGADO
+                    mensaje: No tiene permiso sobre este recurso.
+                    regla: '7.2'
+                    ruta: /api/usuarios/me/reservas
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security:
+      - bearerAuth: []
   /api/canales:
     post:
       tags:
@@ -6242,6 +6344,41 @@ components:
           type: string
         gravedad:
           $ref: '#/components/schemas/GravedadNovedad'
+    DisponibilidadApartamentoResponse:
+      type: object
+      description: Calendario de disponibilidad de un apartamento por rango [desde, hasta) (7.1).
+      required:
+      - identificacion
+      - desde
+      - hasta
+      - noches
+      properties:
+        identificacion:
+          type: string
+          examples:
+          - SUQ-201
+        desde:
+          type: string
+          format: date
+        hasta:
+          type: string
+          format: date
+        noches:
+          type: array
+          items:
+            $ref: '#/components/schemas/NocheDisponibleDTO'
+    NocheDisponibleDTO:
+      type: object
+      description: Una noche y si se puede vender.
+      required:
+      - fecha
+      - disponible
+      properties:
+        fecha:
+          type: string
+          format: date
+        disponible:
+          type: boolean
     CalendarioOcupacionResponse:
       type: object
       description: Calendario de ocupación por rango.
@@ -6584,6 +6721,21 @@ components:
           description: Calculado a la fecha de entrada.
         titular:
           type: boolean
+        documentoIdentidad:
+          type:
+          - string
+          - 'null'
+          description: Documento del titular, o del acompañante si lo dio; null si no hay.
+        correo:
+          type:
+          - string
+          - 'null'
+          description: Solo el titular. Permite a recepción modificar la reserva sin volver a pedir el contacto (7.5).
+        telefono:
+          type:
+          - string
+          - 'null'
+          description: Solo el titular.
     ValorCongeladoDTO:
       type: object
       description: Valor de la reserva congelado al crear (RN-22).

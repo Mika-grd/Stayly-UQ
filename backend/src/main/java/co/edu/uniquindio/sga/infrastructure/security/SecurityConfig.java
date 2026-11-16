@@ -41,6 +41,7 @@ public class SecurityConfig {
     private static final String[] LECTURAS_PUBLICAS = {
             "/api/apartamentos/disponibles",
             "/api/apartamentos/*",
+            "/api/apartamentos/*/disponibilidad",
             "/api/politica-cancelacion/vigente"
     };
 

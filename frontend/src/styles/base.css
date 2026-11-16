@@ -1,0 +1,96 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root > main {
+  flex: 1;
+}
+
+body {
+  margin: 0;
+  background: var(--muro);
+  color: var(--tinta);
+  font-family: var(--letra-texto);
+  font-size: var(--t0);
+  line-height: 1.55;
+  font-feature-settings: 'tnum' 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--letra-titular);
+  font-stretch: 118%;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--e3);
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(var(--t3), 4.4vw, var(--t4)); }
+h2 { font-size: var(--t2); }
+h3 { font-size: var(--t1); font-stretch: 112%; }
+
+p {
+  margin: 0 0 var(--e3);
+  max-width: 68ch;
+}
+
+a {
+  color: var(--cobalto);
+  text-underline-offset: 3px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+:focus-visible {
+  outline: 3px solid var(--cobalto);
+  outline-offset: 3px;
+}
+
+.cifra {
+  font-family: var(--letra-titular);
+  font-stretch: 112%;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.contenedor {
+  width: min(100% - 2 * var(--e4), var(--ancho));
+  margin-inline: auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

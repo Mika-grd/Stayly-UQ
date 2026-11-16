@@ -29,6 +29,8 @@ cd backend
 ./gradlew bootRun        # API en http://localhost:8080
 ```
 
+- Interfaz web: con el backend encendido, `cd frontend && npm install && npm run dev` y abra
+  <http://localhost:5173> (detalles en `frontend/README.md`).
 - Swagger UI: <http://localhost:8080/swagger-ui.html> (botón **Authorize** con el token de `POST /api/auth/login`,
   o con la credencial del canal para `/api/externo/**`).
 - Consola de H2: <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:sga`, usuario `sa`, sin contraseña).
@@ -53,7 +55,7 @@ sin registrar nada, el canal del simulador de los datos de prueba usa la credenc
 
 ```
 backend/      API en Spring Boot (Gradle)
-frontend/     aplicación web (pendiente)
+frontend/     aplicación web en React (Vite + TypeScript)
 docs/         documentación compartida por ambos
 ```
 
