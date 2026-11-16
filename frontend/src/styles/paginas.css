@@ -1697,3 +1697,32 @@ button.noche:disabled {
   grid-column: 2 / -1;
   margin: 0;
 }
+
+/* ---------- Resumen del día (IA) ---------- */
+
+.resumen-ia {
+  margin: 0 0 var(--e5);
+  padding: var(--e3) var(--e4);
+  border: var(--borde);
+  border-left-width: 10px;
+  border-left-color: var(--lila);
+  border-radius: var(--radio);
+  background: var(--cal);
+  max-width: 80ch;
+}
+
+.resumen-ia p {
+  margin: 0;
+}
+
+.resumen-ia .nota {
+  margin-top: var(--e2);
+}
+
+.resumen-ia--apagado,
+.resumen-ia--cargando {
+  border-style: dashed;
+  border-left-style: solid;
+  border-left-color: var(--muro-hondo);
+  margin-top: 0;
+}
