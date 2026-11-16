@@ -6721,6 +6721,21 @@ components:
           description: Calculado a la fecha de entrada.
         titular:
           type: boolean
+        documentoIdentidad:
+          type:
+          - string
+          - 'null'
+          description: Documento del titular, o del acompañante si lo dio; null si no hay.
+        correo:
+          type:
+          - string
+          - 'null'
+          description: Solo el titular. Permite a recepción modificar la reserva sin volver a pedir el contacto (7.5).
+        telefono:
+          type:
+          - string
+          - 'null'
+          description: Solo el titular.
     ValorCongeladoDTO:
       type: object
       description: Valor de la reserva congelado al crear (RN-22).

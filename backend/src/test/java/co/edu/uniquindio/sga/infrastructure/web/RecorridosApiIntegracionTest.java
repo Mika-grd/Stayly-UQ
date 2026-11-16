@@ -226,6 +226,18 @@ class RecorridosApiIntegracionTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("7.5 · La reserva devuelve el documento y el contacto del titular, y no los de los acompañantes")
+    void contactoDelTitularEnLaReserva() throws Exception {
+        mvc.perform(get("/api/reservas/" + pendienteLaura).header(HttpHeaders.AUTHORIZATION, bearer(RECEPCION)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ocupantes[?(@.titular == true)].documentoIdentidad").value(
+                        org.hamcrest.Matchers.contains("1094000001")))
+                .andExpect(jsonPath("$.ocupantes[?(@.titular == true)].correo").isNotEmpty())
+                .andExpect(jsonPath("$.ocupantes[?(@.titular == false)].correo").value(
+                        org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue())));
+    }
+
     // Calendario de disponibilidad del detalle (público)
 
     @Test

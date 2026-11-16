@@ -68,7 +68,10 @@ public interface ReservaWebMapper {
     default OcupanteResponse aOcupanteResponse(Ocupante ocupante, LocalDate fechaEntrada,
                                                UmbralEdadFacturable umbral) {
         return new OcupanteResponse(ocupante.id().valor(), ocupante.nombre(), ocupante.fechaNacimiento(),
-                ocupante.esFacturableEn(fechaEntrada, umbral), ocupante.esTitular());
+                ocupante.esFacturableEn(fechaEntrada, umbral), ocupante.esTitular(),
+                ocupante.documento().map(d -> d.numero()).orElse(null),
+                ocupante.contacto().map(c -> c.correo()).orElse(null),
+                ocupante.contacto().map(c -> c.telefono()).orElse(null));
     }
 
     default ValorCongeladoDTO aValorCongeladoDTO(ValorCongelado valor) {
