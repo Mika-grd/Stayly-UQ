@@ -1,6 +1,6 @@
 # Diagrama de clases — paquete `domain`
 
-Corresponde 1 a 1 con el código del paquete `domain`. No hay clases de Spring ni de infraestructura: los repositorios y `ConfiguracionAlojamiento` son **interfaces del dominio**; sus implementaciones viven en `infrastructure`: los adaptadores JPA que usa la aplicación y los de memoria que usan las pruebas unitarias.
+Corresponde 1 a 1 con el código del paquete `domain`. No hay clases de Spring ni de infraestructura: los repositorios, `ConfiguracionAlojamiento`, `NotificadorTitular` y `AsistenteIA` son **interfaces del dominio**; sus implementaciones viven en `infrastructure`: los adaptadores JPA que usa la aplicación y los de memoria que usan las pruebas unitarias.
 
 ## Cómo leerlo
 
@@ -937,7 +937,7 @@ classDiagram
   AdmisionMascotasService ..> ConfiguracionAlojamiento : depende
 ```
 
-### 8. Repositorios, puerto de configuración y excepción
+### 8. Repositorios, puertos (configuración, avisos al titular e IA) y excepción
 
 ```mermaid
 classDiagram
@@ -961,6 +961,7 @@ classDiagram
     +guardar(Apartamento apartamento) void
     +buscarPorIdentificacion(id) Optional~Apartamento~
     +listarActivos() List~Apartamento~
+    +listarTodos() List~Apartamento~
   }
   class FolioRepository {
     <<Interface>>
@@ -1044,6 +1045,24 @@ classDiagram
   CanalRepository ..> Canal : persiste
   ConflictoCanalRepository ..> ConflictoCanal : persiste
   ConfiguracionAlojamiento ..> Alojamiento : lee configuración
+  class NotificadorTitular {
+    <<Interface>>
+    +notificar(Reserva reserva, Motivo motivo) void
+    +NINGUNO$ NotificadorTitular
+  }
+  class Motivo {
+    <<enumeration>>
+    CREADA
+    CONFIRMADA
+    CANCELADA
+  }
+  class AsistenteIA {
+    <<Interface>>
+    +redactar(String instruccion, String datos) Optional~String~
+    +proveedor() String
+  }
+  NotificadorTitular ..> Reserva : avisa al titular
+  NotificadorTitular +-- Motivo
   ReglaDominioException --|> RuntimeException
 ```
 
@@ -1764,6 +1783,7 @@ classDiagram
     +guardar(Apartamento apartamento) void
     +buscarPorIdentificacion(id) Optional~Apartamento~
     +listarActivos() List~Apartamento~
+    +listarTodos() List~Apartamento~
   }
   class FolioRepository {
     <<Interface>>
@@ -1925,6 +1945,24 @@ classDiagram
   CanalRepository ..> Canal : persiste
   ConflictoCanalRepository ..> ConflictoCanal : persiste
   ConfiguracionAlojamiento ..> Alojamiento : lee configuración
+  class NotificadorTitular {
+    <<Interface>>
+    +notificar(Reserva reserva, Motivo motivo) void
+    +NINGUNO$ NotificadorTitular
+  }
+  class Motivo {
+    <<enumeration>>
+    CREADA
+    CONFIRMADA
+    CANCELADA
+  }
+  class AsistenteIA {
+    <<Interface>>
+    +redactar(String instruccion, String datos) Optional~String~
+    +proveedor() String
+  }
+  NotificadorTitular ..> Reserva : avisa al titular
+  NotificadorTitular +-- Motivo
   ReglaDominioException --|> RuntimeException
 ```
 
