@@ -40,6 +40,12 @@ public class RespuestasErrorSeguridad implements AuthenticationEntryPoint, Acces
     @Override
     public void commence(HttpServletRequest peticion, HttpServletResponse respuesta, AuthenticationException e)
             throws IOException {
+        if (peticion.getRequestURI().startsWith(FiltroCredencialCanal.RUTAS)) {
+            respuesta.setHeader(HttpHeaders.WWW_AUTHENTICATE, "ApiKey header=\"" + FiltroCredencialCanal.ENCABEZADO + "\"");
+            escribir(respuesta, peticion, HttpStatus.UNAUTHORIZED, "CREDENCIALES_INVALIDAS",
+                    "Debe enviar la credencial vigente del canal en el encabezado X-API-Key.");
+            return;
+        }
         respuesta.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
         escribir(respuesta, peticion, HttpStatus.UNAUTHORIZED, "CREDENCIALES_INVALIDAS",
                 "Debe enviar un token válido y vigente en el encabezado Authorization: Bearer.");
