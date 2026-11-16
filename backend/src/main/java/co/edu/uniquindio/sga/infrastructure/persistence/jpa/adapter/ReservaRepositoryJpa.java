@@ -104,6 +104,16 @@ public class ReservaRepositoryJpa implements ReservaRepository {
                 pagina.tamano(), resultado.getTotalElements());
     }
 
+    @Override
+    public List<Reserva> buscarConEntradaEl(LocalDate fecha) {
+        return jpa.findByEstanciaEntradaOrderByApartamentoAsc(fecha).stream().map(ReservaMapper::aDominio).toList();
+    }
+
+    @Override
+    public List<Reserva> buscarConSalidaEl(LocalDate fecha) {
+        return jpa.findByEstanciaSalidaOrderByApartamentoAsc(fecha).stream().map(ReservaMapper::aDominio).toList();
+    }
+
     /** RES-AAAA-NNNNN: el número se reinicia cada año y se toma con la fila del año bloqueada. */
     @Override
     @Transactional

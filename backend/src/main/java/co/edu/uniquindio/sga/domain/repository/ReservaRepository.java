@@ -35,6 +35,12 @@ public interface ReservaRepository {
 
     CodigoReserva siguienteCodigo();
 
+    /** Reservas cuya fecha de entrada es {@code fecha}, en cualquier estado (llegadas del día, 7.6). */
+    List<Reserva> buscarConEntradaEl(LocalDate fecha);
+
+    /** Reservas cuya fecha de salida es {@code fecha}, en cualquier estado (salidas del día, 7.6). */
+    List<Reserva> buscarConSalidaEl(LocalDate fecha);
+
     /** Listado filtrado (7.5), de la más reciente a la más antigua por fecha de creación, de a 10. */
     Pagina<Reserva> buscar(FiltroReservas filtro, PeticionPagina pagina);
 }

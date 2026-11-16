@@ -6,12 +6,14 @@ import co.edu.uniquindio.sga.application.dto.request.HoraEstimadaLlegadaRequest;
 import co.edu.uniquindio.sga.application.dto.request.ModificarReservaRequest;
 import co.edu.uniquindio.sga.application.dto.response.EstadoLiquidacion;
 import co.edu.uniquindio.sga.application.dto.response.LiquidacionReservaResponse;
+import co.edu.uniquindio.sga.application.dto.response.MovimientosDelDiaResponse;
 import co.edu.uniquindio.sga.application.dto.response.PaginaReservaResumenResponse;
 import co.edu.uniquindio.sga.application.dto.response.ReservaResponse;
 import co.edu.uniquindio.sga.application.usecase.CancelarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConfirmarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarDetalleApartamentoUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarFolioUseCase;
+import co.edu.uniquindio.sga.application.usecase.ConsultarMovimientosDelDiaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarReservasUseCase;
 import co.edu.uniquindio.sga.application.usecase.CrearReservaUseCase;
@@ -19,6 +21,7 @@ import co.edu.uniquindio.sga.application.usecase.DeclararNoShowUseCase;
 import co.edu.uniquindio.sga.application.usecase.IndicarHoraEstimadaLlegadaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ModificarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.RegistrarLlegadaUseCase;
+import co.edu.uniquindio.sga.application.usecase.RegistrarSalidaUseCase;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
 import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
@@ -74,6 +77,8 @@ public class ReservaController {
     private final ModificarReservaUseCase modificar;
     private final IndicarHoraEstimadaLlegadaUseCase indicarHoraLlegada;
     private final DeclararNoShowUseCase declararNoShow;
+    private final RegistrarSalidaUseCase registrarSalida;
+    private final ConsultarMovimientosDelDiaUseCase movimientosDelDia;
     private final ConfiguracionAlojamiento configuracion;
     private final ReservaWebMapper mapper;
 
@@ -82,8 +87,9 @@ public class ReservaController {
                              ConsultarReservaUseCase consultarReserva, ConsultarFolioUseCase consultarFolio,
                              ConsultarDetalleApartamentoUseCase consultarApartamento, ConsultarReservasUseCase listar,
                              ModificarReservaUseCase modificar, IndicarHoraEstimadaLlegadaUseCase indicarHoraLlegada,
-                             DeclararNoShowUseCase declararNoShow, ConfiguracionAlojamiento configuracion,
-                             ReservaWebMapper mapper) {
+                             DeclararNoShowUseCase declararNoShow, RegistrarSalidaUseCase registrarSalida,
+                             ConsultarMovimientosDelDiaUseCase movimientosDelDia,
+                             ConfiguracionAlojamiento configuracion, ReservaWebMapper mapper) {
         this.crear = crear;
         this.confirmar = confirmar;
         this.cancelar = cancelar;
@@ -95,6 +101,8 @@ public class ReservaController {
         this.modificar = modificar;
         this.indicarHoraLlegada = indicarHoraLlegada;
         this.declararNoShow = declararNoShow;
+        this.registrarSalida = registrarSalida;
+        this.movimientosDelDia = movimientosDelDia;
         this.configuracion = configuracion;
         this.mapper = mapper;
     }
@@ -197,6 +205,24 @@ public class ReservaController {
         CodigoReserva id = new CodigoReserva(codigo);
         Folio folio = declararNoShow.ejecutar(id, UsuarioAutenticado.de(jwt).correo());
         return mapper.aLiquidacion(consultarReserva.ejecutar(id), folio, EstadoLiquidacion.NO_SHOW);
+    }
+
+    /** CU-06: exige el folio cerrado (7.6); el apartamento queda PENDIENTE_PREPARACION. */
+    @PutMapping("/api/reservas/{codigo}/registrar-salida")
+    @PreAuthorize(ROLES_RECEPCION)
+    public ReservaResponse registrarSalida(@PathVariable String codigo, @AuthenticationPrincipal Jwt jwt) {
+        registrarSalida.ejecutar(new CodigoReserva(codigo), UsuarioAutenticado.de(jwt).correo());
+        return detalle(codigo);
+    }
+
+    /** CU-42: llegadas y salidas previstas del día (por defecto hoy). */
+    @GetMapping("/api/reservas/movimientos-del-dia")
+    @PreAuthorize(ROLES_RECEPCION)
+    public MovimientosDelDiaResponse movimientosDelDia(@RequestParam(required = false) LocalDate fecha) {
+        ConsultarMovimientosDelDiaUseCase.Movimientos movimientos = movimientosDelDia.ejecutar(fecha);
+        return new MovimientosDelDiaResponse(movimientos.fecha(),
+                movimientos.llegadas().stream().map(mapper::aResumen).toList(),
+                movimientos.salidas().stream().map(mapper::aResumen).toList());
     }
 
     /** Detalle sin chequeo propio: lo usan endpoints que ya pasaron su {@code @PreAuthorize}. */

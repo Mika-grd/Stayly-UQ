@@ -64,6 +64,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         .requestMatchers(RUTAS_PUBLICAS).permitAll()
+                        // Ruta literal que la lectura pública /api/apartamentos/* también cubriría
+                        .requestMatchers(HttpMethod.GET, "/api/apartamentos/por-preparar").authenticated()
                         // Lecturas públicas del contrato (security: []): catálogo y política vigente
                         .requestMatchers(HttpMethod.GET, LECTURAS_PUBLICAS).permitAll()
                         .anyRequest().authenticated())

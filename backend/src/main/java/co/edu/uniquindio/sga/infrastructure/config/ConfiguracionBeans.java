@@ -19,6 +19,7 @@ import co.edu.uniquindio.sga.domain.service.ConfirmacionReservaService;
 import co.edu.uniquindio.sga.domain.service.CotizadorEstanciaService;
 import co.edu.uniquindio.sga.domain.service.DisponibilidadApartamentoService;
 import co.edu.uniquindio.sga.domain.service.EntregaApartamentoService;
+import co.edu.uniquindio.sga.domain.service.SalidaGrupoService;
 import co.edu.uniquindio.sga.domain.service.RegistroBloqueoService;
 import co.edu.uniquindio.sga.domain.service.RetiroApartamentoService;
 import co.edu.uniquindio.sga.domain.service.VerificadorEstanciaMinimaService;
@@ -146,6 +147,11 @@ public class ConfiguracionBeans {
     @Bean
     EntregaApartamentoService entregaApartamentoService() {
         return new EntregaApartamentoService();
+    }
+
+    @Bean
+    SalidaGrupoService salidaGrupoService() {
+        return new SalidaGrupoService();
     }
 
     @Bean

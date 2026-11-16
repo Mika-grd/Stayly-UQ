@@ -741,6 +741,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class BloqueoRepository {
     <<Interface>>
@@ -844,6 +846,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class TemporadaRepository {
     <<Interface>>
@@ -934,6 +938,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class ApartamentoRepository {
     <<Interface>>
@@ -973,6 +979,7 @@ classDiagram
     <<Interface>>
     +guardar(Novedad novedad) void
     +listarPorApartamento(id) List~Novedad~
+    +buscarPorApartamento(id, PeticionPagina) Pagina~Novedad~
   }
   class CanalRepository {
     <<Interface>>
@@ -1645,6 +1652,8 @@ classDiagram
     +buscarPendientesCreadasAntesDe(limite) List~Reserva~
     +tieneActivasOFuturas(apartamento, hoy) boolean
     +siguienteCodigo() CodigoReserva
+    +buscarConEntradaEl(LocalDate) List~Reserva~
+    +buscarConSalidaEl(LocalDate) List~Reserva~
   }
   class BloqueoRepository {
     <<Interface>>
@@ -1736,6 +1745,7 @@ classDiagram
     <<Interface>>
     +guardar(Novedad novedad) void
     +listarPorApartamento(id) List~Novedad~
+    +buscarPorApartamento(id, PeticionPagina) Pagina~Novedad~
   }
   class CanalRepository {
     <<Interface>>

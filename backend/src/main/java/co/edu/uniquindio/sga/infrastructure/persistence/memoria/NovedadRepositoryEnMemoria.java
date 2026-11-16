@@ -1,5 +1,7 @@
 package co.edu.uniquindio.sga.infrastructure.persistence.memoria;
 
+import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
+import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.novedad.IdNovedad;
 import co.edu.uniquindio.sga.domain.model.novedad.Novedad;
@@ -25,5 +27,10 @@ public class NovedadRepositoryEnMemoria implements NovedadRepository {
                 .filter(novedad -> novedad.apartamento().equals(apartamento))
                 .sorted(Comparator.comparing(Novedad::fecha))
                 .toList();
+    }
+
+    @Override
+    public Pagina<Novedad> buscarPorApartamento(IdentificacionApartamento apartamento, PeticionPagina pagina) {
+        return Pagina.de(listarPorApartamento(apartamento).reversed(), pagina);
     }
 }

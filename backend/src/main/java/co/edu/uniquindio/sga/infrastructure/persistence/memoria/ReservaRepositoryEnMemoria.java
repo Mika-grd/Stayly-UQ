@@ -82,6 +82,18 @@ public class ReservaRepositoryEnMemoria implements ReservaRepository {
     }
 
     @Override
+    public List<Reserva> buscarConEntradaEl(LocalDate fecha) {
+        return reservas.values().stream().filter(r -> r.estancia().entrada().equals(fecha))
+                .sorted(Comparator.comparing(r -> r.apartamento().valor())).toList();
+    }
+
+    @Override
+    public List<Reserva> buscarConSalidaEl(LocalDate fecha) {
+        return reservas.values().stream().filter(r -> r.estancia().salida().equals(fecha))
+                .sorted(Comparator.comparing(r -> r.apartamento().valor())).toList();
+    }
+
+    @Override
     public Pagina<Reserva> buscar(FiltroReservas filtro, PeticionPagina pagina) {
         List<Reserva> filtradas = reservas.values().stream()
                 .filter(filtro::admite)

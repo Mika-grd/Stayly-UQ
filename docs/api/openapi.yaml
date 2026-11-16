@@ -18,7 +18,7 @@ info:
 
     Todo error devuelve `ErrorNegocioResponse` con un `codigo` estable. Los valores monetarios son enteros en pesos colombianos (COP). Las fechas y horas se expresan en la zona America/Bogota. Los listados se paginan de a 10 elementos.
 
-    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5). Las operaciones de la operación diaria, el folio, el canal externo y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
+    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5). Las operaciones del folio, el canal externo y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
 servers:
 - url: http://localhost:8080
   description: Entorno local de desarrollo.
@@ -346,6 +346,57 @@ paths:
                     ruta: /api/apartamentos/disponibles
                     fecha: '2026-10-01T10:15:30-05:00'
       security: []
+  /api/apartamentos/por-preparar:
+    get:
+      tags:
+      - Apartamentos
+      summary: Consultar apartamentos por preparar (CU-43)
+      description: |-
+        Apartamentos activos en PENDIENTE_PREPARACION o EN_PREPARACION, ordenados por identificación (7.1).
+
+        Actor(es): Personal de servicio, Recepcionista, Administrador.
+      operationId: consultarApartamentosPorPreparar
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApartamentoPorPrepararResponse'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                CREDENCIALES_INVALIDAS:
+                  summary: CREDENCIALES_INVALIDAS
+                  value:
+                    codigo: CREDENCIALES_INVALIDAS
+                    mensaje: 'Credenciales inválidas.'
+                    regla: '7.2'
+                    ruta: /api/apartamentos/por-preparar
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                ACCESO_DENEGADO:
+                  summary: ACCESO_DENEGADO
+                  value:
+                    codigo: ACCESO_DENEGADO
+                    mensaje: 'No tiene permiso sobre este recurso.'
+                    regla: '7.2'
+                    ruta: /api/apartamentos/por-preparar
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security:
+      - bearerAuth: []
   /api/apartamentos/{identificacion}:
     get:
       tags:
@@ -731,11 +782,11 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Iniciar preparación (CU-09) (pendiente del corte 3)
+      summary: Iniciar preparación (CU-09)
       description: |-
         Transición PENDIENTE_PREPARACION → EN_PREPARACION (7.6, F-09).
 
-        Actor(es): Personal de servicio.
+        Actor(es): Personal de servicio, Administrador.
       operationId: iniciarPreparacionApartamento
       parameters:
       - $ref: '#/components/parameters/IdentificacionApartamento'
@@ -757,9 +808,9 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/iniciar-preparacion
+                    ruta: /api/apartamentos/{identificacion}/iniciar-preparacion
                     fecha: '2026-10-01T10:15:30-05:00'
         '403':
           description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
@@ -772,9 +823,9 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/iniciar-preparacion
+                    ruta: /api/apartamentos/{identificacion}/iniciar-preparacion
                     fecha: '2026-10-01T10:15:30-05:00'
         '404':
           description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
@@ -787,12 +838,11 @@ paths:
                   summary: APARTAMENTO_NO_ENCONTRADO
                   value:
                     codigo: APARTAMENTO_NO_ENCONTRADO
-                    mensaje: No existe el apartamento SUQ-201.
-                    ruta: /api/apartamentos/SUQ-201/iniciar-preparacion
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/{identificacion}/iniciar-preparacion
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: TRANSICION_ESTADO_OPERATIVO_INVALIDA.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: TRANSICION_ESTADO_OPERATIVO_INVALIDA.'
           content:
             application/json:
               schema:
@@ -802,9 +852,9 @@ paths:
                   summary: TRANSICION_ESTADO_OPERATIVO_INVALIDA
                   value:
                     codigo: TRANSICION_ESTADO_OPERATIVO_INVALIDA
-                    mensaje: El apartamento no puede pasar de PREPARADO a EN_PREPARACION.
+                    mensaje: 'El apartamento no puede pasar de OCUPADO a EN_PREPARACION.'
                     regla: '7.6'
-                    ruta: /api/apartamentos/SUQ-201/iniciar-preparacion
+                    ruta: /api/apartamentos/{identificacion}/iniciar-preparacion
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
@@ -812,11 +862,11 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Marcar apartamento preparado (CU-10) (pendiente del corte 3)
+      summary: Marcar apartamento preparado (CU-10)
       description: |-
-        Transición EN_PREPARACION → PREPARADO (7.6, RN-11). Desde aquí el apartamento puede recibir un grupo.
+        Transición EN_PREPARACION → PREPARADO (7.6). Desde aquí el apartamento puede recibir un grupo (RN-11).
 
-        Actor(es): Personal de servicio.
+        Actor(es): Personal de servicio, Administrador.
       operationId: marcarApartamentoPreparado
       parameters:
       - $ref: '#/components/parameters/IdentificacionApartamento'
@@ -838,9 +888,9 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/marcar-preparado
+                    ruta: /api/apartamentos/{identificacion}/marcar-preparado
                     fecha: '2026-10-01T10:15:30-05:00'
         '403':
           description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
@@ -853,9 +903,9 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/marcar-preparado
+                    ruta: /api/apartamentos/{identificacion}/marcar-preparado
                     fecha: '2026-10-01T10:15:30-05:00'
         '404':
           description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
@@ -868,12 +918,11 @@ paths:
                   summary: APARTAMENTO_NO_ENCONTRADO
                   value:
                     codigo: APARTAMENTO_NO_ENCONTRADO
-                    mensaje: No existe el apartamento SUQ-201.
-                    ruta: /api/apartamentos/SUQ-201/marcar-preparado
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/{identificacion}/marcar-preparado
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: TRANSICION_ESTADO_OPERATIVO_INVALIDA.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: TRANSICION_ESTADO_OPERATIVO_INVALIDA.'
           content:
             application/json:
               schema:
@@ -883,9 +932,9 @@ paths:
                   summary: TRANSICION_ESTADO_OPERATIVO_INVALIDA
                   value:
                     codigo: TRANSICION_ESTADO_OPERATIVO_INVALIDA
-                    mensaje: El apartamento no puede pasar de PREPARADO a EN_PREPARACION.
+                    mensaje: 'El apartamento no puede pasar de OCUPADO a EN_PREPARACION.'
                     regla: '7.6'
-                    ruta: /api/apartamentos/SUQ-201/marcar-preparado
+                    ruta: /api/apartamentos/{identificacion}/marcar-preparado
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
@@ -893,9 +942,9 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Declarar fuera de servicio (CU-15) (pendiente del corte 3)
+      summary: Declarar fuera de servicio (CU-15)
       description: |-
-        Pasa el apartamento a FUERA_DE_SERVICIO desde cualquier estado no ocupado (7.6, 3.3). Solo administrador. No registra un bloqueo por sí solo.
+        Pasa el apartamento a FUERA_DE_SERVICIO desde cualquier estado no ocupado (A-3); el motivo queda como novedad de gravedad ALTA. No bloquea fechas por sí solo (3.3): el bloqueo se registra con CU-16.
 
         Actor(es): Administrador.
       operationId: declararFueraDeServicio
@@ -914,6 +963,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EstadoOperativoResponse'
+        '400':
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                FORMATO_INVALIDO:
+                  summary: FORMATO_INVALIDO
+                  value:
+                    codigo: FORMATO_INVALIDO
+                    mensaje: 'El campo nombre es obligatorio.'
+                    ruta: /api/apartamentos/{identificacion}/declarar-fuera-de-servicio
+                    fecha: '2026-10-01T10:15:30-05:00'
         '401':
           description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
           content:
@@ -925,9 +988,9 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/declarar-fuera-de-servicio
+                    ruta: /api/apartamentos/{identificacion}/declarar-fuera-de-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
         '403':
           description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
@@ -940,9 +1003,9 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/declarar-fuera-de-servicio
+                    ruta: /api/apartamentos/{identificacion}/declarar-fuera-de-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
         '404':
           description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
@@ -955,12 +1018,11 @@ paths:
                   summary: APARTAMENTO_NO_ENCONTRADO
                   value:
                     codigo: APARTAMENTO_NO_ENCONTRADO
-                    mensaje: No existe el apartamento SUQ-201.
-                    ruta: /api/apartamentos/SUQ-201/declarar-fuera-de-servicio
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/{identificacion}/declarar-fuera-de-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: APARTAMENTO_OCUPADO.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: APARTAMENTO_OCUPADO, TRANSICION_ESTADO_OPERATIVO_INVALIDA.'
           content:
             application/json:
               schema:
@@ -970,9 +1032,17 @@ paths:
                   summary: APARTAMENTO_OCUPADO
                   value:
                     codigo: APARTAMENTO_OCUPADO
-                    mensaje: No se puede declarar fuera de servicio un apartamento ocupado.
+                    mensaje: 'No se puede declarar fuera de servicio un apartamento ocupado.'
                     regla: '7.6'
-                    ruta: /api/apartamentos/SUQ-201/declarar-fuera-de-servicio
+                    ruta: /api/apartamentos/{identificacion}/declarar-fuera-de-servicio
+                    fecha: '2026-10-01T10:15:30-05:00'
+                TRANSICION_ESTADO_OPERATIVO_INVALIDA:
+                  summary: TRANSICION_ESTADO_OPERATIVO_INVALIDA
+                  value:
+                    codigo: TRANSICION_ESTADO_OPERATIVO_INVALIDA
+                    mensaje: 'El apartamento no puede pasar de OCUPADO a EN_PREPARACION.'
+                    regla: '7.6'
+                    ruta: /api/apartamentos/{identificacion}/declarar-fuera-de-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
@@ -980,9 +1050,9 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Volver a servicio (CU-21) (pendiente del corte 3)
+      summary: Volver a servicio (CU-21)
       description: |-
-        Transición FUERA_DE_SERVICIO → PENDIENTE_PREPARACION (7.6). Solo administrador.
+        Transición FUERA_DE_SERVICIO → PENDIENTE_PREPARACION (7.6), nunca directo a PREPARADO.
 
         Actor(es): Administrador.
       operationId: volverAServicioApartamento
@@ -1006,9 +1076,9 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/volver-a-servicio
+                    ruta: /api/apartamentos/{identificacion}/volver-a-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
         '403':
           description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
@@ -1021,9 +1091,9 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/volver-a-servicio
+                    ruta: /api/apartamentos/{identificacion}/volver-a-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
         '404':
           description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
@@ -1036,12 +1106,11 @@ paths:
                   summary: APARTAMENTO_NO_ENCONTRADO
                   value:
                     codigo: APARTAMENTO_NO_ENCONTRADO
-                    mensaje: No existe el apartamento SUQ-201.
-                    ruta: /api/apartamentos/SUQ-201/volver-a-servicio
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/{identificacion}/volver-a-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: TRANSICION_ESTADO_OPERATIVO_INVALIDA.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: TRANSICION_ESTADO_OPERATIVO_INVALIDA.'
           content:
             application/json:
               schema:
@@ -1051,9 +1120,9 @@ paths:
                   summary: TRANSICION_ESTADO_OPERATIVO_INVALIDA
                   value:
                     codigo: TRANSICION_ESTADO_OPERATIVO_INVALIDA
-                    mensaje: El apartamento no puede pasar de PREPARADO a EN_PREPARACION.
+                    mensaje: 'Solo un apartamento fuera de servicio puede volver a servicio.'
                     regla: '7.6'
-                    ruta: /api/apartamentos/SUQ-201/volver-a-servicio
+                    ruta: /api/apartamentos/{identificacion}/volver-a-servicio
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
@@ -1171,11 +1240,11 @@ paths:
     post:
       tags:
       - Apartamentos
-      summary: Registrar novedad (CU-11) (pendiente del corte 3)
+      summary: Registrar novedad (CU-11)
       description: |-
-        Registra un daño, faltante o situación con fecha, autor, descripción y gravedad. No cambia el estado operativo (3.3).
+        Registra un daño, faltante o situación con fecha, autor (del token), descripción y gravedad. No cambia el estado operativo (3.3).
 
-        Actor(es): Personal de servicio, Recepcionista.
+        Actor(es): Personal de servicio, Recepcionista, Administrador.
       operationId: registrarNovedad
       parameters:
       - $ref: '#/components/parameters/IdentificacionApartamento'
@@ -1193,8 +1262,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NovedadResponse'
         '400':
-          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato
-            incorrecto). Códigos: FORMATO_INVALIDO.'
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -1204,8 +1272,8 @@ paths:
                   summary: FORMATO_INVALIDO
                   value:
                     codigo: FORMATO_INVALIDO
-                    mensaje: El campo fechaEntrada es obligatorio.
-                    ruta: /api/apartamentos/SUQ-201/novedades
+                    mensaje: 'El campo nombre es obligatorio.'
+                    ruta: /api/apartamentos/{identificacion}/novedades
                     fecha: '2026-10-01T10:15:30-05:00'
         '401':
           description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
@@ -1218,9 +1286,9 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/novedades
+                    ruta: /api/apartamentos/{identificacion}/novedades
                     fecha: '2026-10-01T10:15:30-05:00'
         '403':
           description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
@@ -1233,9 +1301,9 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/novedades
+                    ruta: /api/apartamentos/{identificacion}/novedades
                     fecha: '2026-10-01T10:15:30-05:00'
         '404':
           description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
@@ -1248,21 +1316,23 @@ paths:
                   summary: APARTAMENTO_NO_ENCONTRADO
                   value:
                     codigo: APARTAMENTO_NO_ENCONTRADO
-                    mensaje: No existe el apartamento SUQ-201.
-                    ruta: /api/apartamentos/SUQ-201/novedades
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/{identificacion}/novedades
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
     get:
       tags:
       - Apartamentos
-      summary: Consultar novedades (pendiente del corte 3)
-      description: Historial paginado de novedades del apartamento.
+      summary: Consultar novedades (CU-41)
+      description: |-
+        Novedades del apartamento, de la más reciente a la más antigua, 10 por página.
+
+        Actor(es): Personal de servicio, Recepcionista, Administrador.
       operationId: consultarNovedades
       parameters:
       - $ref: '#/components/parameters/IdentificacionApartamento'
       - $ref: '#/components/parameters/Pagina'
-      - $ref: '#/components/parameters/Tamano'
       responses:
         '200':
           description: Operación exitosa.
@@ -1281,9 +1351,9 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/novedades
+                    ruta: /api/apartamentos/{identificacion}/novedades
                     fecha: '2026-10-01T10:15:30-05:00'
         '403':
           description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
@@ -1296,9 +1366,9 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
-                    ruta: /api/apartamentos/SUQ-201/novedades
+                    ruta: /api/apartamentos/{identificacion}/novedades
                     fecha: '2026-10-01T10:15:30-05:00'
         '404':
           description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
@@ -1311,8 +1381,8 @@ paths:
                   summary: APARTAMENTO_NO_ENCONTRADO
                   value:
                     codigo: APARTAMENTO_NO_ENCONTRADO
-                    mensaje: No existe el apartamento SUQ-201.
-                    ruta: /api/apartamentos/SUQ-201/novedades
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/{identificacion}/novedades
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
@@ -1320,8 +1390,11 @@ paths:
     get:
       tags:
       - Apartamentos
-      summary: Consultar calendario de ocupación (pendiente del corte 3)
-      description: Estado de cada noche (LIBRE, RESERVADA, BLOQUEADA) por apartamento en el rango.
+      summary: Consultar calendario de ocupación (CU-35)
+      description: |-
+        Para cada apartamento activo (o el indicado) y cada noche de [desde, hasta) dice si está LIBRE, RESERVADA (con su código) o BLOQUEADA.
+
+        Actor(es): Recepcionista, Administrador.
       operationId: consultarCalendarioOcupacion
       parameters:
       - $ref: '#/components/parameters/Desde'
@@ -1329,11 +1402,9 @@ paths:
       - name: apartamento
         in: query
         required: false
-        description: Identificación del apartamento; si se omite, todos.
+        description: 'Identificación del apartamento; si se omite, todos los activos.'
         schema:
           type: string
-          examples:
-          - SUQ-201
       responses:
         '200':
           description: Operación exitosa.
@@ -1342,8 +1413,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CalendarioOcupacionResponse'
         '400':
-          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato
-            incorrecto). Códigos: FORMATO_INVALIDO, RANGO_FECHAS_INVALIDO.'
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO, RANGO_FECHAS_INVALIDO.'
           content:
             application/json:
               schema:
@@ -1353,14 +1423,14 @@ paths:
                   summary: FORMATO_INVALIDO
                   value:
                     codigo: FORMATO_INVALIDO
-                    mensaje: El campo fechaEntrada es obligatorio.
+                    mensaje: 'El parámetro desde es obligatorio.'
                     ruta: /api/calendario-ocupacion
                     fecha: '2026-10-01T10:15:30-05:00'
                 RANGO_FECHAS_INVALIDO:
                   summary: RANGO_FECHAS_INVALIDO
                   value:
                     codigo: RANGO_FECHAS_INVALIDO
-                    mensaje: La fecha final debe ser posterior a la fecha inicial.
+                    mensaje: 'La fecha final debe ser posterior a la fecha inicial.'
                     regla: '3.1'
                     ruta: /api/calendario-ocupacion
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -1375,7 +1445,7 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
                     ruta: /api/calendario-ocupacion
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -1390,8 +1460,22 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
+                    ruta: /api/calendario-ocupacion
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '404':
+          description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                APARTAMENTO_NO_ENCONTRADO:
+                  summary: APARTAMENTO_NO_ENCONTRADO
+                  value:
+                    codigo: APARTAMENTO_NO_ENCONTRADO
+                    mensaje: 'No existe el apartamento SUQ-201.'
                     ruta: /api/calendario-ocupacion
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
@@ -1791,17 +1875,17 @@ paths:
     get:
       tags:
       - Reservas
-      summary: Consultar llegadas y salidas del día (pendiente del corte 3)
+      summary: Consultar llegadas y salidas del día (CU-42)
       description: |-
-        Reservas que llegan y salen en la fecha indicada.
+        Llegadas: reservas que entran ese día, CONFIRMADA o ya EN_CURSO. Salidas: reservas que salen ese día, EN_CURSO o ya FINALIZADA.
 
-        Actor(es): Recepcionista.
+        Actor(es): Recepcionista, Administrador.
       operationId: consultarLlegadasSalidasDelDia
       parameters:
       - name: fecha
         in: query
         required: false
-        description: Día a consultar; por defecto hoy (America/Bogota).
+        description: 'Día a consultar; por defecto hoy (America/Bogota).'
         schema:
           type: string
           format: date
@@ -1813,8 +1897,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MovimientosDelDiaResponse'
         '400':
-          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato
-            incorrecto). Códigos: FORMATO_INVALIDO.'
+          description: 'Formato inválido: el cuerpo o los parámetros no cumplen el schema (campo faltante, tipo o formato incorrecto). Códigos: FORMATO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -1824,7 +1907,7 @@ paths:
                   summary: FORMATO_INVALIDO
                   value:
                     codigo: FORMATO_INVALIDO
-                    mensaje: El campo fechaEntrada es obligatorio.
+                    mensaje: 'El parámetro fecha no tiene un formato válido.'
                     ruta: /api/reservas/movimientos-del-dia
                     fecha: '2026-10-01T10:15:30-05:00'
         '401':
@@ -1838,7 +1921,7 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
                     ruta: /api/reservas/movimientos-del-dia
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -1853,7 +1936,7 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
                     ruta: /api/reservas/movimientos-del-dia
                     fecha: '2026-10-01T10:15:30-05:00'
@@ -2510,11 +2593,11 @@ paths:
     put:
       tags:
       - Reservas
-      summary: Registrar salida (CU-06) (pendiente del corte 3)
+      summary: Registrar salida (CU-06)
       description: |-
-        Transición EN_CURSO → FINALIZADA; el apartamento pasa a PENDIENTE_PREPARACION. Exige el folio cerrado (7.6, RN-17). La salida anticipada se maneja aquí.
+        Transición EN_CURSO → FINALIZADA con el folio cerrado (7.6); el apartamento queda PENDIENTE_PREPARACION. La salida anticipada también pasa por aquí.
 
-        Actor(es): Recepcionista.
+        Actor(es): Recepcionista, Administrador.
       operationId: registrarSalida
       parameters:
       - $ref: '#/components/parameters/CodigoReserva'
@@ -2536,9 +2619,9 @@ paths:
                   summary: CREDENCIALES_INVALIDAS
                   value:
                     codigo: CREDENCIALES_INVALIDAS
-                    mensaje: Credenciales inválidas.
+                    mensaje: 'Credenciales inválidas.'
                     regla: '7.2'
-                    ruta: /api/reservas/RES-2026-00042/registrar-salida
+                    ruta: /api/reservas/{codigo}/registrar-salida
                     fecha: '2026-10-01T10:15:30-05:00'
         '403':
           description: 'Acceso denegado: el rol no tiene permiso o el recurso no pertenece al usuario. Códigos: ACCESO_DENEGADO.'
@@ -2551,9 +2634,9 @@ paths:
                   summary: ACCESO_DENEGADO
                   value:
                     codigo: ACCESO_DENEGADO
-                    mensaje: No tiene permiso sobre este recurso.
+                    mensaje: 'No tiene permiso sobre este recurso.'
                     regla: '7.2'
-                    ruta: /api/reservas/RES-2026-00042/registrar-salida
+                    ruta: /api/reservas/{codigo}/registrar-salida
                     fecha: '2026-10-01T10:15:30-05:00'
         '404':
           description: 'El recurso no existe. Códigos: RESERVA_NO_ENCONTRADA.'
@@ -2566,12 +2649,11 @@ paths:
                   summary: RESERVA_NO_ENCONTRADA
                   value:
                     codigo: RESERVA_NO_ENCONTRADA
-                    mensaje: No existe la reserva RES-2026-00042.
-                    ruta: /api/reservas/RES-2026-00042/registrar-salida
+                    mensaje: 'No existe la reserva RES-2026-00042.'
+                    ruta: /api/reservas/{codigo}/registrar-salida
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: TRANSICION_INVALIDA, FOLIO_ABIERTO.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso. Códigos: TRANSICION_INVALIDA, FOLIO_ABIERTO.'
           content:
             application/json:
               schema:
@@ -2581,17 +2663,17 @@ paths:
                   summary: TRANSICION_INVALIDA
                   value:
                     codigo: TRANSICION_INVALIDA
-                    mensaje: La reserva en estado CANCELADA no puede pasar a EN_CURSO.
-                    regla: RN-08
-                    ruta: /api/reservas/RES-2026-00042/registrar-salida
+                    mensaje: 'La reserva en estado CONFIRMADA no puede pasar a FINALIZADA.'
+                    regla: 'RN-08'
+                    ruta: /api/reservas/{codigo}/registrar-salida
                     fecha: '2026-10-01T10:15:30-05:00'
                 FOLIO_ABIERTO:
                   summary: FOLIO_ABIERTO
                   value:
                     codigo: FOLIO_ABIERTO
-                    mensaje: Debe cerrar el folio antes de registrar la salida.
+                    mensaje: 'Debe cerrar el folio antes de registrar la salida.'
                     regla: '7.6'
-                    ruta: /api/reservas/RES-2026-00042/registrar-salida
+                    ruta: /api/reservas/{codigo}/registrar-salida
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
@@ -6048,6 +6130,22 @@ components:
           format: date-time
         autor:
           type: string
+    ApartamentoPorPrepararResponse:
+      type: object
+      description: Apartamento pendiente o en preparación (7.1).
+      required:
+      - identificacion
+      - nombre
+      - estadoOperativo
+      properties:
+        identificacion:
+          type: string
+          examples:
+          - SUQ-301
+        nombre:
+          type: string
+        estadoOperativo:
+          $ref: '#/components/schemas/EstadoOperativo'
     FueraDeServicioRequest:
       type: object
       description: Motivo para declarar el apartamento fuera de servicio.

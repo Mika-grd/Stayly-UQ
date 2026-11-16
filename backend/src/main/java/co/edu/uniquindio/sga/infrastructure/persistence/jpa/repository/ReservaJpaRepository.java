@@ -31,6 +31,10 @@ public interface ReservaJpaRepository extends JpaRepository<ReservaEntity, Strin
 
     List<ReservaEntity> findByEstadoAndFechaCreacionBefore(EstadoReserva estado, LocalDateTime limite);
 
+    List<ReservaEntity> findByEstanciaEntradaOrderByApartamentoAsc(LocalDate entrada);
+
+    List<ReservaEntity> findByEstanciaSalidaOrderByApartamentoAsc(LocalDate salida);
+
     boolean existsByApartamentoAndEstadoInAndEstanciaSalidaAfter(String apartamento,
                                                                  Collection<EstadoReserva> estados, LocalDate hoy);
 
