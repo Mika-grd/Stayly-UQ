@@ -3106,3 +3106,77 @@ Authorization: Bearer {{tokenRecepcion}}
         client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
     });
 %}
+
+# ============================================================================================================
+# 14. Inventario del administrador, calendario de disponibilidad del detalle e IA no bloqueante (7.1, 7.3, 10.2)
+# ============================================================================================================
+
+### 14.1 El administrador lista el inventario completo, activos o no -> 200 (7.3)
+# espera: 200
+GET {{base}}/api/apartamentos?pagina=0
+Authorization: Bearer {{tokenAdmin}}
+
+> {%
+    client.test("14.1 El administrador lista el inventario completo, activos o no -> 200 (7.3)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.contenido.length > 0 && response.body.contenido[0].tarifasCompletas !== undefined, "Se esperaba el inventario con tarifasCompletas");
+    });
+%}
+
+### 14.2 Recepción no ve el inventario -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/apartamentos?pagina=0
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("14.2 Recepción no ve el inventario -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 14.3 Calendario de disponibilidad del detalle, sin sesión -> 200 sin códigos de reserva (7.1)
+# espera: 200
+GET {{base}}/api/apartamentos/SUQ-201/disponibilidad?desde={{hoy}}&hasta={{hoyMas15}}
+
+> {%
+    client.test("14.3 Calendario de disponibilidad del detalle, sin sesión -> 200 sin códigos de reserva (7.1)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.noches.length === 15 && response.body.noches[0].codigoReserva === undefined, "Se esperaban 15 noches sin códigos de reserva");
+    });
+%}
+
+### 14.4 Calendario de más de 93 noches -> 400 RANGO_FECHAS_INVALIDO
+# espera: 400 RANGO_FECHAS_INVALIDO
+GET {{base}}/api/apartamentos/SUQ-201/disponibilidad?desde={{hoy}}&hasta=2030-01-01
+
+> {%
+    client.test("14.4 Calendario de más de 93 noches -> 400 RANGO_FECHAS_INVALIDO", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "RANGO_FECHAS_INVALIDO", "Se esperaba RANGO_FECHAS_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 14.5 Resumen del día con la IA apagada -> 200, no disponible y la operación sigue (10.2)
+# espera: 200
+GET {{base}}/api/asistente/resumen-del-dia
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("14.5 Resumen del día con la IA apagada -> 200, no disponible y la operación sigue (10.2)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.disponible === false && response.body.proveedor === "ninguno", "Con la IA apagada se esperaba disponible=false");
+    });
+%}
+
+### 14.6 El huésped no ve el resumen del día -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/asistente/resumen-del-dia
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("14.6 El huésped no ve el resumen del día -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}

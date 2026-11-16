@@ -1,12 +1,15 @@
 # Contrato y colección de la API
 
 - `openapi.yaml`: contrato de la API en OpenAPI 3.1, generado a partir de las hojas APIs, Schemas DTO y
-  Errores de Negocio del libro del modelo. Las operaciones que todavía no están implementadas terminan
-  su resumen en *(pendiente del corte 3)*. Con la aplicación arriba, Swagger UI está en
+  Errores de Negocio del libro del modelo, y ampliado con las operaciones de los cortes 3 y 4 (inventario,
+  calendario de disponibilidad, resumen del día con IA). Todas están implementadas. Con la aplicación arriba, Swagger UI está en
   <http://localhost:8080/swagger-ui.html> (botón **Authorize** con el token del login).
 - `coleccion-sga.http`: colección de pruebas para el IntelliJ HTTP Client. Incluye el flujo completo de
-  una reserva, un 409 por cada regla que expone la API, los casos 400, 401, 403 y 404, y los casos de
-  seguridad de la sección 9 de la Guía 12.
+  una reserva, un 409 por cada regla que expone la API, los casos 400, 401, 403 y 404, los casos de
+  seguridad de la sección 9 de la Guía 12, el folio (11), el canal externo con conflicto e idempotencia
+  (12), los reportes (13) y el inventario, el calendario del detalle y la IA apagada (14).
+- `../trazabilidad.md`: matriz de trazabilidad, de cada regla al código que la protege, el endpoint que la
+  expone con su código de error y la prueba que la verifica.
 
 ## Ejecutar la colección
 
