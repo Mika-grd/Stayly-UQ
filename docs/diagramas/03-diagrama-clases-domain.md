@@ -1062,7 +1062,7 @@ classDiagram
     +proveedor() String
   }
   NotificadorTitular ..> Reserva : avisa al titular
-  NotificadorTitular +-- Motivo
+  NotificadorTitular *-- Motivo : define
   ReglaDominioException --|> RuntimeException
 ```
 
@@ -1962,7 +1962,7 @@ classDiagram
     +proveedor() String
   }
   NotificadorTitular ..> Reserva : avisa al titular
-  NotificadorTitular +-- Motivo
+  NotificadorTitular *-- Motivo : define
   ReglaDominioException --|> RuntimeException
 ```
 
