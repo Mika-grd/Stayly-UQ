@@ -486,11 +486,12 @@ Authorization: Bearer {{tokenHuesped1}}
 %}
 
 # ============================================================================================================
-# 4. Flujo completo en recepción: reserva para hoy, confirmación y llegada (CU-02, CU-03, CU-05)
+# 4. Flujo completo en recepción: reserva para hoy, pago, confirmación y llegada (CU-02, CU-07, CU-03, CU-05)
 # ============================================================================================================
 
 ### 4.1 Recepción crea una reserva que entra hoy, sin hora de llegada -> 201 (canal DIRECTO)
 # espera: 201
+# guarda: saldoDirecta = $.saldoFolio
 # guarda: reservaDirecta = $.codigo
 POST {{base}}/api/reservas
 Content-Type: application/json
@@ -514,6 +515,7 @@ Authorization: Bearer {{tokenRecepcion}}
         client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
     });
     client.global.set("reservaDirecta", response.body.codigo);
+    client.global.set("saldoDirecta", response.body.saldoFolio);
 %}
 
 ### 4.2 Confirmar sin hora estimada de llegada -> 409 HORA_LLEGADA_REQUERIDA (RN-09)
@@ -613,71 +615,23 @@ Authorization: Bearer {{tokenRecepcion}}
     });
 %}
 
-### 4.5 El administrador deja de exigir anticipo -> 200 (CU-36: parámetro de la sección 6 sin recompilar)
-# espera: 200
-PUT {{base}}/api/alojamiento
+### 4.5 Recepción registra el pago de la reserva en el folio -> 201 con saldo 0 (CU-07, L-11)
+# espera: 201
+POST {{base}}/api/reservas/{{reservaDirecta}}/folio/pagos
 Content-Type: application/json
-Authorization: Bearer {{tokenAdmin}}
+Authorization: Bearer {{tokenRecepcion}}
 
 {
-  "nombre": "Stayly-UQ",
-  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
-  "ciudad": "Armenia, Quindio",
-  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
-  "ubicacion": {
-    "latitud": 4.5532,
-    "longitud": -75.6593
-  },
-  "horaEntrada": "15:00",
-  "horaSalida": "12:00",
-  "normasConvivencia": [
-    "Silencio de 22:00 a 7:00",
-    "Prohibido fumar dentro de los apartamentos",
-    "No se permiten fiestas ni eventos",
-    "Solo se permite estar a los ocupantes registrados",
-    "Mascotas con correa en las zonas comunes",
-    "Separar los residuos para reciclaje"
-  ],
-  "serviciosAdicionales": [
-    {
-      "nombre": "Desayuno tipico (por persona por dia)",
-      "generaCargo": true,
-      "valor": 18000
-    },
-    {
-      "nombre": "Parqueadero (por noche, cupo limitado)",
-      "generaCargo": true,
-      "valor": 15000
-    },
-    {
-      "nombre": "Lavanderia (por carga)",
-      "generaCargo": true,
-      "valor": 20000
-    },
-    {
-      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
-      "generaCargo": true,
-      "valor": 60000
-    }
-  ],
-  "parametros": {
-    "umbralEdadFacturable": 12,
-    "tiempoPreparacionHoras": 3,
-    "plazoConfirmacionHoras": 24,
-    "horaLimiteNoShow": "23:00",
-    "exigeAnticipo": false,
-    "porcentajeAnticipo": null,
-    "mediosPagoAceptados": [
-      "EFECTIVO",
-      "TRANSFERENCIA",
-      "TARJETA"
-    ]
-  }
+  "valor": {{saldoDirecta}},
+  "medio": "TRANSFERENCIA",
+  "fecha": "{{hoy}}T09:00:00",
+  "referencia": "TRF-4501"
 }
 
 > {%
-    client.test("4.5 El administrador deja de exigir anticipo -> 200 (CU-36: parámetro de la sección 6 sin recompilar)", () => {
-        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+    client.test("4.5 Recepción registra el pago de la reserva en el folio -> 201 con saldo 0 (CU-07, L-11)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+        client.assert(response.body.saldo === 0, "Se esperaba saldo 0 y llegó " + response.body.saldo);
     });
 %}
 
@@ -705,6 +659,7 @@ Authorization: Bearer {{tokenRecepcion}}
 
 ### 4.8 Otra reserva para hoy en SUQ-301, que aún no está preparado -> 201
 # espera: 201
+# guarda: saldoSinPreparar = $.saldoFolio
 # guarda: reservaSinPreparar = $.codigo
 POST {{base}}/api/reservas
 Content-Type: application/json
@@ -729,102 +684,51 @@ Authorization: Bearer {{tokenRecepcion}}
         client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
     });
     client.global.set("reservaSinPreparar", response.body.codigo);
+    client.global.set("saldoSinPreparar", response.body.saldoFolio);
 %}
 
-### 4.9 Confirmarla -> 200
+### 4.9 Pagar esa reserva -> 201 con saldo 0 (CU-07)
+# espera: 201
+POST {{base}}/api/reservas/{{reservaSinPreparar}}/folio/pagos
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "valor": {{saldoSinPreparar}},
+  "medio": "EFECTIVO",
+  "fecha": "{{hoy}}T09:00:00",
+  "referencia": "CAJA-4901"
+}
+
+> {%
+    client.test("4.9 Pagar esa reserva -> 201 con saldo 0 (CU-07)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+        client.assert(response.body.saldo === 0, "Se esperaba saldo 0 y llegó " + response.body.saldo);
+    });
+%}
+
+### 4.10 Confirmarla -> 200
 # espera: 200
 PUT {{base}}/api/reservas/{{reservaSinPreparar}}/confirmar
 Authorization: Bearer {{tokenRecepcion}}
 
 > {%
-    client.test("4.9 Confirmarla -> 200", () => {
+    client.test("4.10 Confirmarla -> 200", () => {
         client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
     });
 %}
 
-### 4.10 Registrar la llegada con el apartamento sin preparar -> 409 APARTAMENTO_NO_PREPARADO (RN-11)
+### 4.11 Registrar la llegada con el apartamento sin preparar -> 409 APARTAMENTO_NO_PREPARADO (RN-11)
 # espera: 409 APARTAMENTO_NO_PREPARADO
 PUT {{base}}/api/reservas/{{reservaSinPreparar}}/registrar-llegada
 Authorization: Bearer {{tokenRecepcion}}
 
 > {%
-    client.test("4.10 Registrar la llegada con el apartamento sin preparar -> 409 APARTAMENTO_NO_PREPARADO (RN-11)", () => {
+    client.test("4.11 Registrar la llegada con el apartamento sin preparar -> 409 APARTAMENTO_NO_PREPARADO (RN-11)", () => {
         client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
         client.assert(response.body.codigo === "APARTAMENTO_NO_PREPARADO", "Se esperaba APARTAMENTO_NO_PREPARADO y llegó " + response.body.codigo);
     });
 %}
-
-### 4.11 El administrador vuelve a exigir el 30 % de anticipo -> 200
-# espera: 200
-PUT {{base}}/api/alojamiento
-Content-Type: application/json
-Authorization: Bearer {{tokenAdmin}}
-
-{
-  "nombre": "Stayly-UQ",
-  "descripcion": "Edificio de seis apartamentos independientes y totalmente equipados para visitantes de la universidad, viajeros de negocios y turistas del Eje Cafetero.",
-  "ciudad": "Armenia, Quindio",
-  "direccion": "Carrera 15 con Calle 12 Norte, sector norte",
-  "ubicacion": {
-    "latitud": 4.5532,
-    "longitud": -75.6593
-  },
-  "horaEntrada": "15:00",
-  "horaSalida": "12:00",
-  "normasConvivencia": [
-    "Silencio de 22:00 a 7:00",
-    "Prohibido fumar dentro de los apartamentos",
-    "No se permiten fiestas ni eventos",
-    "Solo se permite estar a los ocupantes registrados",
-    "Mascotas con correa en las zonas comunes",
-    "Separar los residuos para reciclaje"
-  ],
-  "serviciosAdicionales": [
-    {
-      "nombre": "Desayuno tipico (por persona por dia)",
-      "generaCargo": true,
-      "valor": 18000
-    },
-    {
-      "nombre": "Parqueadero (por noche, cupo limitado)",
-      "generaCargo": true,
-      "valor": 15000
-    },
-    {
-      "nombre": "Lavanderia (por carga)",
-      "generaCargo": true,
-      "valor": 20000
-    },
-    {
-      "nombre": "Traslado a la terminal o al aeropuerto El Eden (por trayecto)",
-      "generaCargo": true,
-      "valor": 60000
-    }
-  ],
-  "parametros": {
-    "umbralEdadFacturable": 12,
-    "tiempoPreparacionHoras": 3,
-    "plazoConfirmacionHoras": 24,
-    "horaLimiteNoShow": "23:00",
-    "exigeAnticipo": true,
-    "porcentajeAnticipo": 30,
-    "mediosPagoAceptados": [
-      "EFECTIVO",
-      "TRANSFERENCIA",
-      "TARJETA"
-    ]
-  }
-}
-
-> {%
-    client.test("4.11 El administrador vuelve a exigir el 30 % de anticipo -> 200", () => {
-        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
-    });
-%}
-
-# ============================================================================================================
-# 5. No-show (CU-12)
-# ============================================================================================================
 
 ### 5.1 Antes de la hora límite del día de entrada -> 409 NO_SHOW_ANTES_DE_HORA_LIMITE (L-15)
 # espera: 409 NO_SHOW_ANTES_DE_HORA_LIMITE
@@ -2653,5 +2557,223 @@ Authorization: Bearer {{tokenHuesped1}}
     client.test("10.22 Un huésped no registra salidas -> 403", () => {
         client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
         client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+# ============================================================================================================
+# 11. Folio: consultar, cargos, pagos, cierre y salida (7.7, CU-06, CU-07, CU-18, CU-19)
+# ============================================================================================================
+
+### 11.1 El titular consulta el folio de su reserva -> 200 con cargos, pagos y saldo (CU-19)
+# espera: 200
+GET {{base}}/api/reservas/{{reservaLaura}}/folio
+Authorization: Bearer {{tokenHuesped1}}
+
+> {%
+    client.test("11.1 El titular consulta el folio de su reserva -> 200 con cargos, pagos y saldo (CU-19)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.estado === "ABIERTO", "Se esperaba estado ABIERTO y llegó " + response.body.estado);
+    });
+%}
+
+### 11.2 Otro huésped consulta ese folio -> 403
+# espera: 403 ACCESO_DENEGADO
+GET {{base}}/api/reservas/{{reservaLaura}}/folio
+Authorization: Bearer {{tokenHuesped2}}
+
+> {%
+    client.test("11.2 Otro huésped consulta ese folio -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 11.3 Un huésped no registra pagos -> 403
+# espera: 403 ACCESO_DENEGADO
+POST {{base}}/api/reservas/{{reservaLaura}}/folio/pagos
+Content-Type: application/json
+Authorization: Bearer {{tokenHuesped1}}
+
+{
+  "valor": 50000,
+  "medio": "EFECTIVO",
+  "fecha": "{{hoy}}T10:00:00",
+  "referencia": "CAJA-1103"
+}
+
+> {%
+    client.test("11.3 Un huésped no registra pagos -> 403", () => {
+        client.assert(response.status === 403, "Se esperaba 403 y llegó " + response.status);
+        client.assert(response.body.codigo === "ACCESO_DENEGADO", "Se esperaba ACCESO_DENEGADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 11.4 Folio de una reserva inexistente -> 404 RESERVA_NO_ENCONTRADA
+# espera: 404 RESERVA_NO_ENCONTRADA
+GET {{base}}/api/reservas/RES-2026-99999/folio
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("11.4 Folio de una reserva inexistente -> 404 RESERVA_NO_ENCONTRADA", () => {
+        client.assert(response.status === 404, "Se esperaba 404 y llegó " + response.status);
+        client.assert(response.body.codigo === "RESERVA_NO_ENCONTRADA", "Se esperaba RESERVA_NO_ENCONTRADA y llegó " + response.body.codigo);
+    });
+%}
+
+### 11.5 Recepción carga el parqueadero de la reserva en curso -> 201 con saldo 15000 (RN-16)
+# espera: 201
+POST {{base}}/api/reservas/{{reservaDirecta}}/folio/cargos
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "tipo": "SERVICIO_ADICIONAL",
+  "concepto": "Parqueadero (1 noche)",
+  "valor": 15000
+}
+
+> {%
+    client.test("11.5 Recepción carga el parqueadero de la reserva en curso -> 201 con saldo 15000 (RN-16)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+        client.assert(response.body.saldo === 15000, "Se esperaba saldo 15000 y llegó " + response.body.saldo);
+    });
+%}
+
+### 11.6 Un cargo PENALIDAD a mano -> 400 FORMATO_INVALIDO (lo registra el sistema)
+# espera: 400 FORMATO_INVALIDO
+POST {{base}}/api/reservas/{{reservaDirecta}}/folio/cargos
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "tipo": "PENALIDAD",
+  "concepto": "Multa",
+  "valor": 10000
+}
+
+> {%
+    client.test("11.6 Un cargo PENALIDAD a mano -> 400 FORMATO_INVALIDO (lo registra el sistema)", () => {
+        client.assert(response.status === 400, "Se esperaba 400 y llegó " + response.status);
+        client.assert(response.body.codigo === "FORMATO_INVALIDO", "Se esperaba FORMATO_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 11.7 Un pago de valor cero -> 409 VALOR_INVALIDO (3.4)
+# espera: 409 VALOR_INVALIDO
+POST {{base}}/api/reservas/{{reservaDirecta}}/folio/pagos
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "valor": 0,
+  "medio": "EFECTIVO",
+  "fecha": "{{hoy}}T10:00:00",
+  "referencia": "CAJA-1107"
+}
+
+> {%
+    client.test("11.7 Un pago de valor cero -> 409 VALOR_INVALIDO (3.4)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "VALOR_INVALIDO", "Se esperaba VALOR_INVALIDO y llegó " + response.body.codigo);
+    });
+%}
+
+### 11.8 Recepción cierra con saldo pendiente -> 409 FOLIO_CON_SALDO_SIN_AUTORIZACION (RN-17)
+# espera: 409 FOLIO_CON_SALDO_SIN_AUTORIZACION
+PUT {{base}}/api/reservas/{{reservaDirecta}}/folio/cerrar
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{}
+
+> {%
+    client.test("11.8 Recepción cierra con saldo pendiente -> 409 FOLIO_CON_SALDO_SIN_AUTORIZACION (RN-17)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "FOLIO_CON_SALDO_SIN_AUTORIZACION", "Se esperaba FOLIO_CON_SALDO_SIN_AUTORIZACION y llegó " + response.body.codigo);
+    });
+%}
+
+### 11.9 El huésped paga el parqueadero en efectivo -> 201 con saldo 0 (CU-07)
+# espera: 201
+POST {{base}}/api/reservas/{{reservaDirecta}}/folio/pagos
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "valor": 15000,
+  "medio": "EFECTIVO",
+  "fecha": "{{hoy}}T10:00:00",
+  "referencia": "CAJA-1109"
+}
+
+> {%
+    client.test("11.9 El huésped paga el parqueadero en efectivo -> 201 con saldo 0 (CU-07)", () => {
+        client.assert(response.status === 201, "Se esperaba 201 y llegó " + response.status);
+        client.assert(response.body.saldo === 0, "Se esperaba saldo 0 y llegó " + response.body.saldo);
+    });
+%}
+
+### 11.10 Cerrar el folio con saldo cero -> 200 CERRADO (CU-18)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaDirecta}}/folio/cerrar
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{}
+
+> {%
+    client.test("11.10 Cerrar el folio con saldo cero -> 200 CERRADO (CU-18)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.estado === "CERRADO", "Se esperaba estado CERRADO y llegó " + response.body.estado);
+    });
+%}
+
+### 11.11 Un pago con el folio cerrado -> 409 FOLIO_CERRADO (7.7)
+# espera: 409 FOLIO_CERRADO
+POST {{base}}/api/reservas/{{reservaDirecta}}/folio/pagos
+Content-Type: application/json
+Authorization: Bearer {{tokenRecepcion}}
+
+{
+  "valor": 1000,
+  "medio": "EFECTIVO",
+  "fecha": "{{hoy}}T10:00:00",
+  "referencia": "CAJA-1111"
+}
+
+> {%
+    client.test("11.11 Un pago con el folio cerrado -> 409 FOLIO_CERRADO (7.7)", () => {
+        client.assert(response.status === 409, "Se esperaba 409 y llegó " + response.status);
+        client.assert(response.body.codigo === "FOLIO_CERRADO", "Se esperaba FOLIO_CERRADO y llegó " + response.body.codigo);
+    });
+%}
+
+### 11.12 Registrar la salida con el folio cerrado -> 200 FINALIZADA (CU-06)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaDirecta}}/registrar-salida
+Authorization: Bearer {{tokenRecepcion}}
+
+> {%
+    client.test("11.12 Registrar la salida con el folio cerrado -> 200 FINALIZADA (CU-06)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.estado === "FINALIZADA", "Se esperaba estado FINALIZADA y llegó " + response.body.estado);
+    });
+%}
+
+### 11.13 El administrador cierra con saldo y motivo -> 200 con la autorización (RN-17)
+# espera: 200
+PUT {{base}}/api/reservas/{{reservaCarlos}}/folio/cerrar
+Content-Type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "motivoAutorizacion": "Cortesía por cambio de apartamento"
+}
+
+> {%
+    client.test("11.13 El administrador cierra con saldo y motivo -> 200 con la autorización (RN-17)", () => {
+        client.assert(response.status === 200, "Se esperaba 200 y llegó " + response.status);
+        client.assert(response.body.estado === "CERRADO", "Se esperaba estado CERRADO y llegó " + response.body.estado);
+        client.assert(response.body.autorizacionCierre.motivo === "Cortesía por cambio de apartamento", "Se esperaba autorizacionCierre.motivo Cortesía por cambio de apartamento y llegó " + response.body.autorizacionCierre.motivo);
     });
 %}
