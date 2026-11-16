@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { reservas } from '../api/servicios';
-import type { EstadoReserva, ReservaResumen } from '../api/tipos';
+import { operacion, reservas } from '../api/servicios';
+import type { CanalOrigen, EstadoReserva, ReservaResumen } from '../api/tipos';
 import { AvisoError, Cargando, EstadoReservaChip, Paginacion } from '../components/Comunes';
 import { colorDe, textoSobre, variable } from '../lib/colores';
-import { dinero, fechaLarga, hoy, nombreCanal, nombreEstado, rango } from '../lib/formato';
+import { dinero, fechaLarga, hoy, nombreCanal, nombreEstado, rango, sumarDias } from '../lib/formato';
 import { useCarga } from '../lib/useCarga';
 
 function Movimiento({ reserva }: { reserva: ReservaResumen }) {
@@ -64,8 +64,21 @@ function Listado() {
   const [estado, setEstado] = useState<EstadoReserva | ''>('');
   const [texto, setTexto] = useState('');
   const [titular, setTitular] = useState('');
+  const [canal, setCanal] = useState<CanalOrigen | ''>('');
+  const [apartamento, setApartamento] = useState('');
+  const [desde, setDesde] = useState('');
+  const [hasta, setHasta] = useState('');
   const [pagina, setPagina] = useState(0);
-  const { datos, error, cargando } = useCarga(() => reservas.listar({ estado, titular, pagina }), [estado, titular, pagina]);
+  const { datos, error, cargando } = useCarga(
+    () => reservas.listar({ estado, titular, canal, apartamento, desde, hasta, pagina }),
+    [estado, titular, canal, apartamento, desde, hasta, pagina],
+  );
+  // Los apartamentos activos salen del calendario de hoy (recepción ya tiene acceso)
+  const aptos = useCarga(() => operacion.calendario(hoy(), sumarDias(hoy(), 1)), []);
+  const filtro = <T,>(fijar: (v: T) => void) => (v: T) => {
+    setPagina(0);
+    fijar(v);
+  };
 
   return (
     <>
@@ -93,6 +106,36 @@ function Listado() {
               </option>
             ))}
           </select>
+        </label>
+        <label className="campo">
+          <span>Canal</span>
+          <select value={canal} onChange={(e) => filtro(setCanal)(e.target.value as CanalOrigen | '')}>
+            <option value="">Todos</option>
+            {(Object.keys(nombreCanal) as CanalOrigen[]).map((c) => (
+              <option key={c} value={c}>
+                {nombreCanal[c]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="campo">
+          <span>Apartamento</span>
+          <select value={apartamento} onChange={(e) => filtro(setApartamento)(e.target.value)}>
+            <option value="">Todos</option>
+            {aptos.datos?.apartamentos.map((a) => (
+              <option key={a.identificacion} value={a.identificacion}>
+                {a.identificacion}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="campo">
+          <span>Entrada desde</span>
+          <input type="date" value={desde} onChange={(e) => filtro(setDesde)(e.target.value)} />
+        </label>
+        <label className="campo">
+          <span>Entrada hasta</span>
+          <input type="date" value={hasta} min={desde || undefined} onChange={(e) => filtro(setHasta)(e.target.value)} />
         </label>
         <label className="campo campo--ancho">
           <span>Titular</span>
