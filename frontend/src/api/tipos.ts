@@ -65,6 +65,7 @@ export interface ApartamentoDetalle {
   estadoOperativo: EstadoOperativo;
   activo: boolean;
   ubicacion: Ubicacion | null;
+  direccion: string | null;
 }
 
 export interface Ubicacion {

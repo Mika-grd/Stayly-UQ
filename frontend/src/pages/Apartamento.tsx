@@ -118,6 +118,7 @@ export function Apartamento() {
           {apto.ubicacion && (
             <section>
               <h2>Ubicación</h2>
+              {apto.direccion && <p className="nota">{apto.direccion}</p>}
               <Mapa ubicacion={apto.ubicacion} titulo={apto.nombre} />
             </section>
           )}

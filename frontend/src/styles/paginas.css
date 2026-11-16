@@ -1327,7 +1327,7 @@ button.noche:disabled {
 
 .tarjeta__lugar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--e1);
   margin: 0;
   font-size: var(--t-1);
@@ -1335,6 +1335,8 @@ button.noche:disabled {
 }
 
 .tarjeta__lugar svg {
+  flex: none;
+  margin-top: 0.3em;
   width: 10px;
   fill: currentColor;
 }

@@ -130,7 +130,7 @@ export function Inicio() {
         {datos && datos.contenido.length > 0 && (
           <div className="rejilla">
             {datos.contenido.map((apto) => (
-              <TarjetaApartamento key={apto.identificacion} apartamento={apto} noches={totalNoches} parametros={enlace} />
+              <TarjetaApartamento key={apto.identificacion} apartamento={apto} noches={totalNoches} parametros={enlace} lugar={ubicacion.datos?.direccion} />
             ))}
           </div>
         )}
@@ -149,6 +149,7 @@ export function Inicio() {
         {ubicacion.datos?.ubicacion && (
           <section className="resultados__mapa">
             <h2>Ubicación</h2>
+            {ubicacion.datos.direccion && <p className="nota">{ubicacion.datos.direccion}</p>}
             <Mapa ubicacion={ubicacion.datos.ubicacion} titulo="Stayly-UQ" />
           </section>
         )}
