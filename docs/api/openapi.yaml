@@ -5368,6 +5368,51 @@ paths:
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
+  /api/asistente/resumen-del-dia:
+    get:
+      tags:
+      - Reportes
+      summary: Resumen del día redactado por IA (10.2)
+      description: |-
+        Resumen operativo del día para recepción (llegadas, salidas, preparación y alertas), redactado por el modelo de IA configurado. Al modelo solo van códigos, apartamentos, horas y cantidades, nunca datos personales. No bloqueante: si la IA está apagada (sga.ia.proveedor=ninguno), falla o supera su tiempo máximo, responde 200 con disponible=false y la operación sigue con las listas de llegadas y salidas.
+
+        Actor(es): Recepcionista, Administrador.
+      operationId: resumirDia
+      parameters:
+      - name: fecha
+        in: query
+        required: false
+        description: Día a resumir (yyyy-MM-dd); hoy si se omite.
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: Operación exitosa (con o sin texto de la IA).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenDiaResponse'
+        '400':
+          description: 'Formato inválido. Códigos: FORMATO_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+        '401':
+          description: 'No autenticado: credencial ausente, inválida o vencida. Códigos: CREDENCIALES_INVALIDAS.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+        '403':
+          description: 'Acceso denegado: el rol no tiene permiso. Códigos: ACCESO_DENEGADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+      security:
+      - bearerAuth: []
   /api/reportes/ocupacion:
     get:
       tags:
@@ -6411,6 +6456,29 @@ components:
           format: date
         disponible:
           type: boolean
+    ResumenDiaResponse:
+      type: object
+      description: Resumen del día del asistente de IA (10.2).
+      required:
+      - fecha
+      - disponible
+      - proveedor
+      properties:
+        fecha:
+          type: string
+          format: date
+        disponible:
+          type: boolean
+          description: false si la IA está apagada, falló o tardó más que su tiempo máximo.
+        texto:
+          type:
+          - string
+          - 'null'
+        proveedor:
+          type: string
+          description: Modelo que redactó el texto, o "ninguno" si la IA está apagada.
+          examples:
+          - ninguno
     CalendarioOcupacionResponse:
       type: object
       description: Calendario de ocupación por rango.

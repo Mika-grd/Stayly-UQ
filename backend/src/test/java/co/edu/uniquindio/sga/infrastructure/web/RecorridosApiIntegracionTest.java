@@ -251,6 +251,17 @@ class RecorridosApiIntegracionTest {
         mvc.perform(get("/api/apartamentos")).andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @DisplayName("10.2 · Con la IA apagada el resumen del día responde 200 y no disponible; el huésped no lo ve")
+    void resumenDelDiaSinIA() throws Exception {
+        mvc.perform(get("/api/asistente/resumen-del-dia").header(HttpHeaders.AUTHORIZATION, bearer(RECEPCION)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.disponible").value(false))
+                .andExpect(jsonPath("$.proveedor").value("ninguno"));
+        mvc.perform(get("/api/asistente/resumen-del-dia").header(HttpHeaders.AUTHORIZATION, bearer(HUESPED_1)))
+                .andExpect(status().isForbidden());
+    }
+
     // Calendario de disponibilidad del detalle (público)
 
     @Test
