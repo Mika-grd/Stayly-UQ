@@ -27,6 +27,8 @@ dependencies {
     // --- Integracion de salida: avisos al titular por correo (10.3.2, opcion A) ---
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     runtimeOnly 'com.h2database:h2'
+    // Base gestionada opcional en despliegue (12.2): se elige con SGA_DB_URL, sin cambiar el dominio
+    runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
     implementation 'org.mapstruct:mapstruct:1.6.3'
     // --- Seguridad: Spring Security + validación de JWT (Guía 12) ---
