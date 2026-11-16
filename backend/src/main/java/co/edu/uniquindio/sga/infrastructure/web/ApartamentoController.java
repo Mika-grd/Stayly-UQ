@@ -22,6 +22,7 @@ import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
 import co.edu.uniquindio.sga.domain.model.compartido.PeticionPagina;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.ApartamentoWebMapper;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -88,6 +89,7 @@ public class ApartamentoController {
     }
 
     @PostMapping("/api/apartamentos")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<ApartamentoDetalleResponse> crear(@Valid @RequestBody ApartamentoRequest request,
                                                             UriComponentsBuilder uri) {
         IdentificacionApartamento identificacion = new IdentificacionApartamento(request.identificacion());
@@ -100,6 +102,7 @@ public class ApartamentoController {
     }
 
     @PutMapping("/api/apartamentos/{identificacion}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ActualizacionApartamentoResponse actualizar(@PathVariable String identificacion,
                                                        @Valid @RequestBody ApartamentoRequest request) {
         var resultado = actualizar.ejecutar(new IdentificacionApartamento(identificacion), mapper.aDatos(request));
@@ -109,12 +112,14 @@ public class ApartamentoController {
     }
 
     @DeleteMapping("/api/apartamentos/{identificacion}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<Void> retirar(@PathVariable String identificacion) {
         retirar.ejecutar(new IdentificacionApartamento(identificacion));
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/api/apartamentos/{identificacion}/activar")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ApartamentoDetalleResponse activar(@PathVariable String identificacion) {
         IdentificacionApartamento id = new IdentificacionApartamento(identificacion);
         Apartamento apartamento = activar.ejecutar(id);

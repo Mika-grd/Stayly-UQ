@@ -4,8 +4,8 @@ import java.time.OffsetDateTime;
 
 /**
  * Formato único de error de la API (schema ErrorNegocioResponse del openapi.yaml). El código HTTP
- * sigue el criterio de la hoja "Errores de Negocio": 400 formato, 404 no encontrado, 422 regla sobre
- * los datos y 409 conflicto con el estado actual. Nunca lleva una traza técnica.
+ * sigue el criterio de la hoja "Errores de Negocio": 400 formato, 401 y 403 seguridad, 404 no encontrado
+ * y 409 regla del negocio violada. Nunca lleva una traza técnica.
  *
  * @param codigo  código estable de la hoja Errores de Negocio (p. ej. NOCHES_NO_DISPONIBLES)
  * @param mensaje mensaje en lenguaje del negocio

@@ -6,8 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 7.3: datos del alojamiento, horarios, normas, servicios y parámetros de la sección 6. Es de solo
- * consulta: los valores se cambian en application.properties, sin recompilar.
+ * CU-22 (7.3): datos del alojamiento, horarios, normas, servicios y parámetros de la sección 6. Los
+ * valores iniciales vienen de application.properties (se cambian sin recompilar) y el administrador
+ * los modifica con CU-36 y CU-37.
  */
 @Service
 @Transactional(readOnly = true)

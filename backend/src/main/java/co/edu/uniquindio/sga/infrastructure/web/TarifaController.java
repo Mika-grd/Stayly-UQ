@@ -6,6 +6,7 @@ import co.edu.uniquindio.sga.application.usecase.GestionarTarifasUseCase;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.TarifaWebMapper;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,12 +26,14 @@ public class TarifaController {
     }
 
     @PutMapping("/api/apartamentos/{identificacion}/tarifas")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public TarifarioResponse definir(@PathVariable String identificacion, @Valid @RequestBody TarifaRequest request) {
         var resultado = gestionar.definir(new IdentificacionApartamento(identificacion), mapper.aTarifasDefinidas(request));
         return mapper.aTarifarioResponse(resultado);
     }
 
     @GetMapping("/api/apartamentos/{identificacion}/tarifas")
+    @PreAuthorize("hasAnyAuthority('RECEPCIONISTA', 'ADMINISTRADOR')")
     public TarifarioResponse consultar(@PathVariable String identificacion) {
         var resultado = gestionar.consultar(new IdentificacionApartamento(identificacion));
         return mapper.aTarifarioResponse(resultado);

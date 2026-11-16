@@ -17,8 +17,18 @@ class CatalogoErroresNegocioTest {
                 CatalogoErroresNegocio.clasificar("ESTANCIA_MINIMA_NO_CUMPLIDA");
 
         // Assert
-        assertThat(clasificacion.estado()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(clasificacion.estado()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(clasificacion.regla()).isEqualTo("RP-01");
+    }
+
+    @Test
+    @DisplayName("Ninguna regla del negocio responde 422: solo 400, 401, 403, 404 y 409")
+    void ningunCodigoUsa422() {
+        assertThat(java.util.List.of("CAPACIDAD_EXCEDIDA", "FECHA_ENTRADA_PASADA", "ESTANCIA_SIN_NOCHES",
+                "TITULAR_NO_FACTURABLE", "MASCOTAS_NO_ADMITIDAS", "CUPO_MASCOTAS_EXCEDIDO", "HORA_LLEGADA_REQUERIDA",
+                "IMAGENES_INVALIDAS", "TRAMOS_INSUFICIENTES", "PARAMETRO_INVALIDO"))
+                .allSatisfy(codigo -> assertThat(CatalogoErroresNegocio.clasificar(codigo).estado())
+                        .isEqualTo(HttpStatus.CONFLICT));
     }
 
     @Test

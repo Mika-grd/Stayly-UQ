@@ -16,28 +16,59 @@ import java.util.UUID;
 public class Alojamiento {
 
     private final UUID id;
-    private final String nombre;
-    private final String descripcion;
-    private final String ciudad;
-    private final String direccion;
-    private final Ubicacion ubicacion;
+    private String nombre;
+    private String descripcion;
+    private String ciudad;
+    private String direccion;
+    private Ubicacion ubicacion;
     private HorarioAlojamiento horario;
-    private final List<String> normasConvivencia;
+    private List<String> normasConvivencia;
     private UmbralEdadFacturable umbralEdad;
     private TiempoPreparacion tiempoPreparacion;
     private PlazoConfirmacion plazoConfirmacion;
     private HoraLimiteNoShow horaLimiteNoShow;
     private Anticipo anticipo;
-    private final List<ServicioAdicional> servicios;
-    private final Set<MedioPago> mediosPago;
+    private List<ServicioAdicional> servicios;
+    private Set<MedioPago> mediosPago;
     private CupoMascotas cupoMascotas;
     private CargoPorMascota cargoPorMascota;
     private RecargoLlegadaNocturna recargoLlegadaNocturna;
 
-    private Alojamiento(UUID id, String nombre, String descripcion, String ciudad, String direccion,
-                        Ubicacion ubicacion, List<String> normasConvivencia, List<ServicioAdicional> servicios,
-                        Set<MedioPago> mediosPago) {
+    private Alojamiento(UUID id) {
         this.id = id;
+    }
+
+    public static Alojamiento crear(UUID id, String nombre, String descripcion, String ciudad, String direccion,
+                                    Ubicacion ubicacion, List<String> normasConvivencia,
+                                    List<ServicioAdicional> servicios, Set<MedioPago> mediosPago,
+                                    HorarioAlojamiento horario, UmbralEdadFacturable umbralEdad,
+                                    TiempoPreparacion tiempoPreparacion, PlazoConfirmacion plazoConfirmacion,
+                                    HoraLimiteNoShow horaLimiteNoShow, Anticipo anticipo, CupoMascotas cupoMascotas,
+                                    CargoPorMascota cargoPorMascota, RecargoLlegadaNocturna recargoLlegadaNocturna) {
+        if (id == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El alojamiento requiere identidad, nombre y ubicación.");
+        }
+        Alojamiento alojamiento = new Alojamiento(id);
+        alojamiento.actualizarDatos(nombre, descripcion, ciudad, direccion, ubicacion, normasConvivencia, servicios,
+                mediosPago);
+        alojamiento.actualizarParametros(horario, umbralEdad, tiempoPreparacion, plazoConfirmacion,
+                horaLimiteNoShow, anticipo, cupoMascotas, cargoPorMascota, recargoLlegadaNocturna);
+        return alojamiento;
+    }
+
+    /**
+     * Reemplaza la identidad del alojamiento (F-13): nombre, ubicación, normas, servicios y medios de pago.
+     * Exige nombre, ubicación y al menos dos medios de pago (sección 6).
+     */
+    public void actualizarDatos(String nombre, String descripcion, String ciudad, String direccion,
+                                Ubicacion ubicacion, List<String> normasConvivencia, List<ServicioAdicional> servicios,
+                                Set<MedioPago> mediosPago) {
+        if (nombre == null || nombre.isBlank() || ubicacion == null || normasConvivencia == null || servicios == null) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El alojamiento requiere identidad, nombre y ubicación.");
+        }
+        if (mediosPago == null || mediosPago.size() < 2) {
+            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El alojamiento debe aceptar al menos dos medios de pago.");
+        }
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.ciudad = ciudad;
@@ -48,25 +79,11 @@ public class Alojamiento {
         this.mediosPago = Set.copyOf(mediosPago);
     }
 
-    public static Alojamiento crear(UUID id, String nombre, String descripcion, String ciudad, String direccion,
-                                    Ubicacion ubicacion, List<String> normasConvivencia,
-                                    List<ServicioAdicional> servicios, Set<MedioPago> mediosPago,
-                                    HorarioAlojamiento horario, UmbralEdadFacturable umbralEdad,
-                                    TiempoPreparacion tiempoPreparacion, PlazoConfirmacion plazoConfirmacion,
-                                    HoraLimiteNoShow horaLimiteNoShow, Anticipo anticipo, CupoMascotas cupoMascotas,
-                                    CargoPorMascota cargoPorMascota, RecargoLlegadaNocturna recargoLlegadaNocturna) {
-        if (id == null || nombre == null || nombre.isBlank() || ubicacion == null
-                || normasConvivencia == null || servicios == null) {
-            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El alojamiento requiere identidad, nombre y ubicación.");
-        }
-        if (mediosPago == null || mediosPago.size() < 2) {
-            throw new ReglaDominioException("PARAMETRO_INVALIDO", "El alojamiento debe aceptar al menos dos medios de pago.");
-        }
-        Alojamiento alojamiento = new Alojamiento(id, nombre, descripcion, ciudad, direccion, ubicacion,
-                normasConvivencia, servicios, mediosPago);
-        alojamiento.actualizarParametros(horario, umbralEdad, tiempoPreparacion, plazoConfirmacion,
-                horaLimiteNoShow, anticipo, cupoMascotas, cargoPorMascota, recargoLlegadaNocturna);
-        return alojamiento;
+    /** Reemplaza solo los parámetros de las reglas propias RP-02 (mascotas) y RP-03 (llegada nocturna). */
+    public void actualizarReglasPropias(CupoMascotas cupoMascotas, CargoPorMascota cargoPorMascota,
+                                        RecargoLlegadaNocturna recargoLlegadaNocturna) {
+        actualizarParametros(horario, umbralEdad, tiempoPreparacion, plazoConfirmacion, horaLimiteNoShow, anticipo,
+                cupoMascotas, cargoPorMascota, recargoLlegadaNocturna);
     }
 
     /** Reemplaza los parámetros de la sección 6. Cada objeto de valor ya validó su rango (AL-2). */

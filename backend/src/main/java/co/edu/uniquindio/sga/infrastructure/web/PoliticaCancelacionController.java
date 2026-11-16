@@ -7,6 +7,7 @@ import co.edu.uniquindio.sga.application.usecase.ConsultarPoliticaVigenteUseCase
 import co.edu.uniquindio.sga.domain.model.politica.PoliticaCancelacion;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.PoliticaCancelacionWebMapper;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +32,7 @@ public class PoliticaCancelacionController {
     }
 
     @PostMapping("/api/politica-cancelacion/versiones")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<PoliticaCancelacionResponse> actualizar(@Valid @RequestBody PoliticaCancelacionRequest request,
                                                                   UriComponentsBuilder uri) {
         PoliticaCancelacion politica = actualizar.ejecutar(mapper.aTramos(request), request.porcentajeRetencionNoShow());

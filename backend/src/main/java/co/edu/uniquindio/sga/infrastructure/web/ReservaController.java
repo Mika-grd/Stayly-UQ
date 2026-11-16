@@ -2,6 +2,8 @@ package co.edu.uniquindio.sga.infrastructure.web;
 
 import co.edu.uniquindio.sga.application.dto.request.CancelarReservaRequest;
 import co.edu.uniquindio.sga.application.dto.request.CrearReservaRequest;
+import co.edu.uniquindio.sga.application.dto.request.HoraEstimadaLlegadaRequest;
+import co.edu.uniquindio.sga.application.dto.request.ModificarReservaRequest;
 import co.edu.uniquindio.sga.application.dto.response.EstadoLiquidacion;
 import co.edu.uniquindio.sga.application.dto.response.LiquidacionReservaResponse;
 import co.edu.uniquindio.sga.application.dto.response.PaginaReservaResumenResponse;
@@ -13,6 +15,9 @@ import co.edu.uniquindio.sga.application.usecase.ConsultarFolioUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.ConsultarReservasUseCase;
 import co.edu.uniquindio.sga.application.usecase.CrearReservaUseCase;
+import co.edu.uniquindio.sga.application.usecase.DeclararNoShowUseCase;
+import co.edu.uniquindio.sga.application.usecase.IndicarHoraEstimadaLlegadaUseCase;
+import co.edu.uniquindio.sga.application.usecase.ModificarReservaUseCase;
 import co.edu.uniquindio.sga.application.usecase.RegistrarLlegadaUseCase;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.compartido.Pagina;
@@ -22,6 +27,7 @@ import co.edu.uniquindio.sga.domain.model.reserva.CanalOrigen;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.EstadoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.FiltroReservas;
+import co.edu.uniquindio.sga.domain.model.reserva.HoraEstimadaLlegada;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.repository.ConfiguracionAlojamiento;
 import co.edu.uniquindio.sga.infrastructure.security.UsuarioAutenticado;
@@ -65,6 +71,9 @@ public class ReservaController {
     private final ConsultarFolioUseCase consultarFolio;
     private final ConsultarDetalleApartamentoUseCase consultarApartamento;
     private final ConsultarReservasUseCase listar;
+    private final ModificarReservaUseCase modificar;
+    private final IndicarHoraEstimadaLlegadaUseCase indicarHoraLlegada;
+    private final DeclararNoShowUseCase declararNoShow;
     private final ConfiguracionAlojamiento configuracion;
     private final ReservaWebMapper mapper;
 
@@ -72,7 +81,9 @@ public class ReservaController {
                              CancelarReservaUseCase cancelar, RegistrarLlegadaUseCase registrarLlegada,
                              ConsultarReservaUseCase consultarReserva, ConsultarFolioUseCase consultarFolio,
                              ConsultarDetalleApartamentoUseCase consultarApartamento, ConsultarReservasUseCase listar,
-                             ConfiguracionAlojamiento configuracion, ReservaWebMapper mapper) {
+                             ModificarReservaUseCase modificar, IndicarHoraEstimadaLlegadaUseCase indicarHoraLlegada,
+                             DeclararNoShowUseCase declararNoShow, ConfiguracionAlojamiento configuracion,
+                             ReservaWebMapper mapper) {
         this.crear = crear;
         this.confirmar = confirmar;
         this.cancelar = cancelar;
@@ -81,6 +92,9 @@ public class ReservaController {
         this.consultarFolio = consultarFolio;
         this.consultarApartamento = consultarApartamento;
         this.listar = listar;
+        this.modificar = modificar;
+        this.indicarHoraLlegada = indicarHoraLlegada;
+        this.declararNoShow = declararNoShow;
         this.configuracion = configuracion;
         this.mapper = mapper;
     }
@@ -130,6 +144,26 @@ public class ReservaController {
                 resultado.totalElementos(), resultado.totalPaginas());
     }
 
+    /** CU-13: repite las validaciones de CU-02 sin contar la propia reserva y ajusta el folio (RN-14). */
+    @PutMapping("/api/reservas/{codigo}")
+    @PreAuthorize(ROLES_RECEPCION)
+    public ReservaResponse modificar(@PathVariable String codigo, @Valid @RequestBody ModificarReservaRequest request,
+                                     @AuthenticationPrincipal Jwt jwt) {
+        modificar.ejecutar(mapper.aComandoModificar(codigo, request, UsuarioAutenticado.de(jwt).correo()));
+        return detalle(codigo);
+    }
+
+    /** CU-14: el huésped la indica para su propia reserva; registra o revierte el recargo nocturno (RP-03). */
+    @PutMapping("/api/reservas/{codigo}/hora-llegada")
+    @PreAuthorize(RECEPCION_O_TITULAR)
+    public ReservaResponse indicarHoraEstimadaLlegada(@PathVariable String codigo,
+                                                      @Valid @RequestBody HoraEstimadaLlegadaRequest request,
+                                                      @AuthenticationPrincipal Jwt jwt) {
+        indicarHoraLlegada.ejecutar(new CodigoReserva(codigo), new HoraEstimadaLlegada(request.horaEstimadaLlegada()),
+                UsuarioAutenticado.de(jwt).correo());
+        return detalle(codigo);
+    }
+
     @PutMapping("/api/reservas/{codigo}/confirmar")
     @PreAuthorize(ROLES_RECEPCION)
     public ReservaResponse confirmar(@PathVariable String codigo, @AuthenticationPrincipal Jwt jwt) {
@@ -154,6 +188,15 @@ public class ReservaController {
         Reserva reserva = consultarReserva.ejecutar(id);
         Folio folio = consultarFolio.ejecutar(id);
         return mapper.aLiquidacion(reserva, folio, EstadoLiquidacion.CANCELADA);
+    }
+
+    /** CU-12: desde la hora límite del día de entrada (L-15); la retención sale de la política congelada. */
+    @PutMapping("/api/reservas/{codigo}/no-show")
+    @PreAuthorize(ROLES_RECEPCION)
+    public LiquidacionReservaResponse declararNoShow(@PathVariable String codigo, @AuthenticationPrincipal Jwt jwt) {
+        CodigoReserva id = new CodigoReserva(codigo);
+        Folio folio = declararNoShow.ejecutar(id, UsuarioAutenticado.de(jwt).correo());
+        return mapper.aLiquidacion(consultarReserva.ejecutar(id), folio, EstadoLiquidacion.NO_SHOW);
     }
 
     /** Detalle sin chequeo propio: lo usan endpoints que ya pasaron su {@code @PreAuthorize}. */

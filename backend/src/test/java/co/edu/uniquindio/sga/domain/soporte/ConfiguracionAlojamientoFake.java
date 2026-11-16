@@ -50,8 +50,18 @@ public class ConfiguracionAlojamientoFake implements ConfiguracionAlojamiento {
         return new RecargoLlegadaNocturna(LocalTime.of(21, 0), Dinero.pesos(30_000));
     }
 
+    private Alojamiento guardado;
+
+    @Override
+    public void guardar(Alojamiento alojamiento) {
+        this.guardado = alojamiento;
+    }
+
     @Override
     public Alojamiento alojamiento() {
+        if (guardado != null) {
+            return guardado;
+        }
         return Alojamiento.crear(UUID.fromString("00000000-0000-0000-0000-00000000a10a"), "Stayly-UQ",
                 "Seis apartamentos en Armenia", "Armenia, Quindío", "Carrera 15 con Calle 12 Norte",
                 new Ubicacion(4.5532, -75.6593), List.of("Silencio de 22:00 a 7:00"),

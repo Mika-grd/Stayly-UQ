@@ -7,6 +7,7 @@ import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.reserva.MascotasAutorizadas;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.CotizacionWebMapper;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +25,7 @@ public class CotizacionController {
     }
 
     @PostMapping("/api/cotizaciones")
+    @PreAuthorize("hasAnyAuthority('HUESPED', 'RECEPCIONISTA', 'ADMINISTRADOR')")
     public CotizacionResponse cotizar(@Valid @RequestBody CotizacionRequest request) {
         int mascotas = request.mascotasAutorizadas() == null ? 0 : request.mascotasAutorizadas();
         var cotizacion = cotizar.ejecutar(new IdentificacionApartamento(request.identificacionApartamento()),

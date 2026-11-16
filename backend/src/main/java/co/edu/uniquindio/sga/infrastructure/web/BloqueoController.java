@@ -8,6 +8,7 @@ import co.edu.uniquindio.sga.domain.model.bloqueo.Bloqueo;
 import co.edu.uniquindio.sga.domain.model.compartido.RangoFechas;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.BloqueoWebMapper;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ public class BloqueoController {
     }
 
     @PostMapping("/api/apartamentos/{identificacion}/bloqueos")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<BloqueoResponse> registrar(@PathVariable String identificacion,
                                                      @Valid @RequestBody BloqueoRequest request,
                                                      UriComponentsBuilder uri) {

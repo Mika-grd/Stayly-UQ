@@ -12,8 +12,8 @@ import co.edu.uniquindio.sga.domain.model.alojamiento.TiempoPreparacion;
 import co.edu.uniquindio.sga.domain.model.alojamiento.UmbralEdadFacturable;
 
 /**
- * Puerto del dominio para leer la configuración vigente del Alojamiento (valores de la Ficha,
- * Anexo A). Los servicios y casos de uso lo reciben por constructor: ningún valor se escribe
+ * Puerto del dominio para leer y cambiar la configuración vigente del Alojamiento (valores de la
+ * Ficha, Anexo A). Los servicios y casos de uso lo reciben por constructor: ningún valor se escribe
  * en el dominio.
  */
 public interface ConfiguracionAlojamiento {
@@ -38,4 +38,7 @@ public interface ConfiguracionAlojamiento {
 
     /** El alojamiento completo (F-13): identidad, ubicación, normas, servicios, medios de pago y parámetros. */
     Alojamiento alojamiento();
+
+    /** Deja vigente la configuración modificada (CU-36, CU-37): los servicios leen el valor nuevo desde ya. */
+    void guardar(Alojamiento alojamiento);
 }

@@ -291,6 +291,13 @@ public class CargaDatosPrueba implements ApplicationRunner {
         noShow.folio().liquidarCancelacion(calculadorRetencion.calcularPenalidadNoShow(noShow.reserva()),
                 trasHoraLimite);
         guardar(noShow);
+
+        // CONFIRMADA · directo: la entrada fue ayer y el huésped no llegó. Ya pasó la hora límite, así que
+        // recepción puede declarar el no-show desde la API en cualquier momento (CU-12, L-15).
+        Reservada sinLlegada = nueva("SUQ-101", new Estancia(hoy.minusDays(1), hoy.plusDays(1)), CanalOrigen.DIRECTO,
+                null, List.of(titular("Andrés Pérez", 1987, "1094000007", "andres.perez@correo.co")),
+                LocalTime.of(19, 0), 0, ahora.minusDays(5));
+        confirmar(sinLlegada, ahora.minusDays(5).plusHours(1));
     }
 
     /** Crea la reserva PENDIENTE con su folio, como CU-02: el valor sale del cotizador y queda congelado. */

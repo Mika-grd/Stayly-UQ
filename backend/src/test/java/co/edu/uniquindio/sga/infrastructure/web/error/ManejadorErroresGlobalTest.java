@@ -58,10 +58,10 @@ class ManejadorErroresGlobalTest {
     }
 
     @Test
-    @DisplayName("Regla sobre los datos · CAPACIDAD_EXCEDIDA responde 422 con la regla RN-02")
-    void reglaSobreLosDatosResponde422() throws Exception {
+    @DisplayName("Regla sobre los datos · CAPACIDAD_EXCEDIDA también responde 409, con la regla RN-02")
+    void reglaSobreLosDatosResponde409() throws Exception {
         mvc.perform(get("/prueba/regla").param("codigo", "CAPACIDAD_EXCEDIDA"))
-                .andExpect(status().isUnprocessableEntity())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("CAPACIDAD_EXCEDIDA"))
                 .andExpect(jsonPath("$.regla").value("RN-02"));
     }

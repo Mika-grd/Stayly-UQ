@@ -132,13 +132,22 @@ public class Reserva {
         anotar("Hora estimada de llegada: " + hora.hora(), autor, ahora);
     }
 
-    /** RN-08 y RN-09. El anticipo (L-11) lo verifica ConfirmacionReservaService antes de llamar aquí. */
-    public void confirmar(String autor, LocalDateTime ahora) {
+    /**
+     * RN-08 y RN-09: la reserva puede pasar a CONFIRMADA y ya tiene hora estimada de llegada. Lo usa
+     * ConfirmacionReservaService antes de revisar el anticipo (L-11): así una reserva cancelada responde
+     * por su estado y no por el pago que le falta.
+     */
+    public void verificarConfirmable() {
         verificarTransicion(EstadoReserva.CONFIRMADA);
         if (horaEstimadaLlegada == null) {
             throw new ReglaDominioException("HORA_LLEGADA_REQUERIDA",
                     "Debe registrar la hora estimada de llegada antes de confirmar.");
         }
+    }
+
+    /** RN-08 y RN-09. El anticipo (L-11) lo verifica ConfirmacionReservaService antes de llamar aquí. */
+    public void confirmar(String autor, LocalDateTime ahora) {
+        verificarConfirmable();
         cambiarEstado(EstadoReserva.CONFIRMADA, autor, ahora);
     }
 

@@ -14,10 +14,11 @@ info:
     - **401**: no autenticado (JWT o credencial del canal ausente o inválida).
     - **403**: el rol no tiene permiso o el recurso no pertenece al usuario.
     - **404**: el recurso no existe (`*_NO_ENCONTRADO` / `*_NO_ENCONTRADA`).
-    - **409**: conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o del folio).
-    - **422**: los datos tienen formato válido pero violan una regla de negocio, sin importar el estado actual.
+    - **409**: regla del negocio violada, sea sobre los datos enviados (capacidad, estancia mínima, mascotas…) o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). La valida el dominio, nunca el DTO.
 
     Todo error devuelve `ErrorNegocioResponse` con un `codigo` estable. Los valores monetarios son enteros en pesos colombianos (COP). Las fechas y horas se expresan en la zona America/Bogota. Los listados se paginan de a 10 elementos.
+
+    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5). Las operaciones de la operación diaria, el folio, el canal externo, la gestión de usuarios y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente: corte 3)* y no aparecen en Swagger UI.
 servers:
 - url: http://localhost:8080
   description: Entorno local de desarrollo.
@@ -238,9 +239,8 @@ paths:
                     mensaje: El campo fechaEntrada es obligatorio.
                     ruta: /api/apartamentos/disponibles
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: ESTANCIA_SIN_NOCHES,
-            FECHA_ENTRADA_PASADA.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: ESTANCIA_SIN_NOCHES, FECHA_ENTRADA_PASADA.'
           content:
             application/json:
               schema:
@@ -377,8 +377,8 @@ paths:
                     mensaje: No existe el apartamento SUQ-201.
                     ruta: /api/apartamentos/SUQ-201
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: IMAGENES_INVALIDAS.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: IMAGENES_INVALIDAS.'
           content:
             application/json:
               schema:
@@ -539,8 +539,7 @@ paths:
                     ruta: /api/apartamentos
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: IDENTIFICACION_DUPLICADA.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: IDENTIFICACION_DUPLICADA, IMAGENES_INVALIDAS.'
           content:
             application/json:
               schema:
@@ -554,13 +553,6 @@ paths:
                     regla: L-04
                     ruta: /api/apartamentos
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: IMAGENES_INVALIDAS.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 IMAGENES_INVALIDAS:
                   summary: IMAGENES_INVALIDAS
                   value:
@@ -656,7 +648,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Iniciar preparación (CU-09)
+      summary: Iniciar preparación (CU-09) (pendiente: corte 3)
       description: |-
         Transición PENDIENTE_PREPARACION → EN_PREPARACION (7.6, F-09).
 
@@ -737,7 +729,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Marcar apartamento preparado (CU-10)
+      summary: Marcar apartamento preparado (CU-10) (pendiente: corte 3)
       description: |-
         Transición EN_PREPARACION → PREPARADO (7.6, RN-11). Desde aquí el apartamento puede recibir un grupo.
 
@@ -818,7 +810,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Declarar fuera de servicio (CU-15)
+      summary: Declarar fuera de servicio (CU-15) (pendiente: corte 3)
       description: |-
         Pasa el apartamento a FUERA_DE_SERVICIO desde cualquier estado no ocupado (7.6, 3.3). Solo administrador. No registra un bloqueo por sí solo.
 
@@ -905,7 +897,7 @@ paths:
     put:
       tags:
       - Apartamentos
-      summary: Volver a servicio (CU-21)
+      summary: Volver a servicio (CU-21) (pendiente: corte 3)
       description: |-
         Transición FUERA_DE_SERVICIO → PENDIENTE_PREPARACION (7.6). Solo administrador.
 
@@ -1096,7 +1088,7 @@ paths:
     post:
       tags:
       - Apartamentos
-      summary: Registrar novedad (CU-11)
+      summary: Registrar novedad (CU-11) (pendiente: corte 3)
       description: |-
         Registra un daño, faltante o situación con fecha, autor, descripción y gravedad. No cambia el estado operativo (3.3).
 
@@ -1181,7 +1173,7 @@ paths:
     get:
       tags:
       - Apartamentos
-      summary: Consultar novedades
+      summary: Consultar novedades (pendiente: corte 3)
       description: Historial paginado de novedades del apartamento.
       operationId: consultarNovedades
       parameters:
@@ -1245,7 +1237,7 @@ paths:
     get:
       tags:
       - Apartamentos
-      summary: Consultar calendario de ocupación
+      summary: Consultar calendario de ocupación (pendiente: corte 3)
       description: Estado de cada noche (LIBRE, RESERVADA, BLOQUEADA) por apartamento en el rango.
       operationId: consultarCalendarioOcupacion
       parameters:
@@ -1404,8 +1396,7 @@ paths:
                     ruta: /api/cotizaciones
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: TARIFAS_INCOMPLETAS.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: TARIFAS_INCOMPLETAS, ESTANCIA_SIN_NOCHES, ESTANCIA_MINIMA_NO_CUMPLIDA.'
           content:
             application/json:
               schema:
@@ -1419,14 +1410,6 @@ paths:
                     regla: '7.4'
                     ruta: /api/cotizaciones
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: ESTANCIA_SIN_NOCHES,
-            ESTANCIA_MINIMA_NO_CUMPLIDA.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 ESTANCIA_SIN_NOCHES:
                   summary: ESTANCIA_SIN_NOCHES
                   value:
@@ -1528,9 +1511,7 @@ paths:
                     ruta: /api/reservas
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: APARTAMENTO_INACTIVO, TARIFAS_INCOMPLETAS, NOCHES_NO_DISPONIBLES, APARTAMENTO_BLOQUEADO,
-            TIEMPO_PREPARACION_INSUFICIENTE.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: APARTAMENTO_INACTIVO, TARIFAS_INCOMPLETAS, NOCHES_NO_DISPONIBLES, APARTAMENTO_BLOQUEADO, TIEMPO_PREPARACION_INSUFICIENTE, ESTANCIA_SIN_NOCHES, FECHA_ENTRADA_PASADA, CAPACIDAD_EXCEDIDA, TITULAR_NO_FACTURABLE, ESTANCIA_MINIMA_NO_CUMPLIDA, MASCOTAS_NO_ADMITIDAS, CUPO_MASCOTAS_EXCEDIDO.'
           content:
             application/json:
               schema:
@@ -1576,15 +1557,6 @@ paths:
                     regla: RN-20
                     ruta: /api/reservas
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: ESTANCIA_SIN_NOCHES,
-            FECHA_ENTRADA_PASADA, CAPACIDAD_EXCEDIDA, TITULAR_NO_FACTURABLE, ESTANCIA_MINIMA_NO_CUMPLIDA, MASCOTAS_NO_ADMITIDAS,
-            CUPO_MASCOTAS_EXCEDIDO.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 ESTANCIA_SIN_NOCHES:
                   summary: ESTANCIA_SIN_NOCHES
                   value:
@@ -1736,7 +1708,7 @@ paths:
     get:
       tags:
       - Reservas
-      summary: Consultar llegadas y salidas del día
+      summary: Consultar llegadas y salidas del día (pendiente: corte 3)
       description: |-
         Reservas que llegan y salen en la fecha indicada.
 
@@ -1957,9 +1929,7 @@ paths:
                     ruta: /api/reservas/RES-2026-00042
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: RESERVA_NO_MODIFICABLE, APARTAMENTO_INACTIVO, TARIFAS_INCOMPLETAS, NOCHES_NO_DISPONIBLES,
-            APARTAMENTO_BLOQUEADO, TIEMPO_PREPARACION_INSUFICIENTE.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: RESERVA_NO_MODIFICABLE, APARTAMENTO_INACTIVO, TARIFAS_INCOMPLETAS, NOCHES_NO_DISPONIBLES, APARTAMENTO_BLOQUEADO, TIEMPO_PREPARACION_INSUFICIENTE, ESTANCIA_SIN_NOCHES, FECHA_ENTRADA_PASADA, CAPACIDAD_EXCEDIDA, TITULAR_NO_FACTURABLE, ESTANCIA_MINIMA_NO_CUMPLIDA, MASCOTAS_NO_ADMITIDAS, CUPO_MASCOTAS_EXCEDIDO.'
           content:
             application/json:
               schema:
@@ -2013,15 +1983,6 @@ paths:
                     regla: RN-20
                     ruta: /api/reservas/RES-2026-00042
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: ESTANCIA_SIN_NOCHES,
-            FECHA_ENTRADA_PASADA, CAPACIDAD_EXCEDIDA, TITULAR_NO_FACTURABLE, ESTANCIA_MINIMA_NO_CUMPLIDA, MASCOTAS_NO_ADMITIDAS,
-            CUPO_MASCOTAS_EXCEDIDO.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 ESTANCIA_SIN_NOCHES:
                   summary: ESTANCIA_SIN_NOCHES
                   value:
@@ -2246,8 +2207,7 @@ paths:
                     ruta: /api/reservas/RES-2026-00042/confirmar
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: TRANSICION_INVALIDA.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: TRANSICION_INVALIDA, HORA_LLEGADA_REQUERIDA, ANTICIPO_INSUFICIENTE.'
           content:
             application/json:
               schema:
@@ -2261,14 +2221,6 @@ paths:
                     regla: RN-08
                     ruta: /api/reservas/RES-2026-00042/confirmar
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: HORA_LLEGADA_REQUERIDA,
-            ANTICIPO_INSUFICIENTE.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 HORA_LLEGADA_REQUERIDA:
                   summary: HORA_LLEGADA_REQUERIDA
                   value:
@@ -2475,7 +2427,7 @@ paths:
     put:
       tags:
       - Reservas
-      summary: Registrar salida (CU-06)
+      summary: Registrar salida (CU-06) (pendiente: corte 3)
       description: |-
         Transición EN_CURSO → FINALIZADA; el apartamento pasa a PENDIENTE_PREPARACION. Exige el folio cerrado (7.6, RN-17). La salida anticipada se maneja aquí.
 
@@ -2653,7 +2605,7 @@ paths:
     get:
       tags:
       - Folio
-      summary: Consultar folio (CU-19)
+      summary: Consultar folio (CU-19) (pendiente: corte 3)
       description: |-
         Devuelve cargos, pagos y saldo calculado del folio de la reserva (RN-15). El huésped solo consulta los suyos.
 
@@ -2718,7 +2670,7 @@ paths:
     post:
       tags:
       - Folio
-      summary: Registrar pago (CU-07)
+      summary: Registrar pago (CU-07) (pendiente: corte 3)
       description: |-
         Registra un abono en el folio con su medio y fecha (RN-15). Admite pagos parciales; nada se edita ni se borra.
 
@@ -2799,8 +2751,7 @@ paths:
                     ruta: /api/reservas/RES-2026-00042/folio/pagos
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: FOLIO_CERRADO.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: FOLIO_CERRADO, MEDIO_PAGO_NO_ACEPTADO, VALOR_INVALIDO.'
           content:
             application/json:
               schema:
@@ -2814,14 +2765,6 @@ paths:
                     regla: '7.7'
                     ruta: /api/reservas/RES-2026-00042/folio/pagos
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: MEDIO_PAGO_NO_ACEPTADO,
-            VALOR_INVALIDO.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 MEDIO_PAGO_NO_ACEPTADO:
                   summary: MEDIO_PAGO_NO_ACEPTADO
                   value:
@@ -2844,7 +2787,7 @@ paths:
     post:
       tags:
       - Folio
-      summary: Registrar cargo
+      summary: Registrar cargo (pendiente: corte 3)
       description: |-
         Registra un cargo manual (SERVICIO_ADICIONAL o AJUSTE) en el folio (RN-16).
 
@@ -2925,8 +2868,7 @@ paths:
                     ruta: /api/reservas/RES-2026-00042/folio/cargos
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: FOLIO_CERRADO.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: FOLIO_CERRADO, VALOR_INVALIDO.'
           content:
             application/json:
               schema:
@@ -2940,13 +2882,6 @@ paths:
                     regla: '7.7'
                     ruta: /api/reservas/RES-2026-00042/folio/cargos
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: VALOR_INVALIDO.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 VALOR_INVALIDO:
                   summary: VALOR_INVALIDO
                   value:
@@ -2961,7 +2896,7 @@ paths:
     put:
       tags:
       - Folio
-      summary: Cerrar folio (CU-18)
+      summary: Cerrar folio (CU-18) (pendiente: corte 3)
       description: |-
         Cierra el folio si el saldo es cero; con saldo distinto de cero exige autorización del administrador con motivo (RN-17).
 
@@ -3121,8 +3056,7 @@ paths:
                     ruta: /api/temporadas
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: TEMPORADAS_SOLAPADAS, TEMPORADA_BASE_DUPLICADA.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: TEMPORADAS_SOLAPADAS, TEMPORADA_BASE_DUPLICADA, PARAMETRO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -3144,13 +3078,6 @@ paths:
                     regla: F-05
                     ruta: /api/temporadas
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: PARAMETRO_INVALIDO.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 PARAMETRO_INVALIDO:
                   summary: PARAMETRO_INVALIDO
                   value:
@@ -3397,8 +3324,8 @@ paths:
                     mensaje: No existe la temporada indicada.
                     ruta: /api/temporadas/{id}/estancia-minima
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: PARAMETRO_INVALIDO.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: PARAMETRO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -3505,8 +3432,8 @@ paths:
                     mensaje: No existe la temporada indicada.
                     ruta: /api/apartamentos/SUQ-201/tarifas
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: VALOR_INVALIDO.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: VALOR_INVALIDO.'
           content:
             application/json:
               schema:
@@ -3651,8 +3578,8 @@ paths:
                     regla: '7.2'
                     ruta: /api/politica-cancelacion/versiones
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: TRAMOS_INSUFICIENTES.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: TRAMOS_INSUFICIENTES.'
           content:
             application/json:
               schema:
@@ -3687,8 +3614,8 @@ paths:
     get:
       tags:
       - Alojamiento
-      summary: Consultar alojamiento
-      description: Obtiene la configuración del alojamiento (recurso único, F-13).
+      summary: Consultar alojamiento (CU-22)
+      description: Obtiene la configuración vigente del alojamiento (recurso único, F-13), con los parámetros de la sección 6 y de las reglas propias.
       operationId: consultarAlojamiento
       responses:
         '200':
@@ -3732,9 +3659,9 @@ paths:
     put:
       tags:
       - Alojamiento
-      summary: Configurar alojamiento
+      summary: Configurar alojamiento (CU-36)
       description: |-
-        Reemplaza la configuración del alojamiento (recurso único, F-13).
+        Reemplaza los datos y los parámetros de la sección 6 del alojamiento (recurso único, F-13). Los valores iniciales salen de application.properties; los cambios rigen desde la siguiente operación. Conserva los parámetros de las reglas propias (los cambia CU-37).
 
         Actor(es): Administrador.
       operationId: configurarAlojamiento
@@ -3796,8 +3723,8 @@ paths:
                     regla: '7.2'
                     ruta: /api/alojamiento
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: PARAMETRO_INVALIDO.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: PARAMETRO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -3817,7 +3744,7 @@ paths:
     put:
       tags:
       - Alojamiento
-      summary: Configurar parámetros de reglas propias
+      summary: Configurar parámetros de reglas propias (CU-37)
       description: |-
         Reglas propias RP-02 y RP-03: cupo de mascotas, cargo por mascota por noche, hora de inicio y valor del recargo por llegada nocturna.
 
@@ -3881,8 +3808,8 @@ paths:
                     regla: '7.2'
                     ruta: /api/alojamiento/parametros
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: PARAMETRO_INVALIDO.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: PARAMETRO_INVALIDO.'
           content:
             application/json:
               schema:
@@ -3902,7 +3829,7 @@ paths:
     get:
       tags:
       - Usuarios
-      summary: Listar usuarios
+      summary: Listar usuarios (pendiente: corte 3)
       description: |-
         Lista paginada de usuarios.
 
@@ -3953,7 +3880,7 @@ paths:
     post:
       tags:
       - Usuarios
-      summary: Crear usuario
+      summary: Crear usuario (pendiente: corte 3)
       description: |-
         Crea un usuario interno con el rol que asigna el administrador.
 
@@ -4039,7 +3966,7 @@ paths:
     get:
       tags:
       - Usuarios
-      summary: Consultar usuario
+      summary: Consultar usuario (pendiente: corte 3)
       description: |-
         Obtiene un usuario.
 
@@ -4103,7 +4030,7 @@ paths:
     put:
       tags:
       - Usuarios
-      summary: Actualizar usuario
+      summary: Actualizar usuario (pendiente: corte 3)
       description: |-
         Reemplaza los datos del usuario. El correo no es editable después de creado.
 
@@ -4204,7 +4131,7 @@ paths:
     delete:
       tags:
       - Usuarios
-      summary: Eliminar usuario
+      summary: Eliminar usuario (pendiente: corte 3)
       description: |-
         Eliminación lógica (activo = false). No se permite si es titular de reservas activas (7.2).
 
@@ -4281,7 +4208,7 @@ paths:
     post:
       tags:
       - Canal externo
-      summary: Registrar canal
+      summary: Registrar canal (pendiente: corte 3)
       description: |-
         Registra un canal. La credencial generada solo se muestra en esta respuesta.
 
@@ -4350,7 +4277,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Listar canales
+      summary: Listar canales (pendiente: corte 3)
       description: |-
         Lista los canales registrados (sin credencial).
 
@@ -4401,7 +4328,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Consultar bitácora de canales
+      summary: Consultar bitácora de canales (pendiente: corte 3)
       description: |-
         Eventos de integración con canales externos, paginados.
 
@@ -4473,7 +4400,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Consultar disponibilidad (canal externo)
+      summary: Consultar disponibilidad (canal externo) (pendiente: corte 3)
       description: |-
         Contrato del canal externo (10.3.1), autenticado con la credencial del canal (apiKey).
 
@@ -4542,8 +4469,8 @@ paths:
                     regla: '7.2'
                     ruta: /api/externo/disponibilidad
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: ESTANCIA_SIN_NOCHES.'
+        '409':
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: ESTANCIA_SIN_NOCHES.'
           content:
             application/json:
               schema:
@@ -4563,7 +4490,7 @@ paths:
     post:
       tags:
       - Canal externo
-      summary: Recibir reserva externa (CU-08)
+      summary: Recibir reserva externa (CU-08) (pendiente: corte 3)
       description: |-
         Recibe una reserva de un canal externo. Idempotente por canal + identificadorExterno (RN-19): un mensaje repetido devuelve 200 con la misma reserva. Si choca con una reserva vigente se rechaza y se registra el conflicto (RN-18). Si es nueva sigue el flujo de CU-02 con canal EXTERNO y respeta la estancia mínima (RP-01).
 
@@ -4620,9 +4547,7 @@ paths:
                     ruta: /api/externo/reservas
                     fecha: '2026-10-01T10:15:30-05:00'
         '409':
-          description: 'Conflicto con el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva o
-            del folio). Códigos: CONFLICTO_CANAL, APARTAMENTO_INACTIVO, TARIFAS_INCOMPLETAS, NOCHES_NO_DISPONIBLES, APARTAMENTO_BLOQUEADO,
-            TIEMPO_PREPARACION_INSUFICIENTE.'
+          description: 'Regla del negocio violada, sobre los datos enviados o sobre el estado actual de un recurso (otra reserva, un bloqueo, el estado de la reserva). Códigos: CONFLICTO_CANAL, APARTAMENTO_INACTIVO, TARIFAS_INCOMPLETAS, NOCHES_NO_DISPONIBLES, APARTAMENTO_BLOQUEADO, TIEMPO_PREPARACION_INSUFICIENTE, ESTANCIA_SIN_NOCHES, FECHA_ENTRADA_PASADA, CAPACIDAD_EXCEDIDA, TITULAR_NO_FACTURABLE, ESTANCIA_MINIMA_NO_CUMPLIDA.'
           content:
             application/json:
               schema:
@@ -4676,14 +4601,6 @@ paths:
                     regla: RN-20
                     ruta: /api/externo/reservas
                     fecha: '2026-10-01T10:15:30-05:00'
-        '422':
-          description: 'Regla de negocio violada por los datos enviados, con formato válido. Códigos: ESTANCIA_SIN_NOCHES,
-            FECHA_ENTRADA_PASADA, CAPACIDAD_EXCEDIDA, TITULAR_NO_FACTURABLE, ESTANCIA_MINIMA_NO_CUMPLIDA.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorNegocioResponse'
-              examples:
                 ESTANCIA_SIN_NOCHES:
                   summary: ESTANCIA_SIN_NOCHES
                   value:
@@ -4730,7 +4647,7 @@ paths:
     put:
       tags:
       - Canal externo
-      summary: Cancelar reserva externa
+      summary: Cancelar reserva externa (pendiente: corte 3)
       description: |-
         Cancela una reserva recibida del canal, con la liquidación de la política congelada.
 
@@ -4796,7 +4713,7 @@ paths:
     get:
       tags:
       - Conflictos
-      summary: Consultar conflictos de canal
+      summary: Consultar conflictos de canal (pendiente: corte 3)
       description: |-
         Revisión del administrador de los conflictos registrados con canales externos (RN-18).
 
@@ -4854,7 +4771,7 @@ paths:
     put:
       tags:
       - Conflictos
-      summary: Resolver conflicto de canal
+      summary: Resolver conflicto de canal (pendiente: corte 3)
       description: |-
         Transición PENDIENTE → RESUELTO del conflicto, registrando qué se hizo con el caso.
 
@@ -4941,7 +4858,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de ocupación
+      summary: Reporte de ocupación (pendiente: corte 3)
       description: |-
         Noches vendidas sobre noches disponibles de los apartamentos activos en el rango.
 
@@ -5016,7 +4933,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de ingresos
+      summary: Reporte de ingresos (pendiente: corte 3)
       description: |-
         Suma de pagos registrados en el rango, por medio de pago.
 
@@ -5091,7 +5008,7 @@ paths:
     get:
       tags:
       - Reportes
-      summary: Reporte de reservas por canal
+      summary: Reporte de reservas por canal (pendiente: corte 3)
       description: |-
         Reservas, cancelaciones y no-show por canal en el rango.
 
@@ -5266,8 +5183,7 @@ components:
   schemas:
     ErrorNegocioResponse:
       type: object
-      description: 'Respuesta de error de negocio. El código HTTP sigue el criterio: 400 formato, 422 regla sobre los datos,
-        409 conflicto con el estado actual.'
+      description: 'Respuesta de error de negocio. El código HTTP sigue el criterio: 400 formato, 401 y 403 seguridad, 404 recurso inexistente y 409 regla del negocio violada. Nunca incluye trazas técnicas.'
       required:
       - codigo
       - mensaje

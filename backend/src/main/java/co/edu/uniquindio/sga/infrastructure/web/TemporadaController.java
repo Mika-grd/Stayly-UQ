@@ -10,6 +10,7 @@ import co.edu.uniquindio.sga.domain.model.temporada.IdTemporada;
 import co.edu.uniquindio.sga.domain.model.temporada.Temporada;
 import co.edu.uniquindio.sga.infrastructure.web.mapper.TemporadaWebMapper;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +39,7 @@ public class TemporadaController {
     }
 
     @PostMapping("/api/temporadas")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<TemporadaResponse> crear(@Valid @RequestBody TemporadaRequest request,
                                                    UriComponentsBuilder uri) {
         Temporada temporada = gestionar.crear(mapper.aDatos(request));
@@ -46,17 +48,20 @@ public class TemporadaController {
     }
 
     @GetMapping("/api/temporadas")
+    @PreAuthorize("hasAnyAuthority('RECEPCIONISTA', 'ADMINISTRADOR')")
     public List<TemporadaResponse> listar() {
         return gestionar.listar().stream().map(mapper::aResponse).toList();
     }
 
     @PutMapping("/api/temporadas/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public TemporadaResponse actualizar(@PathVariable UUID id, @Valid @RequestBody TemporadaRequest request) {
         Temporada temporada = gestionar.actualizar(new IdTemporada(id), mapper.aDatos(request));
         return mapper.aResponse(temporada);
     }
 
     @PutMapping("/api/temporadas/{id}/estancia-minima")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public TemporadaResponse configurarEstanciaMinima(@PathVariable UUID id,
                                                       @Valid @RequestBody EstanciaMinimaRequest request) {
         Temporada temporada = configurarEstanciaMinima.ejecutar(new IdTemporada(id),

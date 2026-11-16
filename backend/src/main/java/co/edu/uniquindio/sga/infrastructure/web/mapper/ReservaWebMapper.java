@@ -1,6 +1,7 @@
 package co.edu.uniquindio.sga.infrastructure.web.mapper;
 
 import co.edu.uniquindio.sga.application.dto.request.CrearReservaRequest;
+import co.edu.uniquindio.sga.application.dto.request.ModificarReservaRequest;
 import co.edu.uniquindio.sga.application.dto.request.OcupanteRequest;
 import co.edu.uniquindio.sga.application.dto.request.TitularRequest;
 import co.edu.uniquindio.sga.application.dto.response.EstadoLiquidacion;
@@ -11,11 +12,13 @@ import co.edu.uniquindio.sga.application.dto.response.ReservaResumenResponse;
 import co.edu.uniquindio.sga.application.dto.response.ValorCongeladoDTO;
 import co.edu.uniquindio.sga.application.usecase.CrearReservaUseCase.Comando;
 import co.edu.uniquindio.sga.application.usecase.CrearReservaUseCase.DatosOcupante;
+import co.edu.uniquindio.sga.application.usecase.ModificarReservaUseCase;
 import co.edu.uniquindio.sga.domain.model.alojamiento.UmbralEdadFacturable;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
 import co.edu.uniquindio.sga.domain.model.folio.Folio;
 import co.edu.uniquindio.sga.domain.model.folio.TipoCargo;
 import co.edu.uniquindio.sga.domain.model.reserva.CanalOrigen;
+import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Ocupante;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.model.reserva.ValorCongelado;
@@ -30,12 +33,15 @@ import java.util.List;
 public interface ReservaWebMapper {
 
     default List<DatosOcupante> aDatosOcupantes(CrearReservaRequest request) {
+        return aDatosOcupantes(request.titular(), request.acompanantes());
+    }
+
+    default List<DatosOcupante> aDatosOcupantes(TitularRequest titular, List<OcupanteRequest> acompanantes) {
         List<DatosOcupante> ocupantes = new ArrayList<>();
-        TitularRequest titular = request.titular();
         ocupantes.add(new DatosOcupante(titular.nombre(), titular.fechaNacimiento(), titular.documentoIdentidad(),
                 true, titular.correo(), titular.telefono()));
-        if (request.acompanantes() != null) {
-            for (OcupanteRequest acompanante : request.acompanantes()) {
+        if (acompanantes != null) {
+            for (OcupanteRequest acompanante : acompanantes) {
                 ocupantes.add(new DatosOcupante(acompanante.nombre(), acompanante.fechaNacimiento(),
                         acompanante.documentoIdentidad(), false, null, null));
             }
@@ -47,6 +53,15 @@ public interface ReservaWebMapper {
     default Comando aComando(CrearReservaRequest request, CanalOrigen canal, String autor) {
         return new Comando(new IdentificacionApartamento(request.identificacionApartamento()), request.fechaEntrada(),
                 request.fechaSalida(), aDatosOcupantes(request), canal, null, request.horaEstimadaLlegada(),
+                request.mascotasAutorizadas() == null ? 0 : request.mascotasAutorizadas(), autor);
+    }
+
+    /** CU-13: el autor lo decide el controller con el token; el canal de la reserva no cambia. */
+    default ModificarReservaUseCase.Comando aComandoModificar(String codigo, ModificarReservaRequest request,
+                                                              String autor) {
+        return new ModificarReservaUseCase.Comando(new CodigoReserva(codigo),
+                new IdentificacionApartamento(request.identificacionApartamento()), request.fechaEntrada(),
+                request.fechaSalida(), aDatosOcupantes(request.titular(), request.acompanantes()),
                 request.mascotasAutorizadas() == null ? 0 : request.mascotasAutorizadas(), autor);
     }
 

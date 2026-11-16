@@ -10,8 +10,9 @@ import co.edu.uniquindio.sga.domain.repository.ConfiguracionAlojamiento;
 import java.time.LocalDateTime;
 
 /**
- * L-11: el anticipo pagado está en el Folio, que la Reserva no puede ver. Verifica el anticipo
- * y luego delega en Reserva.confirmar, que protege RN-08 y RN-09.
+ * L-11: el anticipo pagado está en el Folio, que la Reserva no puede ver. Primero la Reserva verifica
+ * su estado y su hora de llegada (RN-08, RN-09), después se verifica el anticipo y al final
+ * Reserva.confirmar hace la transición.
  */
 public class ConfirmacionReservaService {
 
@@ -25,6 +26,7 @@ public class ConfirmacionReservaService {
         if (!folio.reserva().equals(reserva.codigo())) {
             throw new ReglaDominioException("PARAMETRO_INVALIDO", "El folio no corresponde a la reserva.");
         }
+        reserva.verificarConfirmable();
         Anticipo anticipo = configuracion.anticipo();
         Dinero faltante = anticipo.exigidoSobre(reserva.valor().total()).restar(folio.totalPagos());
         if (faltante.esPositivo()) {

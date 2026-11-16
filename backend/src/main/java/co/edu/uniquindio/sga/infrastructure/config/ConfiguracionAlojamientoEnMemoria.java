@@ -21,36 +21,18 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Implementa el puerto ConfiguracionAlojamiento con los valores de la Ficha cargados al iniciar.
- * Construye los objetos de valor una sola vez, así un valor fuera de rango en application.properties
- * hace fallar el arranque con su ReglaDominioException.
+ * Implementa el puerto ConfiguracionAlojamiento. Al iniciar toma los valores de la Ficha de
+ * application.properties (así un valor fuera de rango hace fallar el arranque con su
+ * ReglaDominioException); después el administrador los cambia por la API (CU-36, CU-37) y cada
+ * servicio lee el valor vigente en su siguiente uso. Un reinicio vuelve a los de application.properties.
  */
 public class ConfiguracionAlojamientoEnMemoria implements ConfiguracionAlojamiento {
 
-    private final UmbralEdadFacturable umbralEdad;
-    private final TiempoPreparacion tiempoPreparacion;
-    private final HorarioAlojamiento horario;
-    private final PlazoConfirmacion plazoConfirmacion;
-    private final HoraLimiteNoShow horaLimiteNoShow;
-    private final Anticipo anticipo;
-    private final CupoMascotas cupoMascotas;
-    private final CargoPorMascota cargoPorMascota;
-    private final RecargoLlegadaNocturna recargoLlegadaNocturna;
-    private final Alojamiento alojamiento;
+    private volatile Alojamiento alojamiento;
 
     public ConfiguracionAlojamientoEnMemoria(PropiedadesAlojamiento propiedades) {
-        this.umbralEdad = new UmbralEdadFacturable(propiedades.umbralEdadFacturable());
-        this.tiempoPreparacion = new TiempoPreparacion(propiedades.tiempoPreparacionHoras());
-        this.horario = new HorarioAlojamiento(LocalTime.parse(propiedades.horaEntrada()),
+        HorarioAlojamiento horario = new HorarioAlojamiento(LocalTime.parse(propiedades.horaEntrada()),
                 LocalTime.parse(propiedades.horaSalida()));
-        this.plazoConfirmacion = new PlazoConfirmacion(propiedades.plazoConfirmacionHoras());
-        this.horaLimiteNoShow = new HoraLimiteNoShow(LocalTime.parse(propiedades.horaLimiteNoShow()));
-        this.anticipo = new Anticipo(propiedades.anticipo().exigido(), propiedades.anticipo().porcentaje());
-        this.cupoMascotas = new CupoMascotas(propiedades.mascotas().cupoMaximo());
-        this.cargoPorMascota = new CargoPorMascota(Dinero.pesos(propiedades.mascotas().cargoPorNoche()));
-        this.recargoLlegadaNocturna = new RecargoLlegadaNocturna(
-                LocalTime.parse(propiedades.recargoLlegadaNocturna().horaInicio()),
-                Dinero.pesos(propiedades.recargoLlegadaNocturna().valor()));
         this.alojamiento = Alojamiento.crear(
                 UUID.nameUUIDFromBytes(propiedades.nombre().getBytes(StandardCharsets.UTF_8)), propiedades.nombre(),
                 propiedades.descripcion(), propiedades.ciudad(), propiedades.direccion(),
@@ -59,18 +41,31 @@ public class ConfiguracionAlojamientoEnMemoria implements ConfiguracionAlojamien
                         .map(servicio -> new ServicioAdicional(servicio.nombre(), servicio.generaCargo(),
                                 Dinero.pesos(servicio.valor())))
                         .toList(),
-                Set.copyOf(propiedades.mediosPago()), horario, umbralEdad, tiempoPreparacion, plazoConfirmacion,
-                horaLimiteNoShow, anticipo, cupoMascotas, cargoPorMascota, recargoLlegadaNocturna);
+                Set.copyOf(propiedades.mediosPago()), horario,
+                new UmbralEdadFacturable(propiedades.umbralEdadFacturable()),
+                new TiempoPreparacion(propiedades.tiempoPreparacionHoras()),
+                new PlazoConfirmacion(propiedades.plazoConfirmacionHoras()),
+                new HoraLimiteNoShow(LocalTime.parse(propiedades.horaLimiteNoShow())),
+                new Anticipo(propiedades.anticipo().exigido(), propiedades.anticipo().porcentaje()),
+                new CupoMascotas(propiedades.mascotas().cupoMaximo()),
+                new CargoPorMascota(Dinero.pesos(propiedades.mascotas().cargoPorNoche())),
+                new RecargoLlegadaNocturna(LocalTime.parse(propiedades.recargoLlegadaNocturna().horaInicio()),
+                        Dinero.pesos(propiedades.recargoLlegadaNocturna().valor())));
     }
 
-    @Override public UmbralEdadFacturable umbralEdad() { return umbralEdad; }
-    @Override public TiempoPreparacion tiempoPreparacion() { return tiempoPreparacion; }
-    @Override public HorarioAlojamiento horario() { return horario; }
-    @Override public PlazoConfirmacion plazoConfirmacion() { return plazoConfirmacion; }
-    @Override public HoraLimiteNoShow horaLimiteNoShow() { return horaLimiteNoShow; }
-    @Override public Anticipo anticipo() { return anticipo; }
-    @Override public CupoMascotas cupoMascotas() { return cupoMascotas; }
-    @Override public CargoPorMascota cargoPorMascota() { return cargoPorMascota; }
-    @Override public RecargoLlegadaNocturna recargoLlegadaNocturna() { return recargoLlegadaNocturna; }
+    @Override public UmbralEdadFacturable umbralEdad() { return alojamiento.umbralEdad(); }
+    @Override public TiempoPreparacion tiempoPreparacion() { return alojamiento.tiempoPreparacion(); }
+    @Override public HorarioAlojamiento horario() { return alojamiento.horario(); }
+    @Override public PlazoConfirmacion plazoConfirmacion() { return alojamiento.plazoConfirmacion(); }
+    @Override public HoraLimiteNoShow horaLimiteNoShow() { return alojamiento.horaLimiteNoShow(); }
+    @Override public Anticipo anticipo() { return alojamiento.anticipo(); }
+    @Override public CupoMascotas cupoMascotas() { return alojamiento.cupoMascotas(); }
+    @Override public CargoPorMascota cargoPorMascota() { return alojamiento.cargoPorMascota(); }
+    @Override public RecargoLlegadaNocturna recargoLlegadaNocturna() { return alojamiento.recargoLlegadaNocturna(); }
     @Override public Alojamiento alojamiento() { return alojamiento; }
+
+    @Override
+    public void guardar(Alojamiento alojamiento) {
+        this.alojamiento = alojamiento;
+    }
 }
