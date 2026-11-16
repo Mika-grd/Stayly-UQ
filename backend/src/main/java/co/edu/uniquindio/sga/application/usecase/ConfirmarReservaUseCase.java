@@ -4,6 +4,7 @@ import co.edu.uniquindio.sga.domain.model.folio.Folio;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
+import co.edu.uniquindio.sga.domain.repository.NotificadorTitular;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.service.ConfirmacionReservaService;
 import org.springframework.stereotype.Service;
@@ -21,13 +22,16 @@ public class ConfirmarReservaUseCase {
     private final FolioRepository folios;
     private final ConfirmacionReservaService confirmacion;
     private final Clock reloj;
+    private final NotificadorTitular notificador;
 
     public ConfirmarReservaUseCase(ReservaRepository reservas, FolioRepository folios,
-                                   ConfirmacionReservaService confirmacion, Clock reloj) {
+                                   ConfirmacionReservaService confirmacion,
+                                   Clock reloj, NotificadorTitular notificador) {
         this.reservas = reservas;
         this.folios = folios;
         this.confirmacion = confirmacion;
         this.reloj = reloj;
+        this.notificador = notificador;
     }
 
     public Reserva ejecutar(CodigoReserva codigo, String autor) {
@@ -35,6 +39,7 @@ public class ConfirmarReservaUseCase {
         Folio folio = Consultas.folio(folios, codigo);
         confirmacion.confirmar(reserva, folio, autor, LocalDateTime.now(reloj));
         reservas.guardar(reserva);
+        notificador.notificar(reserva, NotificadorTitular.Motivo.CONFIRMADA);
         return reserva;
     }
 }

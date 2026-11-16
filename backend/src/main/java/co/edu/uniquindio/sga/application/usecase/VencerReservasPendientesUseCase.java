@@ -6,6 +6,7 @@ import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.repository.ConfiguracionAlojamiento;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
+import co.edu.uniquindio.sga.domain.repository.NotificadorTitular;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +28,16 @@ public class VencerReservasPendientesUseCase {
     private final FolioRepository folios;
     private final ConfiguracionAlojamiento configuracion;
     private final Clock reloj;
+    private final NotificadorTitular notificador;
 
     public VencerReservasPendientesUseCase(ReservaRepository reservas, FolioRepository folios,
-                                           ConfiguracionAlojamiento configuracion, Clock reloj) {
+                                           ConfiguracionAlojamiento configuracion,
+                                           Clock reloj, NotificadorTitular notificador) {
         this.reservas = reservas;
         this.folios = folios;
         this.configuracion = configuracion;
         this.reloj = reloj;
+        this.notificador = notificador;
     }
 
     /** Devuelve los códigos de las reservas que vencieron en esta pasada. */
@@ -48,6 +52,7 @@ public class VencerReservasPendientesUseCase {
                 folios.guardar(folio);
             });
             reservas.guardar(reserva);
+            notificador.notificar(reserva, NotificadorTitular.Motivo.CANCELADA);
         }
         return candidatas.stream().map(Reserva::codigo).toList();
     }

@@ -5,6 +5,7 @@ import co.edu.uniquindio.sga.domain.model.folio.Folio;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
+import co.edu.uniquindio.sga.domain.repository.NotificadorTitular;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.service.CalculadorRetencionService;
 import org.springframework.stereotype.Service;
@@ -25,13 +26,16 @@ public class CancelarReservaUseCase {
     private final FolioRepository folios;
     private final CalculadorRetencionService calculadorRetencion;
     private final Clock reloj;
+    private final NotificadorTitular notificador;
 
     public CancelarReservaUseCase(ReservaRepository reservas, FolioRepository folios,
-                                  CalculadorRetencionService calculadorRetencion, Clock reloj) {
+                                  CalculadorRetencionService calculadorRetencion,
+                                  Clock reloj, NotificadorTitular notificador) {
         this.reservas = reservas;
         this.folios = folios;
         this.calculadorRetencion = calculadorRetencion;
         this.reloj = reloj;
+        this.notificador = notificador;
     }
 
     public Folio ejecutar(CodigoReserva codigo, String autor) {
@@ -42,6 +46,7 @@ public class CancelarReservaUseCase {
         reserva.cancelar(autor, ahora);
         folio.liquidarCancelacion(retencion, ahora);
         reservas.guardar(reserva);
+        notificador.notificar(reserva, NotificadorTitular.Motivo.CANCELADA);
         folios.guardar(folio);
         return folio;
     }

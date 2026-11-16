@@ -14,6 +14,7 @@ import co.edu.uniquindio.sga.domain.model.reserva.CanalOrigen;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.EstadoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
+import co.edu.uniquindio.sga.domain.repository.NotificadorTitular;
 import co.edu.uniquindio.sga.domain.service.AdmisionMascotasService;
 import co.edu.uniquindio.sga.domain.service.CalculadorRetencionService;
 import co.edu.uniquindio.sga.domain.service.ConfirmacionReservaService;
@@ -103,7 +104,8 @@ class ReservaUseCasesTest {
                 LocalDateTime.of(2026, 10, 1, 12, 0), "TRF-100"));
 
         // Act
-        new ConfirmarReservaUseCase(reservas, folios, new ConfirmacionReservaService(configuracion), reloj)
+        new ConfirmarReservaUseCase(reservas, folios, new ConfirmacionReservaService(configuracion), reloj,
+                NotificadorTitular.NINGUNO)
                 .ejecutar(reserva.codigo(), "recepcion");
         reloj = relojEn(LocalDateTime.of(2026, 11, 20, 15, 0));
         new RegistrarLlegadaUseCase(reservas, apartamentos, new EntregaApartamentoService(), reloj)
@@ -122,14 +124,16 @@ class ReservaUseCasesTest {
         reloj = relojEn(LocalDateTime.of(2026, 11, 10, 9, 0));
 
         // Act
-        Folio folio = new CancelarReservaUseCase(reservas, folios, new CalculadorRetencionService(politicas), reloj)
+        Folio folio = new CancelarReservaUseCase(reservas, folios, new CalculadorRetencionService(politicas), reloj,
+                NotificadorTitular.NINGUNO)
                 .ejecutar(reserva.codigo(), "huesped");
 
         // Assert
         assertThat(reserva.estado()).isEqualTo(EstadoReserva.CANCELADA);
         assertThat(folio.saldo().valor()).isEqualTo(Dinero.pesos(117_000));
         assertThatThrownBy(() -> new CancelarReservaUseCase(reservas, folios,
-                new CalculadorRetencionService(politicas), reloj).ejecutar(reserva.codigo(), "huesped"))
+                new CalculadorRetencionService(politicas), reloj,
+                        NotificadorTitular.NINGUNO).ejecutar(reserva.codigo(), "huesped"))
                 .isInstanceOf(ReglaDominioException.class)
                 .extracting("codigo").isEqualTo("TRANSICION_INVALIDA");
     }
@@ -139,7 +143,8 @@ class ReservaUseCasesTest {
     void confirmarReservaInexistente() {
         // Arrange
         ConfirmarReservaUseCase confirmar =
-                new ConfirmarReservaUseCase(reservas, folios, new ConfirmacionReservaService(configuracion), reloj);
+                new ConfirmarReservaUseCase(reservas, folios, new ConfirmacionReservaService(configuracion), reloj,
+                        NotificadorTitular.NINGUNO);
 
         // Act y Assert
         assertThatThrownBy(() -> confirmar.ejecutar(new CodigoReserva("RES-2026-09999"), "recepcion"))
@@ -170,7 +175,7 @@ class ReservaUseCasesTest {
                 new VerificadorTarifasCompletasService(temporadas, tarifarios),
                 new VerificadorEstanciaMinimaService(temporadas), new AdmisionMascotasService(configuracion),
                 disponibilidad, new CotizadorEstanciaService(temporadas, tarifarios, configuracion), configuracion,
-                reloj);
+                reloj, NotificadorTitular.NINGUNO);
     }
 
     /** SUQ-301 del 20 al 22/11/2026 (temporada base) con dos adultos y un niño de 13 años. */
