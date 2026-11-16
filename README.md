@@ -138,6 +138,12 @@ IA apagada).
 **Vercel** (Root Directory `frontend`, preset Vite): `VITE_API_URL` con la URL de Render terminada en `/api`, y
 opcionalmente `VITE_MAPBOX_TOKEN`.
 
+**Base de datos (12.2).** En `prod` se usa H2 en modo archivo (`./data/sgadb`, esquema con `update`): los datos se
+conservan entre arranques mientras exista el disco; en el plan gratuito de Render el disco se borra al reiniciar, y
+la aplicación vuelve a cargar los datos de prueba sin duplicarlos. Para una base gestionada (por ejemplo PostgreSQL de
+Neon o de Render) basta definir `SGA_DB_URL=jdbc:postgresql://...`, `SGA_DB_USUARIO` y `SGA_DB_CLAVE`: se sustituye el
+adaptador JDBC y el dominio no cambia. El driver de PostgreSQL ya está en `build.gradle`.
+
 En el perfil `prod` la consola de H2 y Swagger quedan cerrados, solo existe la cuenta del administrador (las de la
 tabla anterior no se crean) y el arranque falla si falta la clave o un dato de esa cuenta. Los datos de prueba del
 alojamiento (apartamentos, tarifas y reservas) sí se cargan, para que el catálogo funcione en la demostración.
