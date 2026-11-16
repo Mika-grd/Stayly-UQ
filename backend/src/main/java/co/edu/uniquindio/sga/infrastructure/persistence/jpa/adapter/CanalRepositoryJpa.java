@@ -6,6 +6,7 @@ import co.edu.uniquindio.sga.domain.repository.CanalRepository;
 import co.edu.uniquindio.sga.infrastructure.persistence.jpa.mapper.CanalMapper;
 import co.edu.uniquindio.sga.infrastructure.persistence.jpa.repository.CanalJpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /** Adaptador JPA del puerto CanalRepository. */
@@ -25,5 +26,10 @@ public class CanalRepositoryJpa implements CanalRepository {
     @Override
     public Optional<Canal> buscarPorId(IdCanal id) {
         return jpa.findById(id.valor()).map(CanalMapper::aDominio);
+    }
+
+    @Override
+    public List<Canal> listar() {
+        return jpa.findAllByOrderByNombreAsc().stream().map(CanalMapper::aDominio).toList();
     }
 }

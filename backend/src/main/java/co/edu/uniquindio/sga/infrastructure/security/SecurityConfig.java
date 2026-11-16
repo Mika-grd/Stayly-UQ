@@ -14,6 +14,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -46,12 +47,14 @@ public class SecurityConfig {
     private final JwtDecoder jwtDecoder;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
     private final RespuestasErrorSeguridad respuestasError;
+    private final CredencialesCanalServiceImpl credencialesCanal;
 
     public SecurityConfig(JwtDecoder jwtDecoder, JwtAuthenticationConverter jwtAuthenticationConverter,
-                          RespuestasErrorSeguridad respuestasError) {
+                          RespuestasErrorSeguridad respuestasError, CredencialesCanalServiceImpl credencialesCanal) {
         this.jwtDecoder = jwtDecoder;
         this.jwtAuthenticationConverter = jwtAuthenticationConverter;
         this.respuestasError = respuestasError;
+        this.credencialesCanal = credencialesCanal;
     }
 
     @Bean
@@ -68,7 +71,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/apartamentos/por-preparar").authenticated()
                         // Lecturas públicas del contrato (security: []): catálogo y política vigente
                         .requestMatchers(HttpMethod.GET, LECTURAS_PUBLICAS).permitAll()
+                        // Canal externo: credencial X-API-Key en vez de JWT (7.8)
+                        .requestMatchers(FiltroCredencialCanal.RUTAS + "**").hasAuthority(CanalExternoAutenticado.AUTORIDAD)
                         .anyRequest().authenticated())
+                .addFilterBefore(new FiltroCredencialCanal(credencialesCanal, respuestasError),
+                        BearerTokenAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.decoder(jwtDecoder).jwtAuthenticationConverter(jwtAuthenticationConverter))

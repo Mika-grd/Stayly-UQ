@@ -17,6 +17,7 @@ import co.edu.uniquindio.sga.domain.service.CalculadorRetencionService;
 import co.edu.uniquindio.sga.domain.service.CalendarioTemporadasService;
 import co.edu.uniquindio.sga.domain.service.ConfirmacionReservaService;
 import co.edu.uniquindio.sga.domain.service.CotizadorEstanciaService;
+import co.edu.uniquindio.sga.domain.service.ConciliacionCanalExternoService;
 import co.edu.uniquindio.sga.domain.service.DisponibilidadApartamentoService;
 import co.edu.uniquindio.sga.domain.service.EntregaApartamentoService;
 import co.edu.uniquindio.sga.domain.service.SalidaGrupoService;
@@ -125,6 +126,12 @@ public class ConfiguracionBeans {
     }
 
     // Servicios de dominio
+
+    @Bean
+    ConciliacionCanalExternoService conciliacionCanalExternoService(ReservaRepository reservas,
+                                                                    DisponibilidadApartamentoService disponibilidad) {
+        return new ConciliacionCanalExternoService(reservas, disponibilidad);
+    }
 
     @Bean
     DisponibilidadApartamentoService disponibilidadApartamentoService(ReservaRepository reservas,

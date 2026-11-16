@@ -18,7 +18,7 @@ info:
 
     Todo error devuelve `ErrorNegocioResponse` con un `codigo` estable. Los valores monetarios son enteros en pesos colombianos (COP). Las fechas y horas se expresan en la zona America/Bogota. Los listados se paginan de a 10 elementos.
 
-    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5), operación diaria (7.6) y folio (7.7). Las operaciones del canal externo y los reportes siguen documentadas como contrato, pero aún no están implementadas: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
+    **Alcance de la Entrega 2 (corte 2)**: usuarios y seguridad (7.2), alojamiento y apartamentos (7.3), temporadas, tarifas y política (7.4), disponibilidad y reservas (7.5), operación diaria (7.6), folio (7.7) y canal externo y conflictos (7.8). Los reportes siguen documentados como contrato, pero aún no están implementados: su resumen termina en *(pendiente del corte 3)* y no aparecen en Swagger UI.
 servers:
 - url: http://localhost:8080
   description: Entorno local de desarrollo.
@@ -4588,7 +4588,7 @@ paths:
     post:
       tags:
       - Canal externo
-      summary: Registrar canal (pendiente del corte 3)
+      summary: Registrar canal
       description: |-
         Registra un canal. La credencial generada solo se muestra en esta respuesta.
 
@@ -4657,7 +4657,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Listar canales (pendiente del corte 3)
+      summary: Listar canales
       description: |-
         Lista los canales registrados (sin credencial).
 
@@ -4708,7 +4708,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Consultar bitácora de canales (pendiente del corte 3)
+      summary: Consultar bitácora de canales
       description: |-
         Eventos de integración con canales externos, paginados.
 
@@ -4780,7 +4780,7 @@ paths:
     get:
       tags:
       - Canal externo
-      summary: Consultar disponibilidad (canal externo) (pendiente del corte 3)
+      summary: Consultar disponibilidad (canal externo)
       description: |-
         Contrato del canal externo (10.3.1), autenticado con la credencial del canal (apiKey).
 
@@ -4870,7 +4870,7 @@ paths:
     post:
       tags:
       - Canal externo
-      summary: Recibir reserva externa (CU-08) (pendiente del corte 3)
+      summary: Recibir reserva externa (CU-08)
       description: |-
         Recibe una reserva de un canal externo. Idempotente por canal + identificadorExterno (RN-19): un mensaje repetido devuelve 200 con la misma reserva. Si choca con una reserva vigente se rechaza y se registra el conflicto (RN-18). Si es nueva sigue el flujo de CU-02 con canal EXTERNO y respeta la estancia mínima (RP-01).
 
@@ -5027,7 +5027,7 @@ paths:
     put:
       tags:
       - Canal externo
-      summary: Cancelar reserva externa (pendiente del corte 3)
+      summary: Cancelar reserva externa
       description: |-
         Cancela una reserva recibida del canal, con la liquidación de la política congelada.
 
@@ -5093,7 +5093,7 @@ paths:
     get:
       tags:
       - Conflictos
-      summary: Consultar conflictos de canal (pendiente del corte 3)
+      summary: Consultar conflictos de canal
       description: |-
         Revisión del administrador de los conflictos registrados con canales externos (RN-18).
 
@@ -5151,7 +5151,7 @@ paths:
     put:
       tags:
       - Conflictos
-      summary: Resolver conflicto de canal (pendiente del corte 3)
+      summary: Resolver conflicto de canal
       description: |-
         Transición PENDIENTE → RESUELTO del conflicto, registrando qué se hizo con el caso.
 

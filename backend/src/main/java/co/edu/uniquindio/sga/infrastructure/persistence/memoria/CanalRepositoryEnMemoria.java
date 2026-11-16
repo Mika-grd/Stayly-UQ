@@ -4,7 +4,9 @@ import co.edu.uniquindio.sga.domain.model.canal.Canal;
 import co.edu.uniquindio.sga.domain.model.canal.IdCanal;
 import co.edu.uniquindio.sga.domain.repository.CanalRepository;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,5 +22,10 @@ public class CanalRepositoryEnMemoria implements CanalRepository {
     @Override
     public Optional<Canal> buscarPorId(IdCanal id) {
         return Optional.ofNullable(canales.get(id));
+    }
+
+    @Override
+    public List<Canal> listar() {
+        return canales.values().stream().sorted(Comparator.comparing(Canal::nombre)).toList();
     }
 }

@@ -3,12 +3,18 @@ package co.edu.uniquindio.sga.application.usecase;
 import co.edu.uniquindio.sga.application.exception.RecursoNoEncontradoException;
 import co.edu.uniquindio.sga.domain.model.apartamento.Apartamento;
 import co.edu.uniquindio.sga.domain.model.apartamento.IdentificacionApartamento;
+import co.edu.uniquindio.sga.domain.model.canal.Canal;
+import co.edu.uniquindio.sga.domain.model.canal.ConflictoCanal;
+import co.edu.uniquindio.sga.domain.model.canal.IdCanal;
+import co.edu.uniquindio.sga.domain.model.canal.IdConflictoCanal;
 import co.edu.uniquindio.sga.domain.model.folio.Folio;
 import co.edu.uniquindio.sga.domain.model.reserva.CodigoReserva;
 import co.edu.uniquindio.sga.domain.model.reserva.Reserva;
 import co.edu.uniquindio.sga.domain.model.temporada.IdTemporada;
 import co.edu.uniquindio.sga.domain.model.temporada.Temporada;
 import co.edu.uniquindio.sga.domain.repository.ApartamentoRepository;
+import co.edu.uniquindio.sga.domain.repository.CanalRepository;
+import co.edu.uniquindio.sga.domain.repository.ConflictoCanalRepository;
 import co.edu.uniquindio.sga.domain.repository.FolioRepository;
 import co.edu.uniquindio.sga.domain.repository.ReservaRepository;
 import co.edu.uniquindio.sga.domain.repository.TemporadaRepository;
@@ -35,6 +41,18 @@ final class Consultas {
         return apartamentos.buscarPorIdentificacion(identificacion)
                 .orElseThrow(() -> new RecursoNoEncontradoException("APARTAMENTO_NO_ENCONTRADO",
                         "No existe el apartamento " + identificacion + "."));
+    }
+
+    static Canal canal(CanalRepository canales, IdCanal id) {
+        return canales.buscarPorId(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("CANAL_NO_ENCONTRADO",
+                        "No existe el canal " + id.valor() + "."));
+    }
+
+    static ConflictoCanal conflicto(ConflictoCanalRepository conflictos, IdConflictoCanal id) {
+        return conflictos.buscarPorId(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("CONFLICTO_NO_ENCONTRADO",
+                        "No existe el conflicto de canal " + id.valor() + "."));
     }
 
     static Temporada temporada(TemporadaRepository temporadas, IdTemporada id) {
