@@ -226,6 +226,25 @@ class RecorridosApiIntegracionTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Calendario de disponibilidad del detalle (público)
+
+    @Test
+    @DisplayName("7.1 · El calendario de disponibilidad es público y no expone códigos de reserva")
+    void calendarioDisponibilidadPublico() throws Exception {
+        LocalDate hoy = LocalDate.now(java.time.ZoneId.of("America/Bogota"));
+        mvc.perform(get("/api/apartamentos/SUQ-101/disponibilidad")
+                        .param("desde", hoy.toString()).param("hasta", hoy.plusDays(14).toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.identificacion").value("SUQ-101"))
+                .andExpect(jsonPath("$.noches.length()").value(14))
+                .andExpect(jsonPath("$.noches[0].disponible").isBoolean())
+                .andExpect(jsonPath("$.noches[0].codigoReserva").doesNotExist());
+        mvc.perform(get("/api/apartamentos/SUQ-101/disponibilidad")
+                        .param("desde", hoy.toString()).param("hasta", hoy.plusYears(1).toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("RANGO_FECHAS_INVALIDO"));
+    }
+
     // Apoyo
 
     private String reservaDe(String documentoTitular) {

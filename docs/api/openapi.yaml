@@ -1386,6 +1386,57 @@ paths:
                     fecha: '2026-10-01T10:15:30-05:00'
       security:
       - bearerAuth: []
+  /api/apartamentos/{identificacion}/disponibilidad:
+    get:
+      tags:
+      - Apartamentos
+      summary: Consultar calendario de disponibilidad de un apartamento (7.1)
+      description: |-
+        Para cada noche de [desde, hasta) dice si el apartamento se puede vender, con las mismas reglas de la búsqueda (RN-01, RN-07, RN-12, RN-20). Las noches pasadas no se ofrecen. No expone reservas ni bloqueos. El rango abarca como máximo 93 noches.
+
+        Actor(es): público (detalle del apartamento).
+      operationId: consultarDisponibilidadApartamento
+      parameters:
+      - $ref: '#/components/parameters/IdentificacionApartamento'
+      - $ref: '#/components/parameters/Desde'
+      - $ref: '#/components/parameters/Hasta'
+      responses:
+        '200':
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisponibilidadApartamentoResponse'
+        '400':
+          description: 'Formato inválido o rango fuera de lo permitido. Códigos: FORMATO_INVALIDO, RANGO_FECHAS_INVALIDO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                RANGO_FECHAS_INVALIDO:
+                  summary: RANGO_FECHAS_INVALIDO
+                  value:
+                    codigo: RANGO_FECHAS_INVALIDO
+                    mensaje: 'El calendario de disponibilidad abarca como máximo 93 noches.'
+                    regla: '3.1'
+                    ruta: /api/apartamentos/SUQ-201/disponibilidad
+                    fecha: '2026-10-01T10:15:30-05:00'
+        '404':
+          description: 'El recurso no existe. Códigos: APARTAMENTO_NO_ENCONTRADO.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNegocioResponse'
+              examples:
+                APARTAMENTO_NO_ENCONTRADO:
+                  summary: APARTAMENTO_NO_ENCONTRADO
+                  value:
+                    codigo: APARTAMENTO_NO_ENCONTRADO
+                    mensaje: 'No existe el apartamento SUQ-201.'
+                    ruta: /api/apartamentos/SUQ-201/disponibilidad
+                    fecha: '2026-10-01T10:15:30-05:00'
+      security: []
   /api/calendario-ocupacion:
     get:
       tags:
@@ -6293,6 +6344,41 @@ components:
           type: string
         gravedad:
           $ref: '#/components/schemas/GravedadNovedad'
+    DisponibilidadApartamentoResponse:
+      type: object
+      description: Calendario de disponibilidad de un apartamento por rango [desde, hasta) (7.1).
+      required:
+      - identificacion
+      - desde
+      - hasta
+      - noches
+      properties:
+        identificacion:
+          type: string
+          examples:
+          - SUQ-201
+        desde:
+          type: string
+          format: date
+        hasta:
+          type: string
+          format: date
+        noches:
+          type: array
+          items:
+            $ref: '#/components/schemas/NocheDisponibleDTO'
+    NocheDisponibleDTO:
+      type: object
+      description: Una noche y si se puede vender.
+      required:
+      - fecha
+      - disponible
+      properties:
+        fecha:
+          type: string
+          format: date
+        disponible:
+          type: boolean
     CalendarioOcupacionResponse:
       type: object
       description: Calendario de ocupación por rango.
