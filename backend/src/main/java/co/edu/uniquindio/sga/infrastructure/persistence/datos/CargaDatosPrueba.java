@@ -71,7 +71,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 import java.util.UUID;
 
 /**
@@ -205,6 +207,23 @@ public class CargaDatosPrueba implements ApplicationRunner {
                 "Tercer piso sin ascensor", Set.of("Vista panorámica a la cordillera", "Dos baños"));
     }
 
+    /** Fotos de Unsplash (licencia libre) por apartamento; la primera de cada lista es la principal. */
+    private static final Map<String, List<String>> FOTOS = Map.of(
+            "SUQ-101", List.of("1560448075-57d0285fc59b", "1774685110793-e427dfa87467", "1583847268964-b28dc8f51f92"),
+            "SUQ-102", List.of("1630699375019-c334927264df", "1612320743558-020669ff20e8", "1630703103579-bde27ee45e49"),
+            "SUQ-201", List.of("1652882860938-f90aa298e644", "1630699293259-0b6c08606c62"),
+            "SUQ-202", List.of("1630703103084-4ac45d397a0c", "1778087413059-3607735aa1e8"),
+            "SUQ-301", List.of("1709805619372-40de3f158e83", "1555854877-bab0e564b8d5", "1778088442658-befac1af7bea"),
+            "SUQ-302", List.of("1632518741173-9c2d8e962704", "1758448511320-05d7d28f4298"));
+
+    private static List<ImagenApartamento> imagenesDe(String id) {
+        List<String> fotos = FOTOS.get(id);
+        return IntStream.range(0, fotos.size())
+                .mapToObj(i -> new ImagenApartamento("https://images.unsplash.com/photo-" + fotos.get(i)
+                        + "?w=1200&q=80&auto=format&fit=crop", i == 0))
+                .toList();
+    }
+
     /** 7.4: solo se activa si tiene tarifa en todas las temporadas. Queda PREPARADO para recibir grupos. */
     private void apartamento(String id, String nombre, String descripcion, int dormitorios, int capacidad,
                              boolean admiteMascotas, String advertencia, Set<String> caracteristicas) {
@@ -212,8 +231,7 @@ public class CargaDatosPrueba implements ApplicationRunner {
         Apartamento apartamento = Apartamento.crear(identificacion, nombre, descripcion, dormitorios,
                 new Capacidad(capacidad), admiteMascotas, advertencia,
                 Set.copyOf(caracteristicas.stream().map(Caracteristica::new).toList()),
-                List.of(new ImagenApartamento("https://stayly-uq.co/img/" + id.toLowerCase() + "-1.jpg", true),
-                        new ImagenApartamento("https://stayly-uq.co/img/" + id.toLowerCase() + "-2.jpg", false)));
+                imagenesDe(id));
         verificadorTarifas.verificarTarifasCompletas(identificacion);
         apartamento.activar();
         apartamento.iniciarPreparacion();
